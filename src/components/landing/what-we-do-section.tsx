@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,28 +12,28 @@ const features = [
     title: "Visa Rejection Reversal",
     description: "Expert strategies to successfully appeal or reapply after a rejection.",
     details: "We analyze rejection reasons and guide you step-by-step with tailored reapplication strategies that maximize approval odds.",
-    href: "#about"
+    href: "/rejection-reversal"
   },
   {
     icon: Users,
     title: "Rejection-Proof Documents",
     description: "Guaranteed document templates and guidance to minimize refusal risk.",
     details: "From cover letters to financial statements, we provide ready-to-use templates reviewed by immigration experts.",
-    href: "#about"
+    href: "/document-check"
   },
   {
     icon: Briefcase,
     title: "Proof of Funds Guidance",
     description: "Trusted pathways to meet financial requirements without stress.",
     details: "Learn safe, verifiable methods to present proof of funds that embassies accept with confidence.",
-    href: "#about"
+    href: "/proof-of-funds"
   },
   {
     icon: Video,
     title: "Priority Processing Tips",
     description: "Insider strategies to fast-track your visa approval.",
     details: "Discover country-specific hacks, premium options, and timing strategies to cut waiting times in half.",
-    href: "#about"
+    href: "/priority-processing"
   }
 ];
 
@@ -81,6 +82,7 @@ export function WhatWeDoSection() {
                   {isOpen && (
                     <Link
                       href={feature.href}
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center gap-1 text-sm font-medium hover:underline"
                     >
                       <LinkIcon className="w-3.5 h-3.5" />
