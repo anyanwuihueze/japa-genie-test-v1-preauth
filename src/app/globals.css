@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 93% 96%; /* #E8F0FE */
+    --foreground: 220 15% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 25%;
+    --primary: 217 89% 61%; /* #4285F4 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 220 15% 25%;
+    --muted: 220 20% 94%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 45 100% 51%; /* #FFC107 */
+    --accent-foreground: 220 15% 25%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 90%;
+    --input: 220 20% 92%;
+    --ring: 217 89% 61%; /* #4285F4 */
+    --radius: 0.75rem;
+    --chart-1: 217 80% 65%;
+    --chart-2: 45 90% 55%;
+    --chart-3: 260 80% 70%;
+    --chart-4: 300 75% 60%;
+    --chart-5: 30 80% 60%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 15% 25%;
+    --sidebar-primary: 217 89% 61%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 89% 61%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 217 89% 61%;
+  }
+
+  .dark {
+    --background: 220 15% 15%;
+    --foreground: 220 15% 95%;
+    --card: 220 15% 20%;
+    --card-foreground: 220 15% 95%;
+    --popover: 220 15% 20%;
+    --popover-foreground: 220 15% 95%;
+    --primary: 217 89% 61%; /* #4285F4 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 30%;
+    --secondary-foreground: 220 15% 95%;
+    --muted: 220 15% 30%;
+    --muted-foreground: 220 15% 75%;
+    --accent: 45 100% 51%; /* #FFC107 */
+    --accent-foreground: 220 15% 25%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 30%;
+    --input: 220 15% 30%;
+    --ring: 217 89% 61%;
+    --sidebar-background: 220 15% 18%;
+    --sidebar-foreground: 220 15% 95%;
+    --sidebar-primary: 217 89% 61%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 89% 61%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 15% 30%;
+    --sidebar-ring: 217 89% 61%;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-foreground;
+  }
+  section {
+    @apply py-16;
+  }
+  
+  /* The border-* properties below are now applied directly in components where needed */
+  /* e.g., in card.tsx: className="rounded-lg border bg-card text-card-foreground shadow-sm" */
+}
+
+@layer components {
+  .container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .glass-effect {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* ✅ Wallpaper with subtle built-in pulse animation */
+/* ✅ Wallpaper with subtle pulse */
+.chat-wallpaper {
+  background-image: url('/wallpaper/genie-chat-wallpaper.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.2;
+  animation: bg-pulse 4s ease-in-out infinite;
+}
+
+@keyframes bg-pulse {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.7; /* More visible peak */
+  }
+}
