@@ -262,13 +262,16 @@ export default function JapaNewsPage() {
                     <a href="/chat" className="flex items-center gap-2">
                       <Zap className="w-4 h-4" />
                       Start Now
-                      <ArrowRight className="w-4 w-4" />
+                      <ArrowRight className="w-4 h-4" />
                     </a>
                   </Button>
                   
                   <button
                     onClick={() => {
-                      document.querySelector('[data-sticky="true"]').style.display = 'none';
+                      const element = document.querySelector('[data-sticky="true"]') as HTMLElement;
+                      if (element) {
+                        element.style.display = 'none';
+                      }
                     }}
                     className="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
                     aria-label="Close"
