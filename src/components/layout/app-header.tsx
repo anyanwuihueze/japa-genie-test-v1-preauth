@@ -30,6 +30,7 @@ export function AppHeader() {
     { href: "/where-youre-stuck", label: "Where You're Stuck" },
     { href: "/how-it-helps", label: "How It Helps" },
     { href: "/your-next-steps", label: "Your Next Steps" },
+    { href: "/blog", label: "Japa news" },
     { href: "/about-us", label: "About Us" },
   ];
   
