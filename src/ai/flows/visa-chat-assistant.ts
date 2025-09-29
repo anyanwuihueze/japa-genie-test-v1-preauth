@@ -27,7 +27,7 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
     };
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   // 🔥 PREMIUM CONVERSION PROMPT (COPY-PASTE READY)
   const promptText = `

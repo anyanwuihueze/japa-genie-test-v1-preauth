@@ -21,7 +21,7 @@ import {
 // Define the AI prompt using Genkit
 const prompt = ai.definePrompt({
   name: 'insightsGeneratorPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'gemini-1.5-flash',
   input: { schema: InsightInputSchema },
   output: { schema: InsightOutputSchema },
   prompt: `

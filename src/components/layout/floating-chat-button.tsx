@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -33,3 +32,6 @@ export function FloatingChatButton() {
     </>
   );
 }
+
+// ALSO export as default so any parent can import either way
+export default FloatingChatButton;

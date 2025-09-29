@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { siteAssistant } from '@/ai/flows/site-assistant-flow';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface Message {
@@ -30,7 +29,7 @@ export default function ChatPanel() {
   const [questionsAsked, setQuestionsAsked] = useState(0);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,7 +44,7 @@ export default function ChatPanel() {
   };
 
   useEffect(scrollToBottom, [messages]);
-  
+
   useEffect(() => {
     if (questionsAsked >= MAX_FREE_QUESTIONS) {
       setShowUpgradeSheet(true);
@@ -56,8 +55,8 @@ export default function ChatPanel() {
     if (!inputValue.trim() || isLoading) return;
 
     if (questionsAsked >= MAX_FREE_QUESTIONS) {
-        setShowUpgradeSheet(true);
-        return;
+      setShowUpgradeSheet(true);
+      return;
     }
 
     const userMessage: Message = {
@@ -71,15 +70,27 @@ export default function ChatPanel() {
     setIsLoading(true);
 
     try {
-      const result = await siteAssistant({ question: inputValue });
-      
+      const response = await fetch('/api/visitor-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: inputValue,
+          conversationHistory: messages,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: result.answer,
+        content: data.response,
         sender: 'assistant',
       };
       setMessages((prev) => [...prev, assistantMessage]);
-      setQuestionsAsked(prev => prev + 1);
+      setQuestionsAsked((prev) => prev + 1);
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -102,10 +113,8 @@ export default function ChatPanel() {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd send this to a backend/CRM
     localStorage.setItem('prospectEmail', userEmail);
     setShowUpgradeSheet(false);
-    // Redirect to the main chat page after signup
     window.location.href = '/chat';
   };
 
@@ -129,7 +138,7 @@ export default function ChatPanel() {
               </div>
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-card rounded-2xl px-4 py-2 shadow-sm border rounded-bl-none">
@@ -164,7 +173,7 @@ export default function ChatPanel() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          {MAX_FREE_QUESTIONS - questionsAsked > 0 
+          {MAX_FREE_QUESTIONS - questionsAsked > 0
             ? `${MAX_FREE_QUESTIONS - questionsAsked} questions remaining.`
             : "You've reached the question limit."}
         </p>
@@ -172,30 +181,30 @@ export default function ChatPanel() {
 
       <Sheet open={showUpgradeSheet} onOpenChange={setShowUpgradeSheet}>
         <SheetContent>
-            <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                    <Sparkles className="text-amber-500" />
-                    Unlock Your Visa Journey
-                </SheetTitle>
-                <SheetDescription>
-                    You've asked all the right questions! To get unlimited, personalized visa guidance from Japa Genie, enter your email below.
-                </SheetDescription>
-            </SheetHeader>
-            <form onSubmit={handleEmailSubmit} className="py-8 space-y-4">
-                <Input 
-                    type="email"
-                    placeholder="you@example.com"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    required
-                />
-                <Button type="submit" className="w-full">
-                    Unlock Your 3 Visa Wishes
-                </Button>
-            </form>
-             <p className="text-xs text-center text-muted-foreground">
-                You'll be redirected to the full AI assistant to start your journey.
-            </p>
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Sparkles className="text-amber-500" />
+              Unlock Your Visa Journey
+            </SheetTitle>
+            <SheetDescription>
+              You've asked all the right questions! To get unlimited, personalized visa guidance from Japa Genie, enter your email below.
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleEmailSubmit} className="py-8 space-y-4">
+            <Input
+              type="email"
+              placeholder="you@example.com"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              required
+            />
+            <Button type="submit" className="w-full">
+              Unlock Your 3 Visa Wishes
+            </Button>
+          </form>
+          <p className="text-xs text-center text-muted-foreground">
+            You'll be redirected to the full AI assistant to start your journey.
+          </p>
         </SheetContent>
       </Sheet>
     </div>

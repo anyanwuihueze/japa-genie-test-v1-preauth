@@ -33,7 +33,7 @@ export async function documentChecker(input: DocumentCheckerInput): Promise<Docu
 
 const documentCheckerPrompt = ai.definePrompt({
   name: 'documentCheckerPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'gemini-1.5-flash',
   input: {schema: DocumentCheckerInputSchema},
   output: {schema: DocumentCheckerOutputSchema},
   prompt: `You are an AI assistant that checks visa application documents for errors.

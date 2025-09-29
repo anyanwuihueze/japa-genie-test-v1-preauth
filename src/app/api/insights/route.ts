@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const { question, aiResponse } = await request.json();
     console.log('Insights API called for:', question);
     
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `You are an expert immigration analyst. Analyze this visa consultation and generate strategic insights.
 

@@ -29,7 +29,7 @@ export async function generateRejectionStrategy(input: RejectionStrategyInput): 
 
 const prompt = ai.definePrompt({
   name: 'rejectionStrategyPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'gemini-1.5-flash',
   input: {schema: RejectionStrategyInputSchema},
   output: {schema: RejectionStrategyOutputSchema},
   prompt: `You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. Your persona is encouraging, knowledgeable, and empathetic. Your task is to create a detailed, actionable comeback strategy for an applicant who was rejected.

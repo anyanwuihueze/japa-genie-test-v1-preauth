@@ -29,7 +29,7 @@ export async function generateInterviewQuestion(input: InterviewQuestionInput): 
 
 const prompt = ai.definePrompt({
   name: 'interviewQuestionPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'gemini-1.5-flash',
   input: {schema: InterviewQuestionInputSchema},
   output: {schema: InterviewQuestionOutputSchema},
   prompt: `You are an expert visa consular officer conducting a mock interview. Your task is to generate a single, realistic interview question.

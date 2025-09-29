@@ -3,23 +3,20 @@ import { siteAssistant } from '@/ai/flows/site-assistant-flow';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory } = await request.json();
+    const { message } = await request.json();
 
-    // Call the site assistant flow with the correct parameter format
+    console.log('🔍 Calling siteAssistant with:', { message });
     const response = await siteAssistant({ question: message });
+    console.log('✅ AI Response received:', response);
 
-    return NextResponse.json({ 
-      response: response.answer, // FIXED: Use response.answer instead of response.answer
-      success: true 
+    return NextResponse.json({
+      response: response.answer,
+      success: true
     });
-
   } catch (error) {
     console.error('Visitor chat API error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to process message',
-        success: false 
-      },
+      { error: 'Failed to process message', success: false },
       { status: 500 }
     );
   }
