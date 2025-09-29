@@ -101,7 +101,23 @@
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
+  .logo-glow-float {
+    animation: logo-glow-float 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));
+  }
 }
+
+@keyframes logo-glow-float {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));
+  }
+  50% {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.6));
+  }
+}
+
 
 /* ✅ Wallpaper with subtle built-in pulse animation */
 /* ✅ Wallpaper with subtle pulse */
