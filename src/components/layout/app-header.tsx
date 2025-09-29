@@ -60,7 +60,7 @@ export function AppHeader() {
         </div>
         
         <Link href="/" className="mr-6 flex items-center gap-2">
-          <JapaGenieLogo className="w-7 h-7 text-accent" />
+          <JapaGenieLogo className="w-8 h-8 text-accent" />
           <span className="font-bold text-lg hidden sm:inline-block">Japa Genie</span>
         </Link>
 
