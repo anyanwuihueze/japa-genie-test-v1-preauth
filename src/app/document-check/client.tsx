@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { documentChecker } from '@/ai/flows/document-checker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,10 +36,22 @@ export default function DocumentCheckClient() {
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
+
     reader.onload = async () => {
       const documentDataUri = reader.result as string;
+
       try {
-        const result = await documentChecker({ documentDataUri });
+        const response = await fetch('/api/document-check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documentDataUri }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to analyze document');
+        }
+
+        const result = await response.json();
         setReport(result.report);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred during analysis.';
@@ -54,6 +65,7 @@ export default function DocumentCheckClient() {
         setIsLoading(false);
       }
     };
+
     reader.onerror = () => {
       const errorMessage = 'Failed to read the file.';
       setError(errorMessage);

@@ -15,6 +15,7 @@ const inter = Inter({
         title: 'Japa Genie: Your AI-Powered Visa Guide',
           description:
               'Stop getting scammed by visa agents. Start getting real results today with Japa Genie. AI-powered visa guidance, eligibility checks, and personalized roadmaps.',
+        viewport: 'width=device-width, initial-scale=1.0',
               }
 
               export default function RootLayout({ children }: { children: React.ReactNode }) {

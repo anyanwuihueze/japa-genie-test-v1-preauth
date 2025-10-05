@@ -1,11 +1,9 @@
-
 'use client';
 
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal-flow';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -17,6 +15,7 @@ import { Loader2, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 
+// ✅ Zod schema for form validation
 const formSchema = z.object({
   visaType: z.string().min(1, 'Visa type is required.'),
   destination: z.string().min(2, 'Destination country is required.'),
@@ -32,6 +31,7 @@ export default function RejectionReversalClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ Initialize form with react-hook-form + zod
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,16 +42,27 @@ export default function RejectionReversalClient() {
     },
   });
 
+  // ✅ Handle form submission
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setError(null);
     setStrategy(null);
 
     try {
-      const result = await generateRejectionStrategy({
-        ...data,
-        rejectionReason: data.rejectionReason || "No official reason provided.",
+      const response = await fetch('/api/rejection-reversal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          rejectionReason: data.rejectionReason || "No official reason provided.",
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate strategy. Please try again.');
+      }
+
+      const result = await response.json();
       setStrategy(result.strategy);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -71,7 +82,9 @@ export default function RejectionReversalClient() {
       <Card>
         <CardHeader>
           <CardTitle>Tell Us What Happened</CardTitle>
-          <CardDescription>Provide details about your visa rejection, and our AI will create a personalized comeback strategy.</CardDescription>
+          <CardDescription>
+            Provide details about your visa rejection, and our AI will create a personalized comeback strategy.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -115,6 +128,7 @@ export default function RejectionReversalClient() {
                   )}
                 />
               </div>
+
               <FormField
                 control={form.control}
                 name="rejectionReason"
@@ -122,12 +136,16 @@ export default function RejectionReversalClient() {
                   <FormItem>
                     <FormLabel>Official Rejection Reason (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Copy and paste the reason from your rejection letter, if you have it." {...field} />
+                      <Textarea 
+                        placeholder="Copy and paste the reason from your rejection letter, if you have it." 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="userBackground"
@@ -135,12 +153,16 @@ export default function RejectionReversalClient() {
                   <FormItem>
                     <FormLabel>Your Background & Purpose of Travel</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Briefly describe your situation. For example: 'I am a 28-year-old marketing manager applying for a skilled worker visa to Germany. I have a job offer...' " {...field} />
+                      <Textarea 
+                        placeholder="Briefly describe your situation. For example: 'I am a 28-year-old marketing manager applying for a skilled worker visa to Germany. I have a job offer...'" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
                 {isLoading ? (
                   <>
@@ -170,15 +192,15 @@ export default function RejectionReversalClient() {
       {strategy && (
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Sparkles className="text-primary"/>
-                Your Personalized Rejection Reversal Plan
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Sparkles className="text-primary" />
+              Your Personalized Rejection Reversal Plan
             </CardTitle>
             <CardDescription>Follow these steps to strengthen your next application.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm md:prose-base max-w-none dark:prose-invert prose-headings:text-primary">
-                <ReactMarkdown>{strategy}</ReactMarkdown>
+              <ReactMarkdown>{strategy}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>

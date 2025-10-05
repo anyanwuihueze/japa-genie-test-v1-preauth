@@ -19,6 +19,9 @@ interface InsightOutput {
 
 const MAX_WISHES = 3;
 
+// ✅ STATIC SOCIAL PROOF VALUE — NO RANDOMNESS
+const SOCIAL_PROOF_COUNT = 1200;
+
 export default function UserChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -38,13 +41,10 @@ export default function UserChat() {
   }, []);
 
   const handleCtaClick = () => {
-    // This is where your signup modal would trigger
     alert("✨ Premium plan unlocked! Redirecting to signup...");
-    // In your real app, replace with: openSignupModal();
   };
 
   const renderMessageContent = (content: string) => {
-    // Makes CTAs clickable in responses
     return (
       <div 
         className="prose max-w-none"
@@ -69,7 +69,6 @@ export default function UserChat() {
     const trimmed = currentInput.trim();
     if (!trimmed || isTyping) return;
 
-    // Check if wishes are exhausted
     if (wishCount >= MAX_WISHES) {
       setMessages((prev) => [
         ...prev,
@@ -86,7 +85,6 @@ export default function UserChat() {
     const newWishCount = wishCount + 1;
     const userMessage: Message = { role: 'user', content: trimmed };
     
-    // Clear welcome message on first question
     if (newWishCount === 1 && messages.length === 1) {
       setMessages([userMessage]);
     } else {
@@ -100,7 +98,6 @@ export default function UserChat() {
     try {
       console.log(`Processing wish ${newWishCount}/${MAX_WISHES}:`, trimmed);
       
-      // Get chat response
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -120,8 +117,6 @@ export default function UserChat() {
 
       const aiResponse = chatResult.answer;
       setMessages((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
-
-      // Update wish count
       setWishCount(newWishCount);
 
       // Generate insights for visa questions
@@ -156,11 +151,12 @@ export default function UserChat() {
 
     } catch (err) {
       console.error("Chat error:", err);
+      // ✅ FIXED: No Math.random() — use static value
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `Wish ${wishCount + 1}: Temporary error. Trusted by ${Math.floor(Math.random() * 500) + 750}+ professionals — Unlock your step-by-step plan — Sign up`,
+          content: `Wish ${wishCount + 1}: Temporary error. Trusted by ${SOCIAL_PROOF_COUNT}+ professionals — Unlock your step-by-step plan — Sign up`,
         },
       ]);
     } finally {
@@ -175,9 +171,9 @@ export default function UserChat() {
     <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-4rem)]">
       {/* Chat Section */}
       <div className="flex flex-col border-r border-gray-200 relative bg-white">
-        {/* Social Proof Banner */}
+        {/* Social Proof Banner — FIXED: Static value */}
         <div className="bg-blue-50 py-1.5 px-4 text-center text-xs text-blue-700 font-medium">
-          Trusted by {Math.floor(Math.random() * 500) + 750}+ professionals — average approval path uncovered in 7 days
+          Trusted by {SOCIAL_PROOF_COUNT}+ professionals — average approval path uncovered in 7 days
         </div>
 
         {/* Message List */}

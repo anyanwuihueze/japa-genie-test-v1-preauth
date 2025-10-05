@@ -9,13 +9,10 @@ export default function JapaNewsPage() {
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [visitorCount, setVisitorCount] = useState(0);
 
-  // Fix hydration issue
   useEffect(() => {
     setMounted(true);
-    // Simulate visitor counter
     setVisitorCount(Math.floor(Math.random() * 500) + 1250);
     
-    // Exit intent detection
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0) {
         setShowExitIntent(true);
@@ -27,6 +24,18 @@ export default function JapaNewsPage() {
   }, []);
 
   const stories = [
+    // ▼▼▼ ADD THIS NEW STORY AT THE TOP ▼▼▼
+    {
+      slug: 'rejection-risk-score',
+      title: 'How Japa Genie Calculates Your Visa Rejection Risk Score',
+      excerpt: 'Discover the 7 hidden factors embassies check that cause 68% of rejections.',
+      author: 'Japa Genie Team',
+      location: 'Lagos, Nigeria',
+      outcome: '62% risk reduction',
+      hook: '"My Japan SSW visa was rejected until I fixed my Proof of Funds risk score."',
+      readTime: '5 min read'
+    },
+    // ▲▲▲ END OF NEW STORY ▲▲▲
     {
       slug: 'amara-visa-rejection-reversal',
       title: 'From Heartbreak to Toronto: Amara\'s Visa Rejection Reversal',
@@ -114,7 +123,7 @@ export default function JapaNewsPage() {
             if (step < 3) {
               setStep(step + 1);
             } else {
-              window.location.href = '/chat';
+              window.location.href = '/visa-readiness-check';
             }
           }}
         >
@@ -145,10 +154,8 @@ export default function JapaNewsPage() {
 
   return (
     <>
-      {/* Main Content */}
       <section className="py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 min-h-screen">
         <div className="container mx-auto px-4 max-w-6xl">
-          {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 rounded-full text-sm font-medium text-purple-700 mb-4">
               <Users className="w-4 h-4" />
@@ -164,12 +171,10 @@ export default function JapaNewsPage() {
             </p>
           </div>
 
-          {/* Progressive CTA */}
           <ProgressiveCTA />
 
-          {/* Success Stories */}
           <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {stories.map((story, index) => (
+            {stories.map((story) => (
               <div key={story.slug} className="bg-white/30 backdrop-blur-sm border border-white/40 rounded-3xl shadow-xl p-8 group hover:scale-105 transition-all duration-300">
                 <div className="flex justify-between items-start mb-4">
                   <span className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-medium">
@@ -205,7 +210,6 @@ export default function JapaNewsPage() {
             ))}
           </div>
 
-          {/* Final CTA Section */}
           <div className="bg-white/30 backdrop-blur-sm border border-white/40 rounded-3xl shadow-xl p-12 text-center">
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Your Success Story is Next
@@ -236,58 +240,28 @@ export default function JapaNewsPage() {
         </div>
       </section>
 
-      {/* Improved Sticky Bottom Bar */}
       {mounted && (
-        <div className="fixed bottom-4 left-4 right-4 z-40" data-sticky="true">
+        <div className="fixed bottom-4 left-4 right-4 z-40">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-4 transform transition-all duration-300 hover:scale-[1.02]">
+            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-4">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div className="flex-1 text-center sm:text-left">
                   <p className="text-white font-semibold text-sm sm:text-base">
                     Ready to be our next success story?
                   </p>
-                  <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <p className="text-purple-100 text-xs sm:text-sm">
-                      2,847+ approved • Average 6 months
-                    </p>
-                  </div>
+                  <p className="text-purple-100 text-xs sm:text-sm">
+                    Join 2,847+ approved applicants
+                  </p>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Button 
-                    asChild 
-                    className="bg-white/20 hover:bg-white/30 text-white border border-white/30 hover:border-white/50 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
-                  >
-                    <a href="/chat" className="flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Start Now
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                  </Button>
-                  
-                  <button
-                    onClick={() => {
-                      const element = document.querySelector('[data-sticky="true"]') as HTMLElement;
-                      if (element) {
-                        element.style.display = 'none';
-                      }
-                    }}
-                    className="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
-                    aria-label="Close"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                <Button className="bg-white/20 hover:bg-white/30 text-white" asChild>
+                  <a href="/chat">Start Now</a>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Exit Intent Popup */}
       {showExitIntent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white/90 backdrop-blur-sm border border-white/40 rounded-3xl shadow-xl max-w-md p-8 m-4">
@@ -297,7 +271,7 @@ export default function JapaNewsPage() {
             </p>
             <div className="flex gap-4">
               <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex-1" asChild>
-                <a href="/chat">Get My Score</a>
+                <a href="/visa-readiness-check">Get My Score</a>
               </Button>
               <Button variant="outline" onClick={() => setShowExitIntent(false)}>
                 Maybe Later
