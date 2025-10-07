@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal-flow';
-import type { RejectionStrategyInput } from '@/ai/flows/rejection-reversal-flow';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as RejectionStrategyInput;
+    const body = (await request.json());
 
     if (!body.visaType || !body.destination || !body.userBackground) {
       return NextResponse.json(
