@@ -21,7 +21,7 @@ export default function WhereYoureStuck() {
       description: "Get AI guidance on asylum documentation requirements. For sensitive cases, we'll connect you with humanitarian immigration lawyers.",
       emoji: "🕊️",
       cta: "Start asylum guidance",
-      path: "/asylum-help",
+      path: "/asylum",
     },
     {
       title: "You're prepping for your interview",
