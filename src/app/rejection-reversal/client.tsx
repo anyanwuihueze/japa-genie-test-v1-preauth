@@ -14,8 +14,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal-flow';
 
-// ✅ Zod schema for form validation
 const formSchema = z.object({
   visaType: z.string().min(1, 'Visa type is required.'),
   destination: z.string().min(2, 'Destination country is required.'),
@@ -31,7 +31,6 @@ export default function RejectionReversalClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Initialize form with react-hook-form + zod
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,27 +41,17 @@ export default function RejectionReversalClient() {
     },
   });
 
-  // ✅ Handle form submission
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setError(null);
     setStrategy(null);
 
     try {
-      const response = await fetch('/api/rejection-reversal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          rejectionReason: data.rejectionReason || "No official reason provided.",
-        }),
+      const result = await generateRejectionStrategy({
+        ...data,
+        rejectionReason: data.rejectionReason || "No official reason provided.",
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate strategy. Please try again.');
-      }
-
-      const result = await response.json();
       setStrategy(result.strategy);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';

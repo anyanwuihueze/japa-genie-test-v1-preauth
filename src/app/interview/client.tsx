@@ -13,8 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Sparkles, MessageSquareQuote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateInterviewQuestion } from '@/ai/flows/interview-flow';
 
-// ✅ Zod schema remains unchanged
 const formSchema = z.object({
   visaType: z.string().min(2, 'Visa type is required.'),
   destination: z.string().min(2, 'Destination country is required.'),
@@ -44,7 +44,6 @@ export default function InterviewClient() {
     },
   });
 
-  // ✅ Start interview via API
   async function handleStartInterview(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setError(null);
@@ -53,20 +52,10 @@ export default function InterviewClient() {
     setIsInterviewStarted(true);
 
     try {
-      const response = await fetch('/api/interview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...values,
-          previousQuestions: [],
-        }),
+      const data = await generateInterviewQuestion({
+        ...values,
+        previousQuestions: [],
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate initial question');
-      }
-
-      const data = await response.json();
       setCurrentQuestion(data.question);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -82,7 +71,6 @@ export default function InterviewClient() {
     }
   }
 
-  // ✅ Get next question via API
   async function handleNextQuestion() {
     if (!currentQuestion || !currentAnswer.trim()) return;
 
@@ -98,20 +86,11 @@ export default function InterviewClient() {
       const previousQuestions = updatedHistory.map(turn => turn.question);
       const formData = form.getValues();
 
-      const response = await fetch('/api/interview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          previousQuestions,
-        }),
+      const data = await generateInterviewQuestion({
+        ...formData,
+        previousQuestions,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate next question');
-      }
-
-      const data = await response.json();
       setCurrentQuestion(data.question);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
