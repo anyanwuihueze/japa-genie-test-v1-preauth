@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -8,10 +7,12 @@ import { JapaGenieLogo } from "@/components/icons";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useAuth } from '@/lib/AuthContext';  // ← ADDED THIS
 
 export function AppHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, signInWithGoogle, signOut } = useAuth();  // ← ADDED THIS
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
@@ -25,7 +26,6 @@ export function AppHeader() {
     return () => window.removeEventListener('resize', handleResize);
   }, [isMobileMenuOpen]);
 
-  // ✅ FINAL NAV LINKS - Human-first, accurate, no false promises
   const navLinks = [
     { href: "/where-youre-stuck", label: "Where You're Stuck" },
     { href: "/how-it-helps", label: "How It Helps" },
@@ -69,11 +69,20 @@ export function AppHeader() {
           <NavLinkItems />
         </nav>
 
-        {/* Auth Buttons */}
+        {/* Auth Buttons - FIXED HERE */}
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/progress-map">Log In</Link>
-          </Button>
+          {user ? (
+            // Logged in - show Sign Out
+            <Button variant="ghost" onClick={() => signOut()}>
+              Sign Out
+            </Button>
+          ) : (
+            // Not logged in - show Log In
+            <Button variant="ghost" onClick={() => signInWithGoogle()}>
+              Log In
+            </Button>
+          )}
+          
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground" 
             asChild
