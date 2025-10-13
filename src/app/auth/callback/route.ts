@@ -8,8 +8,6 @@ export const runtime = 'edge'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
-
   if (!code) return NextResponse.redirect(new URL('/?error=no_code', req.url))
 
   const supabase = createClient(
@@ -18,9 +16,8 @@ export async function GET(req: NextRequest) {
   )
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error || !data.session) {
+  if (error || !data.session)
     return NextResponse.redirect(new URL('/?error=auth_failed', req.url))
-  }
 
-  return NextResponse.redirect(new URL(next, req.url), 307)
+  return NextResponse.redirect(new URL('/', req.url), 307)
 }
