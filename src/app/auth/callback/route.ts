@@ -7,8 +7,14 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') ?? '/'
+  
+  // If no code, redirect to home
+  if (!code) {
+    console.error('❌ No authorization code received')
+    return NextResponse.redirect(requestUrl.origin)
+  }
 
-  if (code) {
+  try {
     const cookieStore = await cookies()
     
     const supabase = createServerClient(
@@ -25,19 +31,34 @@ export async function GET(request: NextRequest) {
                 cookieStore.set(name, value, options ?? {})
               })
             } catch (error) {
-              // Ignore errors
+              // Cookie setting can fail in middleware, ignore
+              console.warn('Cookie set warning:', error)
             }
           },
         },
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    // Exchange the code for a session
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
-      return NextResponse.redirect(`${requestUrl.origin}${next}`)
+    if (error) {
+      console.error('❌ Session exchange failed:', error.message)
+      // Redirect to home with error
+      return NextResponse.redirect(
+        `${requestUrl.origin}?error=auth_failed`
+      )
     }
-  }
 
-  return NextResponse.redirect(requestUrl.origin)
+    console.log('✅ Authentication successful:', data.user?.email)
+    
+    // Successful auth - redirect to intended destination
+    return NextResponse.redirect(`${requestUrl.origin}${next}`)
+    
+  } catch (error) {
+    console.error('💥 Unexpected error in callback:', error)
+    return NextResponse.redirect(
+      `${requestUrl.origin}?error=server_error`
+    )
+  }
 }
