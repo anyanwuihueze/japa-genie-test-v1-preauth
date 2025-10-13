@@ -16,8 +16,16 @@ export async function GET(req: NextRequest) {
   )
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error || !data.session)
-    return NextResponse.redirect(new URL('/?error=auth_failed', req.url))
+
+  // ❗️ surface the real error
+  if (error) {
+    return NextResponse.redirect(
+      new URL(`/?error=exchange_fail&desc=${encodeURIComponent(error.message)}`, req.url)
+    )
+  }
+  if (!data.session) {
+    return NextResponse.redirect(new URL('/?error=no_session', req.url))
+  }
 
   return NextResponse.redirect(new URL('/', req.url), 307)
 }
