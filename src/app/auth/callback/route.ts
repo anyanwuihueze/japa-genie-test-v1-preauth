@@ -1,31 +1,21 @@
-// src/app/auth/callback/route.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export const runtime = 'edge'
+export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const origin = requestUrl.origin
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const code = searchParams.get('code')
-  if (!code) return NextResponse.redirect(new URL('/?error=no_code', req.url))
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-  // ❗️ surface the real error
-  if (error) {
-    return NextResponse.redirect(
-      new URL(`/?error=exchange_fail&desc=${encodeURIComponent(error.message)}`, req.url)
-    )
-  }
-  if (!data.session) {
-    return NextResponse.redirect(new URL('/?error=no_session', req.url))
+  if (code) {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (error) {
+      console.error('Auth callback error:', error)
+      return NextResponse.redirect(`${origin}/?error=${encodeURIComponent(error.message)}`)
+    }
   }
 
-  return NextResponse.redirect(new URL('/', req.url), 307)
+  return NextResponse.redirect(origin)
 }
