@@ -3,10 +3,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/AuthContext';
+import CheckoutButton from '@/components/checkout-button'
+import { createClient } from '@/lib/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  id?: string;
 }
 
 interface InsightOutput {
@@ -18,23 +22,99 @@ interface InsightOutput {
 }
 
 const MAX_WISHES = 3;
-
-// ✅ STATIC SOCIAL PROOF VALUE — NO RANDOMNESS
 const SOCIAL_PROOF_COUNT = 1200;
 
 export default function UserChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: "Welcome, Pathfinder! I'm Japa Genie, your magical guide to global relocation. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?",
-    }
-  ]);
+  const { user, loading: authLoading } = useAuth();
+  const supabase = createClient();
+  
+  const [messages, setMessages] = useState<Message[]>([]);
   const [insights, setInsights] = useState<InsightOutput | null>(null);
   const [currentInput, setCurrentInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isInsightsLoading, setIsInsightsLoading] = useState(false);
   const [wishCount, setWishCount] = useState(0);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load messages from Supabase when user logs in
+  useEffect(() => {
+    async function loadMessages() {
+      if (!user) {
+        // Visitor - show welcome message
+        setMessages([{
+          role: 'assistant',
+          content: "Welcome, Pathfinder! I'm Japa Genie, your magical guide to global relocation. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?",
+        }]);
+        setWishCount(0);
+        return;
+      }
+      
+      setIsLoadingMessages(true);
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setMessages(data.map(msg => ({
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content
+          })));
+          
+          const userMessageCount = data.filter(m => m.role === 'user').length;
+          setWishCount(userMessageCount);
+        } else {
+          // Logged in but no messages yet
+          setMessages([{
+            role: 'assistant',
+            content: "Welcome back, Pathfinder! You have unlimited wishes. What would you like to explore today?",
+          }]);
+          setWishCount(0);
+        }
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        setMessages([{
+          role: 'assistant',
+          content: "Welcome back! You have unlimited wishes.",
+        }]);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    }
+
+    if (!authLoading) {
+      loadMessages();
+    }
+  }, [user, authLoading, supabase]);
+
+  // Save message to Supabase
+  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          user_id: user.id,
+          role,
+          content
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error saving message:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -69,13 +149,14 @@ export default function UserChat() {
     const trimmed = currentInput.trim();
     if (!trimmed || isTyping) return;
 
-    if (wishCount >= MAX_WISHES) {
+    // Check wish limit only for non-logged-in users
+    if (!user && wishCount >= MAX_WISHES) {
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: trimmed },
         { 
           role: 'assistant', 
-          content: "You've used all 3 wishes! Upgrade to premium for unlimited visa guidance and personalized application packs." 
+          content: "You've used all 3 wishes! Sign in with Google for unlimited visa guidance." 
         },
       ]);
       setCurrentInput('');
@@ -84,6 +165,12 @@ export default function UserChat() {
 
     const newWishCount = wishCount + 1;
     const userMessage: Message = { role: 'user', content: trimmed };
+    
+    // Save user message to Supabase
+    if (user) {
+      const savedMsg = await saveMessage('user', trimmed);
+      if (savedMsg) userMessage.id = savedMsg.id;
+    }
     
     if (newWishCount === 1 && messages.length === 1) {
       setMessages([userMessage]);
@@ -96,7 +183,7 @@ export default function UserChat() {
     setIsInsightsLoading(true);
 
     try {
-      console.log(`Processing wish ${newWishCount}/${MAX_WISHES}:`, trimmed);
+      console.log(`Processing wish ${newWishCount}${user ? ' (unlimited)' : `/${MAX_WISHES}`}:`, trimmed);
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -116,10 +203,17 @@ export default function UserChat() {
       }
 
       const aiResponse = chatResult.answer;
-      setMessages((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
+      const assistantMessage: Message = { role: 'assistant', content: aiResponse };
+      
+      // Save assistant message to Supabase
+      if (user) {
+        const savedMsg = await saveMessage('assistant', aiResponse);
+        if (savedMsg) assistantMessage.id = savedMsg.id;
+      }
+      
+      setMessages((prev) => [...prev, assistantMessage]);
       setWishCount(newWishCount);
 
-      // Generate insights for visa questions
       const isVisaRelated = (text: string) => {
         const lower = text.toLowerCase();
         const countries = ['canada','australia','usa','uk','spain','germany','france','italy','netherlands'];
@@ -151,7 +245,6 @@ export default function UserChat() {
 
     } catch (err) {
       console.error("Chat error:", err);
-      // ✅ FIXED: No Math.random() — use static value
       setMessages((prev) => [
         ...prev,
         {
@@ -165,22 +258,30 @@ export default function UserChat() {
     }
   };
 
-  const wishesLeft = MAX_WISHES - wishCount;
+  const wishesLeft = user ? Infinity : MAX_WISHES - wishCount;
+
+  if (authLoading || isLoadingMessages) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-4rem)]">
-      {/* Chat Section */}
       <div className="flex flex-col border-r border-gray-200 relative bg-white">
-        {/* Social Proof Banner — FIXED: Static value */}
         <div className="bg-blue-50 py-1.5 px-4 text-center text-xs text-blue-700 font-medium">
           Trusted by {SOCIAL_PROOF_COUNT}+ professionals — average approval path uncovered in 7 days
         </div>
 
-        {/* Message List */}
         <div className="flex-1 p-4 overflow-y-auto space-y-3 relative z-10">
           {messages.map((msg, idx) => (
             <div
-              key={idx}
+              key={msg.id || idx}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
@@ -210,16 +311,18 @@ export default function UserChat() {
           )}
         </div>
 
-        {/* Input Section */}
         <div className="p-4 border-t bg-white/80 backdrop-blur relative z-10">
           <div className="flex items-center justify-between mb-2">
             <Badge variant={wishesLeft > 0 ? "default" : "secondary"}>
-              {wishesLeft > 0 
-                ? `${wishesLeft} wish${wishesLeft !== 1 ? 'es' : ''} left` 
-                : 'All wishes used — Upgrade for more'}
+              {user 
+                ? '✨ Unlimited wishes' 
+                : wishesLeft > 0 
+                  ? `${wishesLeft} wish${wishesLeft !== 1 ? 'es' : ''} left` 
+                  : 'All wishes used — Sign in for more'
+              }
             </Badge>
             <div className="text-xs text-gray-500">
-              Wish {wishCount} of {MAX_WISHES}
+              {user ? `Wish ${wishCount}` : `Wish ${wishCount} of ${MAX_WISHES}`}
             </div>
           </div>
           
@@ -230,45 +333,34 @@ export default function UserChat() {
               value={currentInput}
               onChange={(e) => setCurrentInput(e.target.value)}
               placeholder={
-                wishCount === 0 
-                  ? "Ask for your first wish..." 
-                  : wishCount < MAX_WISHES 
-                    ? "Ask your next wish..." 
-                    : "Upgrade for unlimited questions"
+                user
+                  ? "Ask your next wish..."
+                  : wishCount === 0 
+                    ? "Ask for your first wish..." 
+                    : wishCount < MAX_WISHES 
+                      ? "Ask your next wish..." 
+                      : "Sign in for unlimited questions"
               }
               className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isTyping || wishCount >= MAX_WISHES}
+              disabled={isTyping || (!user && wishCount >= MAX_WISHES)}
             />
             <button
               type="submit"
-              disabled={isTyping || !currentInput.trim() || wishCount >= MAX_WISHES}
+              disabled={isTyping || !currentInput.trim() || (!user && wishCount >= MAX_WISHES)}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all"
             >
-              {isTyping ? '...' : wishCount >= MAX_WISHES ? 'Upgrade' : 'Send'}
+              {isTyping ? '...' : (!user && wishCount >= MAX_WISHES) ? 'Sign In' : 'Send'}
             </button>
           </form>
           
-          {/* Post-Wish CTA */}
-          {wishCount > 0 && wishCount < MAX_WISHES && (
-            <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
-              <p className="text-sm font-medium text-purple-800 mb-1">
-                Want the full application pack?
-              </p>
-              <p className="text-xs text-purple-700 mb-2">
-                Create a free profile to receive document templates + timeline
-              </p>
-              <button 
-                onClick={handleCtaClick}
-                className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
-              >
-                Unlock my plan
-              </button>
+          {!user && wishCount >= MAX_WISHES && (
+            <div className="mt-3">
+              <CheckoutButton />
             </div>
           )}
         </div>
       </div>
 
-      {/* Insights Panel */}
       <div className="bg-gradient-to-b from-blue-50 to-purple-50 p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Sparkles className="w-5 h-5 text-purple-600" />
@@ -283,7 +375,6 @@ export default function UserChat() {
           </div>
         ) : insights ? (
           <div className="space-y-4">
-            {/* Difficulty Badge */}
             <div>
               <p className="text-sm text-gray-600 mb-1">Difficulty</p>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -297,7 +388,6 @@ export default function UserChat() {
               </span>
             </div>
             
-            {/* Timeline Bar */}
             <div>
               <p className="text-sm text-gray-600 mb-1">Expected Timeline</p>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -314,7 +404,6 @@ export default function UserChat() {
               <p className="text-xs text-gray-500 mt-1">{insights.timeline || 'Varies'}</p>
             </div>
             
-            {/* Recommendations */}
             {insights.recommendations && insights.recommendations.length > 0 && (
               <div>
                 <p className="text-sm text-gray-600 mb-2">Key Recommendations</p>
