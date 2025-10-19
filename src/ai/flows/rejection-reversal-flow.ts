@@ -34,6 +34,12 @@ export const RejectionStrategyOutputSchema = z.object({
 });
 export type RejectionStrategyOutput = z.infer<typeof RejectionStrategyOutputSchema>;
 
+// Export a regular async function that calls the flow
+export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
+  return await generateRejectionStrategyFlow(input);
+}
+
+
 // Define the AI prompt using Genkit for structured output
 const rejectionReversalPrompt = ai.definePrompt({
   name: 'rejectionReversalPrompt',
@@ -58,8 +64,8 @@ Focus on addressing the likely root causes of the rejection, even if the officia
 `,
 });
 
-// Define the main flow
-export const generateRejectionStrategy = ai.defineFlow(
+// Define the main flow, but do not export it directly
+const generateRejectionStrategyFlow = ai.defineFlow(
   {
     name: 'generateRejectionStrategyFlow',
     inputSchema: RejectionStrategyInputSchema,
