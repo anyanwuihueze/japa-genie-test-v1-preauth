@@ -11,19 +11,14 @@ import {
   type RejectionStrategyOutput 
 } from '@/ai/schemas/rejection-reversal-schema';
 
-// RE-EXPORT the types so they can be imported from this file
-export type { RejectionStrategyInput, RejectionStrategyOutput };
-
 // Define the AI prompt
 const rejectionReversalPrompt = ai.definePrompt({
   name: 'rejectionReversalPrompt',
-  model: 'gemini-pro', // Switched to a model better for structured output
+  model: 'gemini-pro',
   input: { schema: RejectionStrategyInputSchema },
   output: { schema: RejectionStrategyOutputSchema },
   prompt: `
-You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. 
-A user has provided details of their visa rejection. Your task is to create a detailed, encouraging, and highly actionable comeback strategy.
-Return the response ONLY in the specified JSON format.
+You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. A user has provided details of their visa rejection. Your task is to create a detailed, encouraging, and highly actionable comeback strategy.
 
 User's situation:
 - Visa Type: {{{visaType}}}
@@ -38,17 +33,17 @@ End with a single sentence of encouragement and a call to action.
 
 Focus on addressing the likely root causes of the rejection, even if the official reason is vague. Provide practical advice that an applicant from Africa can use to strengthen their next application.
 
-Example of the required JSON output format:
+YOU MUST respond with valid JSON that exactly matches this structure:
 {
-  "introduction": "A rejection is not the end, but a chance to come back stronger!",
+  "introduction": "string - encouraging intro sentence",
   "strategy": [
     {
       "step": 1,
-      "headline": "Strengthen Your Financial Ties",
-      "details": "The reason 'lack of funds' often means lack of proof. You need to provide 6 months of bank statements showing a consistent, stable balance..."
+      "headline": "string - actionable headline",
+      "details": "string - detailed explanation"
     }
   ],
-  "conclusion": "With these steps, your next application will be much stronger. Let's get to work!"
+  "conclusion": "string - encouraging conclusion"
 }
 `,
 });
