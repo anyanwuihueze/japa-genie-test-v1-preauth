@@ -17,11 +17,13 @@ export type { RejectionStrategyInput, RejectionStrategyOutput };
 // Define the AI prompt
 const rejectionReversalPrompt = ai.definePrompt({
   name: 'rejectionReversalPrompt',
-  model: 'gemini-1.5-flash',
+  model: 'gemini-pro', // Switched to a model better for structured output
   input: { schema: RejectionStrategyInputSchema },
   output: { schema: RejectionStrategyOutputSchema },
   prompt: `
-You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. A user has provided details of their visa rejection. Your task is to create a detailed, encouraging, and highly actionable comeback strategy.
+You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. 
+A user has provided details of their visa rejection. Your task is to create a detailed, encouraging, and highly actionable comeback strategy.
+Return the response ONLY in the specified JSON format.
 
 User's situation:
 - Visa Type: {{{visaType}}}
@@ -35,19 +37,20 @@ Begin with a single sentence of encouragement.
 End with a single sentence of encouragement and a call to action.
 
 Focus on addressing the likely root causes of the rejection, even if the official reason is vague. Provide practical advice that an applicant from Africa can use to strengthen their next application.
+
+Example of the required JSON output format:
+{
+  "introduction": "A rejection is not the end, but a chance to come back stronger!",
+  "strategy": [
+    {
+      "step": 1,
+      "headline": "Strengthen Your Financial Ties",
+      "details": "The reason 'lack of funds' often means lack of proof. You need to provide 6 months of bank statements showing a consistent, stable balance..."
+    }
+  ],
+  "conclusion": "With these steps, your next application will be much stronger. Let's get to work!"
+}
 `,
-  config: {
-    safetySettings: [
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_NONE',
-      },
-    ],
-  },
 });
 
 // Define the Genkit flow (NOT exported)
@@ -66,7 +69,7 @@ const generateRejectionStrategyFlow = ai.defineFlow(
   }
 );
 
-// Export the async function
+// ONLY export the async function
 export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
   try {
     return await generateRejectionStrategyFlow(input);
