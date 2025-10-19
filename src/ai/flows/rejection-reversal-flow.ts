@@ -1,46 +1,20 @@
 'use server';
 /**
  * @fileOverview AI-powered visa rejection reversal strategy generator.
- *
- * This flow analyzes a user's visa rejection details and provides a structured,
- * step-by-step comeback strategy.
- *
- * - generateRejectionStrategy - A Genkit flow that returns a structured plan.
- * - RejectionStrategyInput - The Zod schema for the flow's input.
- * - RejectionStrategyOutput - The Zod schema for the flow's structured output.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { 
+  RejectionStrategyInputSchema, 
+  RejectionStrategyOutputSchema,
+  type RejectionStrategyInput,
+  type RejectionStrategyOutput 
+} from '@/ai/schemas/rejection-reversal-schema';
 
-export const RejectionStrategyInputSchema = z.object({
-  visaType: z.string().describe('The type of visa that was rejected (e.g., Student Visa, Work Permit).'),
-  destination: z.string().describe('The destination country for the visa application.'),
-  rejectionReason: z.string().optional().describe('The official reason for rejection, as stated in the letter from the embassy.'),
-  userBackground: z.string().describe("A brief summary of the user's profile and circumstances (e.g., profession, purpose of travel)."),
-});
-export type RejectionStrategyInput = z.infer<typeof RejectionStrategyInputSchema>;
+// RE-EXPORT the types so they can be imported from this file
+export type { RejectionStrategyInput, RejectionStrategyOutput };
 
-const StrategyStepSchema = z.object({
-  step: z.number().describe('The step number in the plan.'),
-  headline: z.string().describe('A short, actionable headline for the step.'),
-  details: z.string().describe('A detailed explanation of what to do in this step, including specific actions to take or documents to prepare.'),
-});
-
-export const RejectionStrategyOutputSchema = z.object({
-  introduction: z.string().describe('An encouraging introductory sentence for the user.'),
-  strategy: z.array(StrategyStepSchema).describe('A list of 3-5 concrete steps for the user to follow to strengthen their reapplication.'),
-  conclusion: z.string().describe('A final sentence of encouragement and a call to action.'),
-});
-export type RejectionStrategyOutput = z.infer<typeof RejectionStrategyOutputSchema>;
-
-// Export a regular async function that calls the flow
-export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
-  return await generateRejectionStrategyFlow(input);
-}
-
-
-// Define the AI prompt using Genkit for structured output
+// Define the AI prompt
 const rejectionReversalPrompt = ai.definePrompt({
   name: 'rejectionReversalPrompt',
   model: 'gemini-1.5-flash',
@@ -62,9 +36,21 @@ End with a single sentence of encouragement and a call to action.
 
 Focus on addressing the likely root causes of the rejection, even if the official reason is vague. Provide practical advice that an applicant from Africa can use to strengthen their next application.
 `,
+  config: {
+    safetySettings: [
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE',
+      },
+    ],
+  },
 });
 
-// Define the main flow, but do not export it directly
+// Define the Genkit flow (NOT exported)
 const generateRejectionStrategyFlow = ai.defineFlow(
   {
     name: 'generateRejectionStrategyFlow',
@@ -79,3 +65,13 @@ const generateRejectionStrategyFlow = ai.defineFlow(
     return output;
   }
 );
+
+// Export the async function
+export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
+  try {
+    return await generateRejectionStrategyFlow(input);
+  } catch (error) {
+    console.error('Error generating rejection strategy:', error);
+    throw new Error('Failed to generate rejection strategy. Please try again.');
+  }
+}
