@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,28 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Wand2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ReactMarkdown from 'react-markdown';
-import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal-flow';
+import { generateRejectionStrategy, RejectionStrategyInputSchema, RejectionStrategyOutput, type RejectionStrategyInput } from '@/ai/flows/rejection-reversal-flow';
 
-const formSchema = z.object({
-  visaType: z.string().min(1, 'Visa type is required.'),
-  destination: z.string().min(2, 'Destination country is required.'),
-  rejectionReason: z.string().optional(),
-  userBackground: z.string().min(30, 'Please provide a brief background (at least 30 characters).'),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = RejectionStrategyInput;
 
 export default function RejectionReversalClient() {
   const { toast } = useToast();
-  const [strategy, setStrategy] = useState<string | null>(null);
+  const [strategy, setStrategy] = useState<RejectionStrategyOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(RejectionStrategyInputSchema),
     defaultValues: {
       visaType: '',
       destination: '',
@@ -47,12 +38,8 @@ export default function RejectionReversalClient() {
     setStrategy(null);
 
     try {
-      const result = await generateRejectionStrategy({
-        ...data,
-        rejectionReason: data.rejectionReason || "No official reason provided.",
-      });
-
-      setStrategy(result.strategy);
+      const result = await generateRejectionStrategy(data);
+      setStrategy(result);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
       setError(errorMessage);
@@ -182,14 +169,25 @@ export default function RejectionReversalClient() {
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
-              <Sparkles className="text-primary" />
+              <Sparkles />
               Your Personalized Rejection Reversal Plan
             </CardTitle>
-            <CardDescription>Follow these steps to strengthen your next application.</CardDescription>
+            <CardDescription>{strategy.introduction}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm md:prose-base max-w-none dark:prose-invert prose-headings:text-primary">
-              <ReactMarkdown>{strategy}</ReactMarkdown>
+          <CardContent className="space-y-6">
+            {strategy.strategy.map((step) => (
+              <div key={step.step} className="flex items-start gap-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold flex-shrink-0 mt-1">
+                  {step.step}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-foreground">{step.headline}</h3>
+                  <p className="text-muted-foreground">{step.details}</p>
+                </div>
+              </div>
+            ))}
+             <div className="mt-6 border-t border-primary/20 pt-6">
+                <p className="text-center font-medium text-muted-foreground">{strategy.conclusion}</p>
             </div>
           </CardContent>
         </Card>

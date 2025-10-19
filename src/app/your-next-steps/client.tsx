@@ -1,34 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { plans } from '@/lib/plans';
-import { loadStripe } from '@stripe/stripe-js';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 export default function YourNextStepsClient() {
   const { user, signInWithGoogle, loading: authLoading } = useAuth();
-  const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleCheckout = async (plan: any) => {
+    // Check terms acceptance first
     if (!acceptedTerms) {
       alert('Please accept the Terms & Conditions before proceeding.');
       return;
     }
 
+    // Check if user is logged in
     if (!user) {
-      // If user is not logged in, prompt them to sign in.
-      // We can store the selected plan to redirect after login, but for now, we'll just sign them in.
       alert('Please sign in to continue.');
-      signInWithGoogle();
+      await signInWithGoogle();
       return;
     }
 
@@ -40,11 +35,16 @@ export default function YourNextStepsClient() {
         headers: {
           'Content-Type': 'application/json',
         },
-        // The API currently expects a structure without priceId/plan, let's adapt
-        // Or let's assume the API is updated to handle it. For now, we send what the API expects
-        // The current API in context doesn't use a priceId, it has a hardcoded price.
-        // I will follow the user's intent to build a dynamic flow.
+        body: JSON.stringify({
+          planName: plan.name,
+          planPrice: plan.price,
+          planDuration: plan.duration || plan.interval,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const { url, error } = await response.json();
 
@@ -52,14 +52,16 @@ export default function YourNextStepsClient() {
         throw new Error(error);
       }
 
-      if (url) {
-        router.push(url);
-      } else {
+      if (!url) {
         throw new Error('Stripe checkout URL not found.');
       }
-    } catch (error) {
+
+      // Use window.location for full page redirect to Stripe
+      window.location.href = url;
+      
+    } catch (error: any) {
       console.error('Error creating checkout session:', error);
-      alert('Failed to initiate payment. Please try again.');
+      alert(`Failed to initiate payment: ${error.message}`);
     } finally {
       setLoadingPlan(null);
     }
@@ -108,7 +110,7 @@ export default function YourNextStepsClient() {
                 variant="default"
                 className="w-full"
                 onClick={() => handleCheckout(plan)}
-                disabled={authLoading || loadingPlan === plan.name}
+                disabled={authLoading || loadingPlan === plan.name || !acceptedTerms}
               >
                 {loadingPlan === plan.name ? <Loader2 className="animate-spin" /> : plan.cta}
               </Button>
@@ -150,7 +152,7 @@ export default function YourNextStepsClient() {
                 variant={plan.name === 'Pro Plan' ? 'default' : 'outline'}
                 className="w-full"
                 onClick={() => handleCheckout(plan)}
-                disabled={authLoading || loadingPlan === plan.name}
+                disabled={authLoading || loadingPlan === plan.name || !acceptedTerms}
               >
                 {loadingPlan === plan.name ? <Loader2 className="animate-spin" /> : plan.cta}
               </Button>
@@ -158,28 +160,30 @@ export default function YourNextStepsClient() {
           ))}
         </div>
         
-        {/* Terms and Conditions Checkbox */}
+        {/* Terms and Conditions Checkbox - PLACED BEFORE BUTTONS */}
         <div className="max-w-md mx-auto space-y-4">
             <div className="flex items-start space-x-2 p-4 border rounded-md bg-white">
                 <Checkbox 
-                id="terms" 
-                checked={acceptedTerms} 
-                onCheckedChange={(c) => setAcceptedTerms(!!c)} 
-                className="mt-1" 
+                  id="terms" 
+                  checked={acceptedTerms} 
+                  onCheckedChange={(c) => setAcceptedTerms(!!c)} 
+                  className="mt-1" 
                 />
                 <label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
-                I agree to the{' '}
-                <Link href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    Terms & Conditions
-                </Link>
-                {' '}and{' '}
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                </a>.
+                  I agree to the{' '}
+                  <Link href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Terms & Conditions
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Privacy Policy
+                  </Link>.
                 </label>
             </div>
 
-            <p className="text-xs text-center text-gray-500">You must accept the terms to proceed to payment. Secure payments by Stripe.</p>
+            <p className="text-xs text-center text-gray-500">
+              You must accept the terms to proceed to payment. Secure payments by Stripe.
+            </p>
         </div>
 
       </div>
