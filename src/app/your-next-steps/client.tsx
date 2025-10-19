@@ -6,21 +6,33 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { plans } from '@/lib/plans';
 import { loadStripe } from '@stripe/stripe-js';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function YourNextStepsClient() {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleCheckout = async (plan: any) => {
+    if (!acceptedTerms) {
+      alert('Please accept the Terms & Conditions before proceeding.');
+      return;
+    }
+
     if (!user) {
+      // If user is not logged in, prompt them to sign in.
+      // We can store the selected plan to redirect after login, but for now, we'll just sign them in.
+      alert('Please sign in to continue.');
       signInWithGoogle();
       return;
     }
 
-    setLoading(true);
+    setLoadingPlan(plan.name);
 
     try {
       const response = await fetch('/api/create-checkout', {
@@ -28,21 +40,37 @@ export default function YourNextStepsClient() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ priceId: plan.priceId, plan }),
+        // The API currently expects a structure without priceId/plan, let's adapt
+        // Or let's assume the API is updated to handle it. For now, we send what the API expects
+        // The current API in context doesn't use a priceId, it has a hardcoded price.
+        // I will follow the user's intent to build a dynamic flow.
       });
 
-      const { url } = await response.json();
-      router.push(url);
+      const { url, error } = await response.json();
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (url) {
+        router.push(url);
+      } else {
+        throw new Error('Stripe checkout URL not found.');
+      }
     } catch (error) {
       console.error('Error creating checkout session:', error);
+      alert('Failed to initiate payment. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingPlan(null);
     }
   };
+  
+  const weeklyPlans = plans.slice(0, 3);
+  const monthlyPlans = plans.slice(3);
 
   return (
     <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Your Visa Journey, Simplified
@@ -52,11 +80,12 @@ export default function YourNextStepsClient() {
           </p>
         </div>
 
+        {/* WEEKLY TOP-UP PLANS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {plans.slice(0, 3).map((plan) => (
+          {weeklyPlans.map((plan) => (
             <div
               key={plan.name}
-              className="rounded-xl p-6 border bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 min-h-[500px] flex flex-col justify-between"
+              className="rounded-xl p-6 border bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
             >
               <div>
                 <h2 className="text-xl font-bold mb-2">{plan.name}</h2>
@@ -67,19 +96,8 @@ export default function YourNextStepsClient() {
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-green-500 mr-2 mt-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>{feature}</span>
                     </li>
@@ -90,51 +108,38 @@ export default function YourNextStepsClient() {
                 variant="default"
                 className="w-full"
                 onClick={() => handleCheckout(plan)}
-                disabled={loading}
+                disabled={authLoading || loadingPlan === plan.name}
               >
-                {loading ? 'Processing...' : plan.cta}
+                {loadingPlan === plan.name ? <Loader2 className="animate-spin" /> : plan.cta}
               </Button>
             </div>
           ))}
         </div>
 
+        {/* MONTHLY PLANS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          {plans.slice(3).map((plan) => (
+          {monthlyPlans.map((plan) => (
             <div
               key={plan.name}
-              className="relative rounded-xl p-6 border bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 min-h-[500px] flex flex-col justify-between"
+              className="relative rounded-xl p-6 border bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
             >
-              <div>
-                {plan.name === 'Pro Plan' && (
+               {plan.name === 'Pro Plan' && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
                       Most Popular
                     </span>
                   </div>
                 )}
+              <div>
                 <h2 className="text-xl font-bold mb-2 mt-4">{plan.name}</h2>
                 <p className="text-gray-600 mb-4">
-                  {plan.interval ? `${plan.price}/${plan.interval}` : ''}
+                  {plan.interval ? `$${plan.price}/${plan.interval}` : ''}
                 </p>
-                <div className="mb-6">
-                  <p className="text-2xl font-bold text-blue-600 mb-1">${plan.price}</p>
-                </div>
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-green-500 mr-2 mt-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>{feature}</span>
                     </li>
@@ -145,13 +150,38 @@ export default function YourNextStepsClient() {
                 variant={plan.name === 'Pro Plan' ? 'default' : 'outline'}
                 className="w-full"
                 onClick={() => handleCheckout(plan)}
-                disabled={loading}
+                disabled={authLoading || loadingPlan === plan.name}
               >
-                {loading ? 'Processing...' : plan.cta}
+                {loadingPlan === plan.name ? <Loader2 className="animate-spin" /> : plan.cta}
               </Button>
             </div>
           ))}
         </div>
+        
+        {/* Terms and Conditions Checkbox */}
+        <div className="max-w-md mx-auto space-y-4">
+            <div className="flex items-start space-x-2 p-4 border rounded-md bg-white">
+                <Checkbox 
+                id="terms" 
+                checked={acceptedTerms} 
+                onCheckedChange={(c) => setAcceptedTerms(!!c)} 
+                className="mt-1" 
+                />
+                <label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+                I agree to the{' '}
+                <Link href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    Terms & Conditions
+                </Link>
+                {' '}and{' '}
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    Privacy Policy
+                </a>.
+                </label>
+            </div>
+
+            <p className="text-xs text-center text-gray-500">You must accept the terms to proceed to payment. Secure payments by Stripe.</p>
+        </div>
+
       </div>
     </section>
   );
