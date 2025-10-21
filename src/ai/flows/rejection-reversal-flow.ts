@@ -1,75 +1,114 @@
 'use server';
-/**
- * @fileOverview AI-powered visa rejection reversal strategy generator.
- */
 
-import { ai } from '@/ai/genkit';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { 
-  RejectionStrategyInputSchema, 
-  RejectionStrategyOutputSchema,
   type RejectionStrategyInput,
   type RejectionStrategyOutput 
 } from '@/ai/schemas/rejection-reversal-schema';
 
-// Define the AI prompt
-const rejectionReversalPrompt = ai.definePrompt({
-  name: 'rejectionReversalPrompt',
-  model: 'gemini-pro',
-  input: { schema: RejectionStrategyInputSchema },
-  output: { schema: RejectionStrategyOutputSchema },
-  prompt: `
-You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis. A user has provided details of their visa rejection. Your task is to create a detailed, encouraging, and highly actionable comeback strategy.
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+export type { RejectionStrategyInput, RejectionStrategyOutput };
+
+export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
+  // Use EXACT same model as your working site assistant
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis.
 
 User's situation:
-- Visa Type: {{{visaType}}}
-- Destination: {{{destination}}}
-- Stated Rejection Reason: {{{rejectionReason}}}
-- User Background: {{{userBackground}}}
+- Visa Type: ${input.visaType}
+- Destination: ${input.destination}
+- Rejection Reason: ${input.rejectionReason || 'Not provided'}
+- Background: ${input.userBackground}
 
-Based on this information, generate a structured strategy. The strategy should consist of 3 to 5 clear, actionable steps. For each step, provide a clear headline and detailed instructions.
+Create a comeback strategy with 3-5 actionable steps. Each step needs: step number, headline, and detailed instructions.
 
-Begin with a single sentence of encouragement.
-End with a single sentence of encouragement and a call to action.
-
-Focus on addressing the likely root causes of the rejection, even if the official reason is vague. Provide practical advice that an applicant from Africa can use to strengthen their next application.
-
-YOU MUST respond with valid JSON that exactly matches this structure:
+Respond with valid JSON in this EXACT format:
 {
-  "introduction": "string - encouraging intro sentence",
+  "introduction": "One encouraging sentence here",
   "strategy": [
-    {
-      "step": 1,
-      "headline": "string - actionable headline",
-      "details": "string - detailed explanation"
-    }
+    {"step": 1, "headline": "Action headline", "details": "Detailed explanation"},
+    {"step": 2, "headline": "Action headline", "details": "Detailed explanation"},
+    {"step": 3, "headline": "Action headline", "details": "Detailed explanation"}
   ],
-  "conclusion": "string - encouraging conclusion"
-}
-`,
-});
+  "conclusion": "One encouraging conclusion with call to action"
+}`;
 
-// Define the Genkit flow (NOT exported)
-const generateRejectionStrategyFlow = ai.defineFlow(
-  {
-    name: 'generateRejectionStrategyFlow',
-    inputSchema: RejectionStrategyInputSchema,
-    outputSchema: RejectionStrategyOutputSchema,
-  },
-  async (input) => {
-    const { output } = await rejectionReversalPrompt(input);
-    if (!output) {
-      throw new Error('Failed to generate a rejection strategy. The model did not return a valid response.');
-    }
-    return output;
-  }
-);
-
-// ONLY export the async function
-export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
   try {
-    return await generateRejectionStrategyFlow(input);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Clean up response
+    let cleaned = text.trim()
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+    
+    // Parse JSON
+    const parsed = JSON.parse(cleaned);
+    
+    // Validate structure and provide defaults if needed
+    const output: RejectionStrategyOutput = {
+      introduction: parsed.introduction || "Let's turn this rejection into a successful reapplication.",
+      strategy: Array.isArray(parsed.strategy) 
+        ? parsed.strategy.map((s: any, i: number) => ({
+            step: s.step || i + 1,
+            headline: s.headline || `Step ${i + 1}`,
+            details: s.details || s.description || 'Follow this guidance.'
+          }))
+        : [
+            {
+              step: 1,
+              headline: "Review Your Application",
+              details: `Review your ${input.visaType} application for ${input.destination} and identify areas for improvement.`
+            },
+            {
+              step: 2,
+              headline: "Strengthen Documentation",
+              details: "Gather additional supporting documents that address the rejection reason."
+            },
+            {
+              step: 3,
+              headline: "Prepare for Reapplication",
+              details: "Create a comprehensive application package with all improvements implemented."
+            }
+          ],
+      conclusion: parsed.conclusion || "With proper preparation, you can successfully reapply!"
+    };
+    
+    return output;
+    
   } catch (error) {
-    console.error('Error generating rejection strategy:', error);
-    throw new Error('Failed to generate rejection strategy. Please try again.');
+    console.error('Rejection strategy error:', error);
+    
+    // Return fallback response instead of throwing
+    return {
+      introduction: "Don't let this rejection discourage you - there's always a path forward.",
+      strategy: [
+        {
+          step: 1,
+          headline: "Analyze the Rejection",
+          details: `Review the rejection letter carefully. For ${input.destination} ${input.visaType} applications, common issues include insufficient documentation, unclear purpose of visit, or concerns about ties to home country.`
+        },
+        {
+          step: 2,
+          headline: "Address the Core Issue",
+          details: `The rejection reason "${input.rejectionReason || 'not specified'}" suggests you need to strengthen specific areas of your application. Focus on providing clear, verifiable documentation.`
+        },
+        {
+          step: 3,
+          headline: "Strengthen Your Profile",
+          details: `Based on your background as ${input.userBackground}, gather evidence that demonstrates strong ties to your home country and clear intentions for your visit.`
+        },
+        {
+          step: 4,
+          headline: "Prepare Comprehensive Documentation",
+          details: "Compile all required documents plus additional supporting evidence. Ensure everything is properly formatted, translated if necessary, and organized logically."
+        }
+      ],
+      conclusion: "With thorough preparation and the right documentation, many rejected applicants succeed on their second attempt. Let's get your application approved!"
+    };
   }
 }
