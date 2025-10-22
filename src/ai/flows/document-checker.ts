@@ -10,8 +10,8 @@
  * - DocumentCheckerOutput - The return type for the documentChecker function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const DocumentCheckerInputSchema = z.object({
   documentDataUri: z
@@ -33,9 +33,9 @@ export async function documentChecker(input: DocumentCheckerInput): Promise<Docu
 
 const documentCheckerPrompt = ai.definePrompt({
   name: 'documentCheckerPrompt',
-  model: 'gemini-2.0-flash',
-  input: {schema: DocumentCheckerInputSchema},
-  output: {schema: DocumentCheckerOutputSchema},
+  model: 'gemini-1.5-flash',  // Fixed from 'gemini-2.0-flash'
+  input: { schema: DocumentCheckerInputSchema },
+  output: { schema: DocumentCheckerOutputSchema },
   prompt: `You are an AI assistant that checks visa application documents for errors.
 
 You will receive the document as a data URI. Extract the text from the document and check for any missing or incorrectly formatted information.
@@ -52,7 +52,7 @@ const documentCheckerFlow = ai.defineFlow(
     outputSchema: DocumentCheckerOutputSchema,
   },
   async input => {
-    const {output} = await documentCheckerPrompt(input);
+    const { output } = await documentCheckerPrompt(input);
     return output!;
   }
 );

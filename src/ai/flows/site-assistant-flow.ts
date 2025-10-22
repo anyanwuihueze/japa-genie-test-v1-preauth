@@ -1,30 +1,42 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+'use server';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
-interface SiteAssistantInput {
-  question: string;
-}
+const SiteAssistantInputSchema = z.object({
+  question: z.string(),
+});
+export type SiteAssistantInput = z.infer<typeof SiteAssistantInputSchema>;
 
-interface SiteAssistantOutput {
-  answer: string;
-}
+const SiteAssistantOutputSchema = z.object({
+  answer: z.string(),
+});
+export type SiteAssistantOutput = z.infer<typeof SiteAssistantOutputSchema>;
 
 export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssistantOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-  const prompt = `You are an enthusiastic sales assistant for Japa Genie, an AI-powered visa guidance platform. Be warm, energetic, and guide users toward signing up.
-
-User Question: "${input.question}"
-
-Respond naturally and persuasively to move them toward using Japa Genie's services.`;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return { answer: response.text() };
-  } catch (error) {
-    console.error('Site assistant error:', error);
-    return { answer: "I'm having trouble right now. Please try our main chat for full assistance!" };
-  }
+  return siteAssistantFlow(input);
 }
+
+const siteAssistantPrompt = ai.definePrompt({
+  name: 'siteAssistantPrompt',
+  model: 'gemini-1.5-flash',
+  input: { schema: SiteAssistantInputSchema },
+  output: { schema: SiteAssistantOutputSchema },
+  prompt: `You are an enthusiastic sales assistant for Japa Genie, an AI-powered visa guidance platform. Be warm, energetic, and guide users toward signing up.
+
+User Question: "{{question}}"
+
+Respond naturally and persuasively to move them toward using Japa Genie's services.`,
+});
+
+const siteAssistantFlow = ai.defineFlow(
+  {
+    name: 'siteAssistantFlow',
+    inputSchema: SiteAssistantInputSchema,
+    outputSchema: SiteAssistantOutputSchema,
+  },
+  async input => {
+    const { output } = await siteAssistantPrompt(input);
+    return output!;
+  }
+);
