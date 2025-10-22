@@ -53,7 +53,9 @@ export default function InterviewClient() {
 
     try {
       const data = await generateInterviewQuestion({
-        ...values,
+        visaType: values.visaType,
+        destination: values.destination,
+        userBackground: values.userBackground,
         previousQuestions: [],
       });
       setCurrentQuestion(data.question);
@@ -87,7 +89,9 @@ export default function InterviewClient() {
       const formData = form.getValues();
 
       const data = await generateInterviewQuestion({
-        ...formData,
+        visaType: formData.visaType,
+        destination: formData.destination,
+        userBackground: formData.userBackground,
         previousQuestions,
       });
 
