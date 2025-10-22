@@ -11,10 +11,17 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 export type { RejectionStrategyInput, RejectionStrategyOutput };
 
 export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
-  // Use EXACT same model as your working site assistant
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  try {
+    // Match the working chat route configuration EXACTLY
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2000
+      }
+    });
 
-  const prompt = `You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis.
+    const prompt = `You are Japa Genie, an expert immigration consultant specializing in visa rejection analysis.
 
 User's situation:
 - Visa Type: ${input.visaType}
@@ -24,7 +31,9 @@ User's situation:
 
 Create a comeback strategy with 3-5 actionable steps. Each step needs: step number, headline, and detailed instructions.
 
-Respond with valid JSON in this EXACT format:
+CRITICAL: Respond with ONLY valid JSON. No markdown, no code blocks, no explanations. Just pure JSON.
+
+Format:
 {
   "introduction": "One encouraging sentence here",
   "strategy": [
@@ -35,80 +44,78 @@ Respond with valid JSON in this EXACT format:
   "conclusion": "One encouraging conclusion with call to action"
 }`;
 
-  try {
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = result.response;
     const text = response.text();
     
-    // Clean up response
-    let cleaned = text.trim()
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
+    console.log('Raw AI response:', text);
+    
+    // Clean up response more aggressively
+    let cleaned = text
+      .trim()
+      .replace(/```json\n?/gi, '')
+      .replace(/```\n?/g, '')
+      .replace(/^[^{]*/, '') // Remove any text before first {
+      .replace(/[^}]*$/, '') // Remove any text after last }
       .trim();
+    
+    console.log('Cleaned response:', cleaned);
     
     // Parse JSON
     const parsed = JSON.parse(cleaned);
     
-    // Validate structure and provide defaults if needed
+    // Validate and structure output
+    if (!parsed.introduction || !Array.isArray(parsed.strategy)) {
+      throw new Error('Invalid AI response structure');
+    }
+    
     const output: RejectionStrategyOutput = {
-      introduction: parsed.introduction || "Let's turn this rejection into a successful reapplication.",
-      strategy: Array.isArray(parsed.strategy) 
-        ? parsed.strategy.map((s: any, i: number) => ({
-            step: s.step || i + 1,
-            headline: s.headline || `Step ${i + 1}`,
-            details: s.details || s.description || 'Follow this guidance.'
-          }))
-        : [
-            {
-              step: 1,
-              headline: "Review Your Application",
-              details: `Review your ${input.visaType} application for ${input.destination} and identify areas for improvement.`
-            },
-            {
-              step: 2,
-              headline: "Strengthen Documentation",
-              details: "Gather additional supporting documents that address the rejection reason."
-            },
-            {
-              step: 3,
-              headline: "Prepare for Reapplication",
-              details: "Create a comprehensive application package with all improvements implemented."
-            }
-          ],
+      introduction: parsed.introduction,
+      strategy: parsed.strategy.map((s: any, i: number) => ({
+        step: typeof s.step === 'number' ? s.step : i + 1,
+        headline: s.headline || `Step ${i + 1}`,
+        details: s.details || s.description || 'Follow this guidance.'
+      })),
       conclusion: parsed.conclusion || "With proper preparation, you can successfully reapply!"
     };
     
     return output;
     
   } catch (error) {
-    console.error('Rejection strategy error:', error);
+    console.error('❌ Rejection strategy generation failed:', error);
+    console.error('Error details:', error instanceof Error ? error.message : error);
     
-    // Return fallback response instead of throwing
+    // Return robust fallback response
     return {
       introduction: "Don't let this rejection discourage you - there's always a path forward.",
       strategy: [
         {
           step: 1,
-          headline: "Analyze the Rejection",
-          details: `Review the rejection letter carefully. For ${input.destination} ${input.visaType} applications, common issues include insufficient documentation, unclear purpose of visit, or concerns about ties to home country.`
+          headline: "Analyze the Rejection Letter",
+          details: `Carefully review the official rejection letter for your ${input.destination} ${input.visaType}. Identify the specific reasons cited by the visa officer. Common issues include insufficient documentation, unclear purpose of visit, or concerns about ties to home country.`
         },
         {
           step: 2,
-          headline: "Address the Core Issue",
-          details: `The rejection reason "${input.rejectionReason || 'not specified'}" suggests you need to strengthen specific areas of your application. Focus on providing clear, verifiable documentation.`
+          headline: "Address the Core Issues",
+          details: `The rejection reason "${input.rejectionReason || 'not specified'}" indicates specific weaknesses in your application. Focus on gathering evidence and documentation that directly addresses these concerns.`
         },
         {
           step: 3,
-          headline: "Strengthen Your Profile",
-          details: `Based on your background as ${input.userBackground}, gather evidence that demonstrates strong ties to your home country and clear intentions for your visit.`
+          headline: "Strengthen Your Documentation",
+          details: `Based on your background: "${input.userBackground}", compile comprehensive supporting documents. This includes proof of financial stability, ties to home country, employment/study records, and purpose of visit documentation.`
         },
         {
           step: 4,
-          headline: "Prepare Comprehensive Documentation",
-          details: "Compile all required documents plus additional supporting evidence. Ensure everything is properly formatted, translated if necessary, and organized logically."
+          headline: "Prepare a Stronger Application",
+          details: "Organize all documents logically. Include a cover letter that acknowledges the previous rejection and explains how you've addressed each concern. Ensure all documents are properly formatted, translated if necessary, and current."
+        },
+        {
+          step: 5,
+          headline: "Consider Professional Review",
+          details: "Before reapplying, have your complete application package reviewed by an experienced immigration consultant. They can identify potential red flags and suggest improvements you might have missed."
         }
       ],
-      conclusion: "With thorough preparation and the right documentation, many rejected applicants succeed on their second attempt. Let's get your application approved!"
+      conclusion: "Many applicants succeed on their second attempt with proper preparation. Take your time, address each concern thoroughly, and reapply with confidence!"
     };
   }
 }

@@ -25,8 +25,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="font-sans antialiased h-full bg-background text-foreground m-0 p-0">
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <AuthProvider>
           <LayoutSwitcher>{children}</LayoutSwitcher>
           <Toaster />
