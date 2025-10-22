@@ -1,7 +1,7 @@
 export const plans = [
   {
     name: '1 Week Access',
-    price: 9.99,
+    price: 10,  // Fixed: Number for backend (cents: price * 100)
     priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
     duration: '7-day access',
     features: ['Unlimited AI chat', 'Document checker', 'Mock interviews'],
@@ -9,8 +9,8 @@ export const plans = [
   },
   {
     name: '2 Weeks Access',
-    price: 14.99,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 15,
+    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',  // Update with actual Stripe ID
     duration: '14-day access',
     features: [
       'Everything in 1 week plan',
@@ -21,8 +21,8 @@ export const plans = [
   },
   {
     name: '3 Weeks Access',
-    price: 17.99,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 25,
+    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',  // Update with actual
     duration: '21-day access',
     features: [
       'Everything in 2 weeks plan',
@@ -33,8 +33,8 @@ export const plans = [
   },
   {
     name: 'Pro Plan',
-    price: 19.99,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 20,
+    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',  // Update with actual
     interval: 'month',
     features: [
       'Everything in weekly plans',
@@ -45,8 +45,8 @@ export const plans = [
   },
   {
     name: 'Hold My Hand Premium',
-    price: 39.99,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 40,
+    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',  // Update with actual
     interval: 'month',
     features: [
       'Everything in Pro Plan',

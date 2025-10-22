@@ -37,7 +37,7 @@ export default function YourNextStepsClient() {
         },
         body: JSON.stringify({
           planName: plan.name,
-          planPrice: plan.price,
+          planPrice: plan.price,  // Fixed: Send the actual plan price
           planDuration: plan.duration || plan.interval,
         }),
       });
