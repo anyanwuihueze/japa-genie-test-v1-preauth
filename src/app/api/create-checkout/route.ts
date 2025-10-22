@@ -11,6 +11,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const body = await request.json();
+    const { planName, planPrice, planDuration } = body;
+
+    if (!planPrice) {
+      return NextResponse.json({ error: 'Plan price required' }, { status: 400 });
+    }
+
+    const unitAmount = planPrice * 100;  // Convert to cents
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -18,10 +27,10 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Premium Visa Guidance',
-              description: 'Unlimited wishes + personalized visa roadmap',
+              name: planName,
+              description: planDuration,
             },
-            unit_amount: 2900, // $29.00
+            unit_amount: unitAmount,  // Dynamic price
           },
           quantity: 1,
         },
@@ -33,7 +42,6 @@ export async function POST(request: NextRequest) {
       customer_email: user.email,
     })
 
-    // Return both sessionId and checkout URL
     return NextResponse.json({ 
       sessionId: session.id,
       url: session.url

@@ -27,27 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    console.log('✅ AuthProvider mounted')
-    
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📱 Initial session:', session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
+    // onAuthStateChange handles the initial session check automatically.
+    // We don't need a separate getSession() call, which was causing a race condition.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔔 Auth event:', event)
-      console.log('📱 Session:', session)
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
+    // The cleanup function unsubscribes from the listener when the component unmounts.
     return () => {
-      console.log('❌ AuthProvider unmounted')
       subscription.unsubscribe()
     }
   }, [])
