@@ -5,76 +5,68 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
-    const { question, aiResponse } = await request.json();
-    console.log('Insights API called for:', question);
-    
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const body = await request.json();
+    const { question, aiResponse } = body;
 
-    const prompt = `You are an expert immigration analyst. Analyze this visa consultation and generate strategic insights.
+    if (!question) {
+      return NextResponse.json({ error: 'Question is required' }, { status: 400 });
+    }
 
-USER QUESTION: "${question}"
-AI RESPONSE: "${aiResponse}"
+    const prompt = `Analyze this visa question and provide insights in JSON format.
 
-Generate insights in this EXACT JSON format:
+Question: "${question}"
+AI Response: "${aiResponse || ''}"
+
+Return ONLY valid JSON with this structure:
 {
-  "category": "Country Immigration (e.g., Spanish Immigration, Japanese Immigration, etc.)",
-  "confidence": [number 75-95 based on response quality],
-  "recommendations": [
-    "Specific actionable step 1",
-    "Specific actionable step 2", 
-    "Specific actionable step 3",
-    "Specific actionable step 4"
-  ],
-  "timeline": "X-Y months (realistic estimate)",
-  "difficulty": "Low/Moderate/High based on requirements"
-}
+  "category": "Work Visa" | "Student Visa" | "Tourist Visa" | "Other",
+  "confidence": 0.85,
+  "difficulty": "Low" | "Medium" | "High",
+  "timeline": "1–3 months" | "4–6 months" | "6–12 months" | "12+ months",
+  "recommendations": ["action 1", "action 2", "action 3"]
+}`;
 
-ANALYSIS RULES:
-- Extract the target country from question/response
-- Confidence should reflect visa complexity (simple tourist=90+, complex work visa=75-85)
-- Recommendations must be SPECIFIC actions, not generic advice
-- Timeline should be realistic for that country's processing
-- Difficulty based on document requirements, language needs, sponsorship needs
-
-IMPORTANT: Return ONLY the JSON object, no other text.`;
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash",
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 500
+      }
+    });
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text().trim();
+    let text = result.response.text().trim();
     
-    // Clean up response - remove any markdown formatting
-    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Clean JSON response
+    text = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
     
-    try {
-      const insights = JSON.parse(text);
-      console.log('Generated dynamic insights:', insights);
-      return NextResponse.json(insights);
-    } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      console.error('Raw AI response:', text);
-      
-      // Fallback insights if JSON parsing fails
-      const fallbackInsights = {
-        category: "Immigration Analysis",
-        confidence: 80,
-        recommendations: [
-          "Research official government requirements",
-          "Prepare required documentation early",
-          "Consider professional consultation",
-          "Check current processing times"
-        ],
-        timeline: "Variable",
-        difficulty: "Moderate"
-      };
-      
-      return NextResponse.json(fallbackInsights);
-    }
+    const parsed = JSON.parse(text);
     
-  } catch (error) {
-    console.error('Insights API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate insights' }, 
-      { status: 500 }
-    );
+    // Validate and return
+    return NextResponse.json({
+      category: parsed.category || 'Other',
+      confidence: parsed.confidence || 0.7,
+      difficulty: parsed.difficulty || 'Medium',
+      timeline: parsed.timeline || '4–6 months',
+      recommendations: Array.isArray(parsed.recommendations) 
+        ? parsed.recommendations.slice(0, 3) 
+        : ['Research official requirements', 'Prepare documentation', 'Consult an expert']
+    });
+
+  } catch (error: any) {
+    console.error('Insights error:', error);
+    
+    // Return fallback insights
+    return NextResponse.json({
+      category: 'Other',
+      confidence: 0.5,
+      difficulty: 'Medium',
+      timeline: '4–6 months',
+      recommendations: [
+        'Research official visa requirements',
+        'Prepare required documentation',
+        'Consider consulting an immigration expert'
+      ]
+    });
   }
 }

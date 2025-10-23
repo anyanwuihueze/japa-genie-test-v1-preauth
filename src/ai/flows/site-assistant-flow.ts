@@ -1,42 +1,30 @@
-'use server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const SiteAssistantInputSchema = z.object({
-  question: z.string(),
-});
-export type SiteAssistantInput = z.infer<typeof SiteAssistantInputSchema>;
-
-const SiteAssistantOutputSchema = z.object({
-  answer: z.string(),
-});
-export type SiteAssistantOutput = z.infer<typeof SiteAssistantOutputSchema>;
-
-export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssistantOutput> {
-  return siteAssistantFlow(input);
+interface SiteAssistantInput {
+  question: string;
 }
 
-const siteAssistantPrompt = ai.definePrompt({
-  name: 'siteAssistantPrompt',
-  model: 'gemini-1.5-flash',
-  input: { schema: SiteAssistantInputSchema },
-  output: { schema: SiteAssistantOutputSchema },
-  prompt: `You are an enthusiastic sales assistant for Japa Genie, an AI-powered visa guidance platform. Be warm, energetic, and guide users toward signing up.
+interface SiteAssistantOutput {
+  answer: string;
+}
 
-User Question: "{{question}}"
+export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssistantOutput> {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-Respond naturally and persuasively to move them toward using Japa Genie's services.`,
-});
+  const prompt = `You are an enthusiastic sales assistant for Japa Genie, an AI-powered visa guidance platform. Be warm, energetic, and guide users toward signing up.
 
-const siteAssistantFlow = ai.defineFlow(
-  {
-    name: 'siteAssistantFlow',
-    inputSchema: SiteAssistantInputSchema,
-    outputSchema: SiteAssistantOutputSchema,
-  },
-  async input => {
-    const { output } = await siteAssistantPrompt(input);
-    return output!;
+User Question: "${input.question}"
+
+Respond naturally and persuasively to move them toward using Japa Genie's services.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return { answer: response.text() };
+  } catch (error) {
+    console.error('Site assistant error:', error);
+    return { answer: "Hi! I'm the Japa Genie site assistant. I can answer questions about our services, features, and pricing. What would you like to know?" };
   }
-);
+}

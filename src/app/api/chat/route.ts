@@ -1,20 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/lib/supabase/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { visaChatAssistant } from '@/ai/flows/visa-chat-assistant';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: 'Please sign in', needsAuth: true },
-      { status: 401 }
-    );
+  // Parse request body ONCE
+  const body = await request.json();
+  const { question, wishCount, conversationHistory = [] } = body;
+  
+  if (!question?.trim()) {
+    return NextResponse.json({ error: 'Question is required' }, { status: 400 });
   }
 
+  // VISITOR MODE (No Auth)
+  if (authError || !user) {
+    try {
+      const result = await visaChatAssistant({
+        question,
+        wishCount: wishCount || 1,
+        conversationHistory, // NOW receives history from frontend
+        isSignedIn: false,
+      });
+
+      return NextResponse.json({
+        answer: result.answer,
+        questionsRemaining: null,
+        questionsUsed: 0,
+        questionsLimit: 3,
+        subscriptionTier: 'visitor',
+        success: true
+      });
+    } catch (error) {
+      console.error('Visitor chat error:', error);
+      return NextResponse.json({
+        answer: "I'm having trouble connecting right now. But I'm Japa Genie—here to help with visa questions. Try asking about France, Canada, UK visas!",
+        success: true
+      });
+    }
+  }
+
+  // AUTHENTICATED MODE
   let profile = await supabase
     .from('user_profiles')
     .select('*')
@@ -24,22 +51,20 @@ export async function POST(request: NextRequest) {
   if (!profile.data) {
     const { data: newProfile } = await supabase
       .from('user_profiles')
-      .insert({
-        id: user.id,
-        email: user.email,
-        subscription_tier: 'free',
-        wishes_used: 0,
-        wishes_limit: 3
+      .insert({ 
+        id: user.id, 
+        email: user.email, 
+        subscription_tier: 'free', 
+        wishes_used: 0, 
+        wishes_limit: 3 
       })
       .select()
       .single();
     profile.data = newProfile;
   }
 
-  const { data: canAsk } = await supabase.rpc('can_ask_question', {
-    user_uuid: user.id
-  });
-
+  // Check wish limit for free users
+  const { data: canAsk } = await supabase.rpc('can_ask_question', { user_uuid: user.id });
   if (!canAsk) {
     return NextResponse.json(
       {
@@ -53,11 +78,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { question, wishCount } = await request.json();
-  if (!question?.trim()) {
-    return NextResponse.json({ error: 'Question is required' }, { status: 400 });
-  }
-
+  // Get conversation history from database
   const { data: history } = await supabase
     .from('messages')
     .select('role, content, created_at')
@@ -66,70 +87,82 @@ export async function POST(request: NextRequest) {
     .order('created_at', { ascending: true })
     .limit(15);
 
+  // Save user message
   const { data: userMessage } = await supabase
     .from('messages')
     .insert({ user_id: user.id, role: 'user', content: question })
     .select()
     .single();
 
-  const contextMessages = (history || [])
-    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-    .join('\n');
+  // Format conversation history for visa-chat-assistant
+  const formattedHistory = (history || []).map(msg => ({
+    role: msg.role as 'user' | 'assistant',
+    content: msg.content
+  }));
 
-  const fullPrompt = `You are Japa Genie, a helpful visa assistant specializing in helping people relocate internationally.
+  // Get user profile data for context
+  const userContext = {
+    name: user.user_metadata?.name || user.email?.split('@')[0],
+    country: profile.data.country || undefined,
+    destination: profile.data.destination || undefined,
+    profession: profile.data.profession || undefined,
+    visaType: profile.data.visa_type || undefined,
+  };
 
-User Profile:
-- Email: ${user.email}
-- Subscription: ${profile.data.subscription_tier}
-- Wishes used: ${profile.data.wishes_used}/${profile.data.wishes_limit}
-- Current wish: ${wishCount}
+  try {
+    // Call the powerful visa-chat-assistant
+    const result = await visaChatAssistant({
+      question,
+      wishCount: wishCount || 1,
+      conversationHistory: formattedHistory,
+      userContext,
+      isSignedIn: true,
+    });
 
-${contextMessages ? `Previous conversation:\n${contextMessages}\n\n` : ''}
+    const aiResponse = result.answer;
 
-Current question: ${question}
+    // Save assistant message
+    const { data: assistantMessage } = await supabase
+      .from('messages')
+      .insert({ 
+        user_id: user.id, 
+        role: 'assistant', 
+        content: aiResponse, 
+        model: 'gemini-2.0-flash-exp' 
+      })
+      .select()
+      .single();
 
-Provide helpful, accurate visa guidance. Remember the context of our conversation.`;
-
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1000
+    // Increment wish count for free users
+    if (profile.data.subscription_tier === 'free') {
+      await supabase.rpc('increment_question_count', { user_uuid: user.id });
     }
-  });
 
-  const result = await model.generateContent(fullPrompt);
-  const aiResponse = await result.response.text();
+    const updatedWishesUsed = profile.data.wishes_used + 
+      (profile.data.subscription_tier === 'free' ? 1 : 0);
+    const wishesRemaining = profile.data.subscription_tier === 'free' 
+      ? profile.data.wishes_limit - updatedWishesUsed 
+      : null;
 
-  const { data: assistantMessage } = await supabase
-    .from('messages')
-    .insert({
-      user_id: user.id,
-      role: 'assistant',
-      content: aiResponse,
-      model: 'gemini-2.0-flash'
-    })
-    .select()
-    .single();
+    return NextResponse.json({
+      answer: aiResponse,
+      userMessageId: userMessage.id,
+      assistantMessageId: assistantMessage.id,
+      questionsRemaining: wishesRemaining,
+      questionsUsed: updatedWishesUsed,
+      questionsLimit: profile.data.wishes_limit,
+      subscriptionTier: profile.data.subscription_tier,
+      success: true
+    });
 
-  if (profile.data.subscription_tier === 'free') {
-    await supabase.rpc('increment_question_count', { user_uuid: user.id });
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Temporary AI error. Try again or upgrade for priority support.',
+        success: false 
+      },
+      { status: 500 }
+    );
   }
-
-  const updatedWishesUsed = profile.data.wishes_used + 
-    (profile.data.subscription_tier === 'free' ? 1 : 0);
-  const wishesRemaining = profile.data.subscription_tier === 'free'
-    ? profile.data.wishes_limit - updatedWishesUsed
-    : null;
-
-  return NextResponse.json({
-    answer: aiResponse,
-    userMessageId: userMessage.id,
-    assistantMessageId: assistantMessage.id,
-    questionsRemaining: wishesRemaining,
-    questionsUsed: updatedWishesUsed,
-    questionsLimit: profile.data.wishes_limit,
-    subscriptionTier: profile.data.subscription_tier,
-    success: true
-  });
 }

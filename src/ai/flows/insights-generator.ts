@@ -1,53 +1,57 @@
 'use server';
-/**
- * @fileOverview AI generator function for structured visa insights.
- *
- * This is the core logic that produces:
- * - Key insights (headline + detail + optional URL)
- * - Cost estimates
- * - Visa alternatives
- * - Chart-ready data
- *
- * Called by: insights-flow.ts
- */
-import { ai } from '@/ai/genkit';
-import {
-  InsightInput,
-  InsightInputSchema,
-  InsightOutput,
-  InsightOutputSchema,
-} from '@/ai/schemas/insight-schemas';
 
-// Define the AI prompt using Genkit
-const prompt = ai.definePrompt({
-  name: 'insightsGeneratorPrompt',
-  model: 'gemini-2.0-flash',
-  input: { schema: InsightInputSchema },
-  output: { schema: InsightOutputSchema },
-  prompt: `
-You are an expert immigration analyst. Based on the user's question, generate 3–5 highly relevant, actionable, and factual insights.
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-For each insight:
-- Provide a clear headline
-- A concise detail
-- An official URL if available (e.g., government site, university portal). Only include real, specific links — never generic ones.
+interface InsightInput {
+  question: string;
+}
 
-Additionally, generate:
-1. **Cost Estimates**: Break down 3–5 key costs (e.g., application fee, insurance, rent).
-2. **Visa Alternatives**: List 2–3 alternative visa paths or related options.
-3. **Chart Data**: Create simple bar chart data comparing 3–5 items (e.g., processing times, cost of living). Include a title and data points (name + value).
+interface InsightOutput {
+  insights: Array<{
+    headline: string;
+    detail: string;
+    url?: string;
+  }>;
+  costEstimates: Array<{
+    item: string;
+    cost: number;
+    currency: string;
+  }>;
+  visaAlternatives: Array<{
+    visaName: string;
+    description: string;
+  }>;
+  chartData?: {
+    title: string;
+    data: Array<{
+      name: string;
+      value: number;
+    }>;
+  };
+}
 
-User Question: {{{question}}}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-Generate all structured data that would be genuinely helpful for someone asking this question. Focus on facts, requirements, timelines, or key considerations.
-`
-});
-
-// Main export — this is what insights-flow.ts calls
 export async function generateInsights(input: InsightInput): Promise<InsightOutput> {
-  const { output } = await prompt(input);
-  if (!output) {
-    throw new Error('Failed to generate insights. The AI model did not return a valid response.');
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `You are an expert immigration analyst. Generate 3-5 insights with cost estimates, alternatives, and chart data for: "${input.question}". Return ONLY JSON.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text().trim();
+    
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Insights API error:', error);
+    return {
+      insights: [{ headline: "Research Official Requirements", detail: "Start with government websites.", url: "https://travel.state.gov" }],
+      costEstimates: [{ item: "Application Fee", cost: 160, currency: "USD" }],
+      visaAlternatives: [{ visaName: "Student Visa", description: "Alternative option." }],
+      chartData: { title: "Processing Times", data: [{ name: "USA", value: 90 }] }
+    };
   }
-  return output;
 }
