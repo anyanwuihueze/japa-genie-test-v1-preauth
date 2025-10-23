@@ -17,4 +17,3 @@ echo "✅ Backup complete. Your current state is saved in the 'presupabase-upgra
 
 # Switch back to the main branch to continue development
 git checkout -
-
