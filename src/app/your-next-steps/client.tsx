@@ -12,16 +12,14 @@ export default function YourNextStepsClient() {
   const { user, signInWithGoogle, loading: authLoading } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('stripe');  // New: Default to Stripe
+  const [paymentMethod, setPaymentMethod] = useState('stripe');  // Toggle state
 
   const handleCheckout = async (plan: any) => {
-    // Check terms acceptance first
     if (!acceptedTerms) {
       alert('Please accept the Terms & Conditions before proceeding.');
       return;
     }
 
-    // Check if user is logged in
     if (!user) {
       alert('Please sign in to continue.');
       await signInWithGoogle();
@@ -31,7 +29,6 @@ export default function YourNextStepsClient() {
     setLoadingPlan(plan.name);
 
     try {
-      // New: Dynamic endpoint based on payment method
       const endpoint = paymentMethod === 'paystack' ? '/api/paystack/create' : '/api/create-checkout';
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -59,9 +56,7 @@ export default function YourNextStepsClient() {
         throw new Error('Payment URL not found.');
       }
 
-      // Use window.location for full page redirect to Stripe or Paystack
       window.location.href = url;
-      
     } catch (error: any) {
       console.error('Error creating payment session:', error);
       alert(`Failed to initiate payment: ${error.message}`);
@@ -163,7 +158,7 @@ export default function YourNextStepsClient() {
           ))}
         </div>
         
-        {/* Terms and Conditions Checkbox - PLACED BEFORE BUTTONS */}
+        {/* Terms and Conditions Checkbox */}
         <div className="max-w-md mx-auto space-y-4">
             <div className="flex items-start space-x-2 p-4 border rounded-md bg-white">
                 <Checkbox 
@@ -189,7 +184,7 @@ export default function YourNextStepsClient() {
             </p>
         </div>
 
-        {/* New: Payment Method Selector */}
+        {/* Payment Method Selector */}
         <div className="max-w-md mx-auto space-y-4 mt-8">
           <div className="flex justify-center mb-4">
             <div className="flex space-x-4">
