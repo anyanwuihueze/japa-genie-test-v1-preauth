@@ -38,11 +38,9 @@ export default function UserChat() {
   const [showBanner, setShowBanner] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load messages from Supabase when user logs in
   useEffect(() => {
     async function loadMessages() {
       if (!user) {
-        // Visitor - show welcome message
         setMessages([{
           role: 'assistant',
           content: "Welcome, Pathfinder! I'm Japa Genie, your magical guide to global relocation. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?",
@@ -70,9 +68,8 @@ export default function UserChat() {
           
           const userMessageCount = data.filter(m => m.role === 'user').length;
           setWishCount(userMessageCount);
-          setShowBanner(false); // Hide banner if user has history
+          setShowBanner(false);
         } else {
-          // Logged in but no messages yet
           setMessages([{
             role: 'assistant',
             content: "Welcome back, Pathfinder! You have unlimited wishes. What would you like to explore today?",
@@ -95,7 +92,6 @@ export default function UserChat() {
     }
   }, [user, authLoading, supabase]);
 
-  // Save message to Supabase
   const saveMessage = async (role: 'user' | 'assistant', content: string) => {
     if (!user) return null;
 
@@ -151,10 +147,8 @@ export default function UserChat() {
     const trimmed = currentInput.trim();
     if (!trimmed || isTyping) return;
 
-    // Hide banner after first message
     if (showBanner) setShowBanner(false);
 
-    // Check wish limit only for non-logged-in users
     if (!user && wishCount >= MAX_WISHES) {
       setMessages((prev) => [
         ...prev,
@@ -171,7 +165,6 @@ export default function UserChat() {
     const newWishCount = wishCount + 1;
     const userMessage: Message = { role: 'user', content: trimmed };
     
-    // Save user message to Supabase
     if (user) {
       const savedMsg = await saveMessage('user', trimmed);
       if (savedMsg) userMessage.id = savedMsg.id;
@@ -190,12 +183,11 @@ export default function UserChat() {
     try {
       console.log(`Processing wish ${newWishCount}${user ? ' (unlimited)' : `/${MAX_WISHES}`}:`, trimmed);
       
-      // Build conversation history for visitors (exclude welcome message)
       const conversationHistory = !user 
         ? messages
             .filter(m => m.content !== "Welcome, Pathfinder! I'm Japa Genie, your magical guide to global relocation. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?")
             .map(m => ({ role: m.role, content: m.content }))
-        : []; // Signed-in users get history from Supabase
+        : [];
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -205,7 +197,7 @@ export default function UserChat() {
         body: JSON.stringify({
           question: trimmed,
           wishCount: newWishCount,
-          conversationHistory, // NEW: Send history for context awareness
+          conversationHistory,
         }),
       });
 
@@ -218,7 +210,6 @@ export default function UserChat() {
       const aiResponse = chatResult.answer;
       const assistantMessage: Message = { role: 'assistant', content: aiResponse };
       
-      // Save assistant message to Supabase
       if (user) {
         const savedMsg = await saveMessage('assistant', aiResponse);
         if (savedMsg) assistantMessage.id = savedMsg.id;
@@ -229,12 +220,13 @@ export default function UserChat() {
 
       const isVisaRelated = (text: string) => {
         const lower = text.toLowerCase();
-        const countries = ['canada','australia','usa','uk','spain','germany','france','italy','netherlands'];
-        const visaKeywords = ['visa','immigration','relocate','move to','work in','study in'];
+        const countries = ['canada','australia','usa','uk','spain','germany','france','italy','netherlands','nigeria','ghana','kenya'];
+        const visaKeywords = ['visa','immigration','relocate','move to','work in','study in','travel to'];
         return countries.some(c => lower.includes(c)) || visaKeywords.some(k => lower.includes(k));
       };
 
       if (isVisaRelated(trimmed)) {
+        console.log('🔍 Visa-related question detected, generating insights...');
         try {
           const insightsResponse = await fetch('/api/insights', {
             method: 'POST',
@@ -247,13 +239,20 @@ export default function UserChat() {
             }),
           });
 
+          console.log('📊 Insights response status:', insightsResponse.status);
+          
           if (insightsResponse.ok) {
             const insightsResult = await insightsResponse.json();
+            console.log('✅ Insights generated:', insightsResult);
             setInsights(insightsResult);
+          } else {
+            console.error('❌ Insights API returned error:', insightsResponse.status);
           }
         } catch (error) {
-          console.error("Insights error:", error);
+          console.error("❌ Insights error:", error);
         }
+      } else {
+        console.log('ℹ️ Not visa-related, skipping insights');
       }
 
     } catch (err) {
@@ -287,7 +286,6 @@ export default function UserChat() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-4rem)]">
       <div className="flex flex-col border-r border-gray-200 relative bg-white">
-        {/* Onboarding Banner */}
         {showBanner && !user && messages.length <= 1 && (
           <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
             <div className="max-w-2xl mx-auto">
