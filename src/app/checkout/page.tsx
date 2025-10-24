@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 
 const USD_TO_NGN_RATE = 1500;
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const [plan, setPlan] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [loading, setLoading] = useState(false);
@@ -152,5 +152,17 @@ export default function CheckoutPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

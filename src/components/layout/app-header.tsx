@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { JapaGenieLogo } from "@/components/icons";
 import { Menu, X, ArrowRight } from "lucide-react";
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/lib/AuthContext';
 
-export function AppHeader() {
+function HeaderContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -115,5 +115,13 @@ export function AppHeader() {
         </div>
       )}
     </header>
+  );
+}
+
+export function AppHeader() {
+  return (
+    <Suspense fallback={<div className="h-16 w-full border-b" />}>
+      <HeaderContent />
+    </Suspense>
   );
 }
