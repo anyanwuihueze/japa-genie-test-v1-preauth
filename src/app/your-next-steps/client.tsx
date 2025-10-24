@@ -26,8 +26,12 @@ export default function YourNextStepsClient() {
   };
 
   const handleAccept = () => {
+    // Save to localStorage as backup
     localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
-    window.location.href = '/checkout';
+    
+    // Pass plan data in URL for reliability
+    const planData = encodeURIComponent(JSON.stringify(selectedPlan));
+    window.location.href = `/checkout?plan=${planData}`;
   };
 
   return (

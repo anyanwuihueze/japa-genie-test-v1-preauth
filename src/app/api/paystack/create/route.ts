@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Fixed exchange rate (update periodically)
+const USD_TO_NGN_RATE = 1500;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -16,8 +19,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Plan price required' }, { status: 400 });
     }
 
-    const amount = Math.round(price * 100);
+    // Convert USD to NGN
+    const priceInNGN = price * USD_TO_NGN_RATE;
+    const amount = Math.round(priceInNGN * 100); // Kobo
     const reference = `tx_${user.id}_${Date.now()}`;
+
+    console.log(`💰 Converting: $${price} USD = ₦${priceInNGN.toLocaleString()} NGN`);
 
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -35,6 +42,9 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           planName: name,
           planDuration: duration,
+          usdPrice: price,
+          ngnPrice: priceInNGN,
+          exchangeRate: USD_TO_NGN_RATE,
         },
         channels: ['card', 'bank_transfer', 'ussd', 'mobile_money'],
       }),
@@ -50,6 +60,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       url: data.data.authorization_url,
       reference: data.data.reference,
+      ngnAmount: priceInNGN,
+      usdAmount: price,
     });
   } catch (error: any) {
     console.error('Paystack error:', error);

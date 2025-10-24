@@ -7,7 +7,7 @@ import { createClient } from './supabase/client'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: (redirectPath?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -27,7 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session immediately
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
@@ -41,7 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth()
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -53,15 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectPath?: string) => {
     try {
       console.log('🚀 Starting Google sign in...')
-      console.log('🌐 Redirect URL will be:', `${window.location.origin}/auth/callback`)
+      
+      // Build callback URL with redirect info
+      let callbackUrl = `${window.location.origin}/auth/callback`
+      if (redirectPath) {
+        callbackUrl += `?next=${encodeURIComponent(redirectPath)}`
+      }
+      
+      console.log('🌐 Redirect URL will be:', callbackUrl)
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
