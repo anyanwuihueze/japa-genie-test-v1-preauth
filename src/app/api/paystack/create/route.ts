@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Paystack from 'paystack';  // Install via npm
 import { createClient } from '@/lib/supabase/server';
-
-const paystack = Paystack(process.env.PAYSTACK_SECRET_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,35 +10,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { planName, planPrice, planDuration } = body;
+    const { name, price, duration } = await request.json();
 
-    if (!planPrice) {
+    if (!price) {
       return NextResponse.json({ error: 'Plan price required' }, { status: 400 });
     }
 
-    const amount = Math.round(planPrice * 100);  // Convert to kobo (NGN subunits)
+    const amount = Math.round(price * 100);
+    const reference = `tx_${user.id}_${Date.now()}`;
 
-    const transaction = await paystack.transaction.initialize({
-      amount,
-      currency: 'NGN',
-      email: user.email,
-      reference: `tx_${user.id}_${Date.now()}`,  // Unique ref
-      callback_url: `${request.headers.get('origin')}/chat?success=true`,
-      metadata: {
-        planName,
-        planDuration,
-        userId: user.id,
+    const response = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
       },
-      channels: ['card', 'bank_transfer', 'ussd', 'mobile_money'],  // Non-card options
+      body: JSON.stringify({
+        amount,
+        email: user.email,
+        currency: 'NGN',
+        reference,
+        callback_url: `${request.headers.get('origin')}/chat?success=true`,
+        metadata: {
+          userId: user.id,
+          planName: name,
+          planDuration: duration,
+        },
+        channels: ['card', 'bank_transfer', 'ussd', 'mobile_money'],
+      }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Paystack initialize error:', errorData);
+      throw new Error(errorData.message || 'Initialize failed');
+    }
+
+    const data = await response.json();
     return NextResponse.json({
-      url: transaction.data.authorization_url,
-      reference: transaction.data.reference,
+      url: data.data.authorization_url,
+      reference: data.data.reference,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Paystack error:', error);
-    return NextResponse.json({ error: 'Failed to create Paystack session' }, { status: 500 });
+    return NextResponse.json({ 
+      error: error.message || 'Failed to create Paystack session' 
+    }, { status: 500 });
   }
 }

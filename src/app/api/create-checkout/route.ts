@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
               name: name,
               description: duration || 'Premium access',
             },
-            unit_amount: Math.round(price * 100), // Dynamic price in cents
+            unit_amount: Math.round(price * 100),
           },
           quantity: 1,
         },
@@ -37,6 +37,10 @@ export async function POST(request: NextRequest) {
       cancel_url: `${request.headers.get('origin')}/checkout?canceled=true`,
       client_reference_id: user.id,
       customer_email: user.email,
+      metadata: {
+        userId: user.id,
+        planName: name,
+      },
     });
 
     return NextResponse.json({ url: session.url });
