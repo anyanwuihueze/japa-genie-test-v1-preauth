@@ -25,7 +25,7 @@ interface InsightOutput {
 
 const MAX_WISHES = 3;
 const SOCIAL_PROOF_COUNT = 1200;
-const NAME_MENTION_FREQUENCY = 5; // Mention name every 5 AI messages
+const NAME_MENTION_FREQUENCY = 5;
 
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
@@ -45,7 +45,6 @@ export default function UserChat() {
   const [userName, setUserName] = useState<string>('Pathfinder');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch user's preferred name
   useEffect(() => {
     async function fetchUserName() {
       if (!user) return;
@@ -59,7 +58,6 @@ export default function UserChat() {
 
         if (error) throw error;
 
-        // Priority: preferred_name → OAuth name → email username → generic
         const name = 
           data?.preferred_name ||
           user.user_metadata?.full_name ||
@@ -70,7 +68,6 @@ export default function UserChat() {
         setUserName(name);
       } catch (error) {
         console.error('Error fetching user name:', error);
-        // Fallback
         const name = 
           user.user_metadata?.name ||
           user.email?.split('@')[0] ||
@@ -221,11 +218,9 @@ export default function UserChat() {
     );
   };
 
-  // Helper to add name to AI response if needed
   const addNameToResponse = (response: string, shouldMention: boolean): string => {
     if (!shouldMention || !user || userName === 'Pathfinder') return response;
 
-    // Add name naturally at the beginning of response
     const greetings = [
       `Great question, ${userName}!`,
       `${userName}, here's what you need to know:`,
@@ -284,27 +279,43 @@ export default function UserChat() {
             .map(m => ({ role: m.role, content: m.content }))
         : [];
       
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      // 🔥 KEY FIX: Don't send wishCount for signed-in users
+      const requestBody: any = {
+        question: trimmed,
+        conversationHistory,
+      };
+
+      // Only add wishCount for visitors
+      if (!user) {
+        requestBody.wishCount = newWishCount;
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          question: trimmed,
-          wishCount: newWishCount,
-          conversationHistory,
-        }),
+        headers,
+        body: JSON.stringify(requestBody),
       });
 
       const chatResult = await response.json();
       
       if (!response.ok) {
+        console.error('API Error:', chatResult);
         throw new Error(chatResult.error || 'Failed to get response');
       }
 
       let aiResponse = chatResult.answer;
 
-      // Add name every 5 AI messages
       const shouldMentionName = user && (newAiCount % NAME_MENTION_FREQUENCY === 0);
       aiResponse = addNameToResponse(aiResponse, shouldMentionName);
 
@@ -354,7 +365,7 @@ export default function UserChat() {
         ...prev,
         {
           role: 'assistant',
-          content: `Wish ${wishCount + 1}: Temporary error. Trusted by ${SOCIAL_PROOF_COUNT}+ professionals — Unlock your step-by-step plan — Sign up`,
+          content: `Wish ${newWishCount}: Temporary error. Trusted by ${SOCIAL_PROOF_COUNT}+ professionals — Unlock your step-by-step plan — Sign up`,
         },
       ]);
     } finally {
