@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/AuthContext';
-import CheckoutButton from '@/components/checkout-button'
+import CheckoutButton from '@/components/checkout-button';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -27,6 +28,7 @@ const SOCIAL_PROOF_COUNT = 1200;
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
+  const router = useRouter();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [insights, setInsights] = useState<InsightOutput | null>(null);
@@ -119,7 +121,8 @@ export default function UserChat() {
   }, []);
 
   const handleCtaClick = () => {
-    alert("✨ Premium plan unlocked! Redirecting to signup...");
+    // Redirect to sign up page
+    router.push('/your-next-steps');
   };
 
   const renderMessageContent = (content: string) => {
