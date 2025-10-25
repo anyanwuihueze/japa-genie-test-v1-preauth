@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import CheckoutButton from '@/components/checkout-button';
 import { createClient } from '@/lib/supabase/client';
@@ -24,6 +25,7 @@ interface InsightOutput {
 
 const MAX_WISHES = 3;
 const SOCIAL_PROOF_COUNT = 1200;
+const NAME_MENTION_FREQUENCY = 5; // Mention name every 5 AI messages
 
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
@@ -36,9 +38,49 @@ export default function UserChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [isInsightsLoading, setIsInsightsLoading] = useState(false);
   const [wishCount, setWishCount] = useState(0);
+  const [aiMessageCount, setAiMessageCount] = useState(0);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
+  const [userName, setUserName] = useState<string>('Pathfinder');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch user's preferred name
+  useEffect(() => {
+    async function fetchUserName() {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('preferred_name')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        // Priority: preferred_name → OAuth name → email username → generic
+        const name = 
+          data?.preferred_name ||
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split('@')[0] ||
+          'Pathfinder';
+
+        setUserName(name);
+      } catch (error) {
+        console.error('Error fetching user name:', error);
+        // Fallback
+        const name = 
+          user.user_metadata?.name ||
+          user.email?.split('@')[0] ||
+          'Pathfinder';
+        setUserName(name);
+      }
+    }
+
+    fetchUserName();
+  }, [user, supabase]);
 
   useEffect(() => {
     async function loadMessages() {
@@ -57,6 +99,7 @@ export default function UserChat() {
           .from('messages')
           .select('*')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .order('created_at', { ascending: true });
 
         if (error) throw error;
@@ -69,30 +112,64 @@ export default function UserChat() {
           })));
           
           const userMessageCount = data.filter(m => m.role === 'user').length;
+          const assistantMessageCount = data.filter(m => m.role === 'assistant').length;
           setWishCount(userMessageCount);
+          setAiMessageCount(assistantMessageCount);
           setShowBanner(false);
         } else {
           setMessages([{
             role: 'assistant',
-            content: "Welcome back, Pathfinder! You have unlimited wishes. What would you like to explore today?",
+            content: `Welcome, ${userName}! ✨ You have unlimited wishes. What visa journey would you like to explore today?`,
           }]);
           setWishCount(0);
+          setAiMessageCount(0);
         }
       } catch (error) {
         console.error('Error loading messages:', error);
         setMessages([{
           role: 'assistant',
-          content: "Welcome back! You have unlimited wishes.",
+          content: `Welcome, ${userName}! You have unlimited wishes.`,
         }]);
       } finally {
         setIsLoadingMessages(false);
       }
     }
 
-    if (!authLoading) {
+    if (!authLoading && userName !== 'Pathfinder') {
       loadMessages();
     }
-  }, [user, authLoading, supabase]);
+  }, [user, authLoading, userName, supabase]);
+
+  const handleClearChat = async () => {
+    if (!user) return;
+    
+    const confirm = window.confirm('Clear all chat history? This cannot be undone.');
+    if (!confirm) return;
+
+    setIsClearing(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
+
+      if (error) throw error;
+
+      setMessages([{
+        role: 'assistant',
+        content: `Welcome back, ${userName}! ✨ You have unlimited wishes. What visa journey would you like to explore today?`,
+      }]);
+      setWishCount(0);
+      setAiMessageCount(0);
+      setInsights(null);
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+      alert('Failed to clear chat. Please try again.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const saveMessage = async (role: 'user' | 'assistant', content: string) => {
     if (!user) return null;
@@ -121,7 +198,6 @@ export default function UserChat() {
   }, []);
 
   const handleCtaClick = () => {
-    // Redirect to sign up page
     router.push('/your-next-steps');
   };
 
@@ -145,6 +221,23 @@ export default function UserChat() {
     );
   };
 
+  // Helper to add name to AI response if needed
+  const addNameToResponse = (response: string, shouldMention: boolean): string => {
+    if (!shouldMention || !user || userName === 'Pathfinder') return response;
+
+    // Add name naturally at the beginning of response
+    const greetings = [
+      `Great question, ${userName}!`,
+      `${userName}, here's what you need to know:`,
+      `Let me help you with that, ${userName}.`,
+      `${userName}, I'm glad you asked.`,
+      `Perfect timing, ${userName}!`,
+    ];
+
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+    return `${randomGreeting} ${response}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = currentInput.trim();
@@ -166,6 +259,7 @@ export default function UserChat() {
     }
 
     const newWishCount = wishCount + 1;
+    const newAiCount = aiMessageCount + 1;
     const userMessage: Message = { role: 'user', content: trimmed };
     
     if (user) {
@@ -184,8 +278,6 @@ export default function UserChat() {
     setIsInsightsLoading(true);
 
     try {
-      console.log(`Processing wish ${newWishCount}${user ? ' (unlimited)' : `/${MAX_WISHES}`}:`, trimmed);
-      
       const conversationHistory = !user 
         ? messages
             .filter(m => m.content !== "Welcome, Pathfinder! I'm Japa Genie, your magical guide to global relocation. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?")
@@ -210,7 +302,12 @@ export default function UserChat() {
         throw new Error(chatResult.error || 'Failed to get response');
       }
 
-      const aiResponse = chatResult.answer;
+      let aiResponse = chatResult.answer;
+
+      // Add name every 5 AI messages
+      const shouldMentionName = user && (newAiCount % NAME_MENTION_FREQUENCY === 0);
+      aiResponse = addNameToResponse(aiResponse, shouldMentionName);
+
       const assistantMessage: Message = { role: 'assistant', content: aiResponse };
       
       if (user) {
@@ -220,6 +317,7 @@ export default function UserChat() {
       
       setMessages((prev) => [...prev, assistantMessage]);
       setWishCount(newWishCount);
+      setAiMessageCount(newAiCount);
 
       const isVisaRelated = (text: string) => {
         const lower = text.toLowerCase();
@@ -229,7 +327,6 @@ export default function UserChat() {
       };
 
       if (isVisaRelated(trimmed)) {
-        console.log('🔍 Visa-related question detected, generating insights...');
         try {
           const insightsResponse = await fetch('/api/insights', {
             method: 'POST',
@@ -241,21 +338,14 @@ export default function UserChat() {
               aiResponse: aiResponse
             }),
           });
-
-          console.log('📊 Insights response status:', insightsResponse.status);
           
           if (insightsResponse.ok) {
             const insightsResult = await insightsResponse.json();
-            console.log('✅ Insights generated:', insightsResult);
             setInsights(insightsResult);
-          } else {
-            console.error('❌ Insights API returned error:', insightsResponse.status);
           }
         } catch (error) {
-          console.error("❌ Insights error:", error);
+          console.error("Insights error:", error);
         }
-      } else {
-        console.log('ℹ️ Not visa-related, skipping insights');
       }
 
     } catch (err) {
@@ -311,8 +401,20 @@ export default function UserChat() {
           </div>
         )}
 
-        <div className="bg-blue-50 py-1.5 px-4 text-center text-xs text-blue-700 font-medium">
-          Trusted by {SOCIAL_PROOF_COUNT}+ professionals — average approval path uncovered in 7 days
+        <div className="bg-blue-50 py-1.5 px-4 text-center text-xs text-blue-700 font-medium flex items-center justify-between">
+          <span>Trusted by {SOCIAL_PROOF_COUNT}+ professionals</span>
+          {user && messages.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearChat}
+              disabled={isClearing}
+              className="h-6 px-2 text-xs"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              {isClearing ? 'Clearing...' : 'Clear Chat'}
+            </Button>
+          )}
         </div>
 
         <div className="flex-1 p-4 overflow-y-auto space-y-3 relative z-10">
