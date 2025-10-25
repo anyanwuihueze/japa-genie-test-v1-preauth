@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { plans } from '@/lib/plans';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,13 +14,35 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function YourNextStepsClient() {
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const searchParams = useSearchParams();
+  const { user, signInWithGoogle } = useAuth();
+
+  useEffect(() => {
+    // Check if redirected because login required
+    if (searchParams?.get('login_required') === 'true') {
+      setShowLoginAlert(true);
+      // Auto-hide after 10 seconds
+      const timer = setTimeout(() => setShowLoginAlert(false), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const handlePlanClick = (plan: any) => {
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginAlert(true);
+      return;
+    }
+
     setSelectedPlan(plan);
     setAcceptedTerms(false);
     setShowModal(true);
@@ -29,15 +52,30 @@ export default function YourNextStepsClient() {
     // Save to localStorage as backup
     localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
     
-    // Pass plan data in URL for reliability
-    const planData = encodeURIComponent(JSON.stringify(selectedPlan));
-    window.location.href = `/checkout?plan=${planData}`;
+    // Go to checkout
+    window.location.href = `/checkout`;
   };
 
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 max-w-5xl">
         <h1 className="text-4xl font-bold text-center mb-12">Choose Your Plan</h1>
+
+        {showLoginAlert && (
+          <Alert className="mb-6 bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 flex items-center justify-between">
+              <span>Please log in to purchase a plan</span>
+              <Button 
+                size="sm" 
+                onClick={() => signInWithGoogle()}
+                className="ml-4"
+              >
+                Log In Now
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan) => (

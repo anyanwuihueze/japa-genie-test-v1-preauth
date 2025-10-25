@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { JapaGenieLogo } from "@/components/icons";
 import { Menu, X, ArrowRight } from "lucide-react";
@@ -9,31 +9,48 @@ import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/lib/AuthContext';
 
-function HeaderContent() {
+export function AppHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, signInWithGoogle, signOut } = useAuth();
-  
-  // Check if user needs to log in for checkout
-  const authRequired = searchParams?.get('auth') === 'required';
-  const planData = searchParams?.get('plan');
 
-  // Show prompt if auth is required
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
   useEffect(() => {
-    if (authRequired && !user) {
-      // Auto-trigger login with redirect to checkout
-      const checkoutPath = planData ? `/checkout?plan=${planData}` : '/checkout';
-      signInWithGoogle(checkoutPath);
-    }
-  }, [authRequired, user, planData]);
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobileMenuOpen]);
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/how-it-works', label: 'How It Works' },
-    { href: '/your-next-steps', label: 'Get Started' },
+    { href: "/where-youre-stuck", label: "Where You're Stuck" },
+    { href: "/how-it-helps", label: "How It Helps" },
+    { href: "/your-next-steps", label: "Japa Pricing" },
+    { href: "/blog", label: "Japa news" },
+    { href: "/about-us", label: "About Us" },
   ];
+  
+  const NavLinkItems = () => (
+    <>
+      {navLinks.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          onClick={() => isMobileMenuOpen && toggleMobileMenu()}
+          className={cn(
+            "text-sm font-medium text-muted-foreground hover:text-primary transition-colors",
+            pathname === link.href && "text-primary"
+          )}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </>
+  );
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 glass-effect">
@@ -42,25 +59,12 @@ function HeaderContent() {
           {pathname === '/chat' && <SidebarTrigger />}
           <Link href="/" className="flex items-center gap-2">
             <JapaGenieLogo className="h-8 w-8" />
-            <span className="text-xl font-bold hidden sm:inline-block">JapaGenie</span>
+            <span className="text-xl font-bold hidden sm:inline-block">Japa Genie</span>
           </Link>
         </div>
 
         <nav className="hidden md:flex flex-1 items-center gap-6 text-sm">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'transition-colors hover:text-primary',
-                pathname === link.href
-                  ? 'text-primary font-medium'
-                  : 'text-muted-foreground'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <NavLinkItems />
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
@@ -69,10 +73,7 @@ function HeaderContent() {
               Sign Out
             </Button>
           ) : (
-            <Button 
-              variant="ghost" 
-              onClick={() => signInWithGoogle()}
-            >
+            <Button variant="ghost" onClick={() => signInWithGoogle()}>
               Log In
             </Button>
           )}
@@ -87,7 +88,7 @@ function HeaderContent() {
 
         <button
           className="md:hidden ml-2"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={toggleMobileMenu}
         >
           {isMobileMenuOpen ? <X /> : <Menu />}
         </button>
@@ -96,32 +97,10 @@ function HeaderContent() {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="container py-4 flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'transition-colors hover:text-primary',
-                  pathname === link.href
-                    ? 'text-primary font-medium'
-                    : 'text-muted-foreground'
-                )}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <NavLinkItems />
           </nav>
         </div>
       )}
     </header>
-  );
-}
-
-export function AppHeader() {
-  return (
-    <Suspense fallback={<div className="h-16 w-full border-b" />}>
-      <HeaderContent />
-    </Suspense>
   );
 }

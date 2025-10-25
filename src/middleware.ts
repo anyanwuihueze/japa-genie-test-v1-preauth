@@ -8,15 +8,9 @@ export async function middleware(request: NextRequest) {
 
   // Only protect /checkout route
   if (request.nextUrl.pathname.startsWith('/checkout') && !user) {
-    // Save the plan data from URL if exists
-    const planParam = request.nextUrl.searchParams.get('plan');
-    
-    // Redirect to home with a message to log in
-    const redirectUrl = new URL('/', request.url);
-    redirectUrl.searchParams.set('auth', 'required');
-    if (planParam) {
-      redirectUrl.searchParams.set('plan', planParam);
-    }
+    // Redirect to pricing page with clear message
+    const redirectUrl = new URL('/your-next-steps', request.url);
+    redirectUrl.searchParams.set('login_required', 'true');
     
     return NextResponse.redirect(redirectUrl);
   }
