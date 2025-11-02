@@ -12,7 +12,6 @@ const experts = [
     successRate: "94%",
     specialty: "Student Visas, Proof of Funds",
     description: "Former visa officer with deep knowledge of Canadian immigration policies. Helped 500+ African students get approved.",
-    price: "₦25,000",
     features: ["Document Review", "Interview Prep", "Proof of Funds Plan", "Unlimited Q&A"]
   },
   {
@@ -22,7 +21,6 @@ const experts = [
     successRate: "91%",
     specialty: "Skilled Worker Visas, Sponsorship",
     description: "UK immigration consultant with track record of helping tech professionals relocate from Nigeria and Ghana.",
-    price: "₦35,000",
     features: ["CV Optimization", "Sponsor Matching", "Application Strategy", "Priority Support"]
   },
   {
@@ -32,7 +30,6 @@ const experts = [
     successRate: "89%",
     specialty: "B1/B2 Visas, Family Sponsorship",
     description: "Expert in overcoming visa denials and building strong cases for African families visiting the US.",
-    price: "₦20,000",
     features: ["Overcoming Rejection", "Family Applications", "Financial Documentation", "Embassy Prep"]
   }
 ];
@@ -42,29 +39,21 @@ const services = [
     icon: FileText,
     title: "Document Review",
     description: "Get your application documents checked by experts before submission.",
-    price: "₦15,000",
-    duration: "24-48 hours"
   },
   {
     icon: MessageCircle,
     title: "Mock Interview",
     description: "Practice with former visa officers who know what embassies really look for.",
-    price: "₦12,000",
-    duration: "60 minutes"
   },
   {
     icon: Shield,
     title: "Full Application Support",
     description: "End-to-end guidance from document prep to interview readiness.",
-    price: "₦45,000",
-    duration: "2-4 weeks"
   },
   {
     icon: Plane,
     title: "Fast-Track Consultation", 
     description: "Quick answers to urgent questions before your interview or submission.",
-    price: "₦8,000",
-    duration: "30 minutes"
   }
 ];
 
@@ -197,11 +186,11 @@ export default function ExpertsPage() {
                 Let us match you with the perfect expert for your specific situation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50">
-                  Get Matched with an Expert
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50" asChild>
+                  <Link href="/contact-us">Get Matched with an Expert</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  Speak to Our Team
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+                  <Link href="/contact-us">Speak to Our Team</Link>
                 </Button>
               </div>
             </CardContent>

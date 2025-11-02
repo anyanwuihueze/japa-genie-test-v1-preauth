@@ -1,8 +1,9 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Check, Star, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
 const agents = [
   {
@@ -82,9 +83,11 @@ export default function VerifiedAgentsPage() {
                     <span>({agent.reviews} reviews)</span>
                 </div>
               </div>
-              <Button className="w-full mt-6">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Book Consultation
+              <Button className="w-full mt-6" asChild>
+                <Link href="/contact-us">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Book Consultation
+                </Link>
               </Button>
             </CardContent>
           </Card>

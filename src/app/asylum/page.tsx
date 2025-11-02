@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function BenefitCard({ title, description, icon }: { title: string, description: string, icon: string }) {
   return (
@@ -152,7 +153,7 @@ export default function AsylumPage() {
                 className="bg-gradient-to-r from-orange-500 to-red-600 text-white hover:opacity-90" 
                 asChild
               >
-                <a href="/consultation">Request Professional Assistance</a>
+                <Link href="/experts">Request Professional Assistance</Link>
               </Button>
               <p className="text-xs text-gray-500 mt-2">
                 Free initial consultation to understand your options
@@ -165,7 +166,7 @@ export default function AsylumPage() {
                 className="border-blue-500 text-blue-600 hover:bg-blue-50" 
                 asChild
               >
-                <a href="/chat">Get General Guidance First</a>
+                <Link href="/chat">Get General Guidance First</Link>
               </Button>
               <p className="text-xs text-gray-500 mt-2">
                 Start with our AI assistant for basic information
@@ -180,7 +181,7 @@ export default function AsylumPage() {
             You don't have to navigate this alone. We're here to help guide you with compassion and expertise.
           </p>
           <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 text-white hover:opacity-90" asChild>
-            <a href="/chat">Begin Your Safe Journey <span className="ml-2">🕊️</span></a>
+            <Link href="/chat">Begin Your Safe Journey <span className="ml-2">🕊️</span></Link>
           </Button>
         </div>
       </div>
