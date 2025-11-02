@@ -9,4 +9,5 @@ export const ai = genkit({
   ],
 });
 
-export const geminiFlash = 'gemini-1.5-flash';
+// ✅ CORRECT - Simple string model name (PROVEN TO WORK)
+export const geminiFlash = 'gemini-2.0-flash-exp';

@@ -16,7 +16,7 @@ export function AppFooter() {
         <p className="text-xs">&copy; {new Date().getFullYear()} All rights reserved.</p>
         <div className="flex flex-wrap justify-center gap-3 text-xs">
           <Link href="/privacy-policy" className="hover:underline">Privacy</Link>
-          <Link href="/terms-of-service" className="hover:underline">Terms</Link>
+          <Link href="/terms-and-conditions" className="hover:underline">Terms</Link>
           <Link href="/contact-us" className="hover:underline">Contact</Link>
         </div>
       </div>

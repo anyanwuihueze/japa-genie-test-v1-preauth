@@ -40,7 +40,7 @@ Additionally, generate:
 User Question: {{{question}}}
 
 Generate all structured data that would be genuinely helpful for someone asking this question. Focus on facts, requirements, timelines, or key considerations.
-`
+`,
 });
 
 // Main export — this is what insights-flow.ts calls
