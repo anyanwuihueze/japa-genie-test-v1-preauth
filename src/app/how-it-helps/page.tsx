@@ -1,4 +1,5 @@
-import Link from 'next/link';
+"use client";  
+import Link from 'next-link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
@@ -210,7 +211,7 @@ export default function HowItHelps() {
                   </div>
                 </div>
 
-                {/* UPDATED: Proof of Funds CTA with Anchor Link */}
+                {/* FIXED: Proof of Funds CTA with correct link */}
                 <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
@@ -222,15 +223,8 @@ export default function HowItHelps() {
                       </div>
                       <p className="text-sm opacity-90">Our experts help with business income, gifts, sponsorships</p>
                     </div>
-                    <Button asChild className="bg-white text-green-600 hover:bg-green-50">
-                      <Link 
-                        href="/dashboard" 
-                        onClick={() => {
-                          sessionStorage.setItem('scrollTo', 'proof-of-funds');
-                        }}
-                      >
-                        Get Funds Review <ArrowRight className="ml-2 w-4 h-4" />
-                      </Link>
+                    <Button className="bg-white text-green-600 hover:bg-green-50">
+                      Get Funds Review <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </div>
                 </div>
