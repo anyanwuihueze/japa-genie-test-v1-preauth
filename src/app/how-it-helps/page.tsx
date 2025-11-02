@@ -1,5 +1,5 @@
 "use client";  
-import Link from 'next-link';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
@@ -223,8 +223,10 @@ export default function HowItHelps() {
                       </div>
                       <p className="text-sm opacity-90">Our experts help with business income, gifts, sponsorships</p>
                     </div>
-                    <Button className="bg-white text-green-600 hover:bg-green-50">
-                      Get Funds Review <ArrowRight className="ml-2 w-4 h-4" />
+                    <Button asChild className="bg-white text-green-600 hover:bg-green-50">
+                      <Link href="/public-proof-of-funds">
+                        Get Funds Review <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
                     </Button>
                   </div>
                 </div>

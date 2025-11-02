@@ -138,3 +138,11 @@
     opacity: 0.7; /* More visible peak */
   }
 }
+@keyframes ticker {
+0%   { transform: translate3d(0, 0, 0); }
+100% { transform: translate3d(-50%, 0, 0); }
+}
+.animate-ticker {
+display: inline-block;
+animation: ticker 25s linear infinite;
+}
