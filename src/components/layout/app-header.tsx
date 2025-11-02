@@ -29,6 +29,7 @@ export function AppHeader() {
   const navLinks = [
     { href: "/where-youre-stuck", label: "Where You're Stuck" },
     { href: "/how-it-helps", label: "How It Helps" },
+    { href: "/experts", label: "Expert Help" }, // ← ADDED THIS LINE
     { href: "/your-next-steps", label: "Japa Pricing" },
     { href: "/blog", label: "Japa news" },
     { href: "/about-us", label: "About Us" },
