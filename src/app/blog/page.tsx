@@ -234,7 +234,7 @@ export default function JapaNewsPage() {
             </div>
 
             <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg px-8 py-4" asChild>
-              <a href="/chat">Get Your Japa Plan <ArrowRight className="ml-2 h-5 w-5" /></a>
+              <a href="/your-next-steps">Get Your Japa Plan <ArrowRight className="ml-2 h-5 w-5" /></a>
             </Button>
           </div>
         </div>

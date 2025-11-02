@@ -76,39 +76,41 @@
   }
 }
 
-/* ===== MOBILE FIXES (copy-paste below) ===== */
+/* ===== MOBILE FIXES ===== */
 html, body {
   overflow-x: hidden;
   width: 100vw;
   position: relative;
 }
-
-/* Kill pinch-zoom & text inflation */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
-
-/* Remove tap grey flash */
 * {
   -webkit-tap-highlight-color: transparent;
 }
-
-/* Apple HIG minimum tap target */
 button, a, input, select, textarea, label {
   min-height: 44px;
   min-width: 44px;
 }
-
-/* Break long words (emails, hashes) */
 .break-word {
   word-break: break-word;
   overflow-wrap: break-word;
 }
-
-/* Smooth momentum scroll */
 .scroll-momentum {
   -webkit-overflow-scrolling: touch;
+}
+
+/* ===== VISA-PULSE TICKER (inside utilities so Tailwind keeps it) ===== */
+@layer utilities {
+  @keyframes ticker {
+    0%   { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
+  .animate-ticker {
+    display: inline-block;
+    animation: ticker 25s linear infinite;
+  }
 }
