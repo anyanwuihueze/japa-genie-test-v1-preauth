@@ -7,7 +7,7 @@ const todayRows = [
 { category:'tip',      headline:'Kenya: new 6-month bank-statement rule now enforced', count:null, country_code:'KE' },
 ];
 export async function GET(req: NextRequest) {
-if (req.headers.get('Authorization') !== Bearer ${process.env.CRON_SECRET}) {
+if (req.headers.get('Authorization') !== Bearer `${process.env.CRON_SECRET}`) {
 return new Response('Unauthorized', { status: 401 });
 }
 const supabase = createClient();
