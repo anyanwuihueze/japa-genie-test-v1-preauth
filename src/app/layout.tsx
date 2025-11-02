@@ -18,9 +18,12 @@ export const metadata: Metadata = {
     'Stop getting scammed by visa agents. Start getting real results today with Japa Genie. AI-powered visa guidance, eligibility checks, and personalized roadmaps.',
 }
 
+//  ➜  MOBILE-OPTIMISED VIEWPORT (no pinch, no zoom)
 export const viewport: Viewport = {
   width: 'device-width',
-  initialScale: 1.0,
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link
           rel="icon"
-          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg ' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>"
         />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">

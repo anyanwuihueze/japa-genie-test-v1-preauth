@@ -71,78 +71,44 @@
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
   body {
-    @apply font-sans bg-background text-foreground;
-    margin: 0;
-    padding: 0;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold text-foreground;
-  }
-  section {
-    @apply py-16;
-  }
-  
-  /* The border-* properties below are now applied directly in components where needed */
-  /* e.g., in card.tsx: className="rounded-lg border bg-card text-card-foreground shadow-sm" */
-}
-
-@layer components {
-  .container {
-    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
-  .glass-effect {
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-  }
-  .logo-glow-float {
-    animation: logo-glow-float 5s ease-in-out infinite;
-    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+    @apply bg-background text-foreground;
   }
 }
 
-@keyframes logo-glow-float {
-  0%, 100% {
-    transform: translateY(0);
-    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
-  }
-  50% {
-    transform: translateY(-6px);
-    filter: drop-shadow(0 6px 16px rgba(139, 92, 246, 0.7));
-  }
+/* ===== MOBILE FIXES (copy-paste below) ===== */
+html, body {
+  overflow-x: hidden;
+  width: 100vw;
+  position: relative;
 }
 
-
-/* ✅ Wallpaper with subtle built-in pulse animation */
-/* ✅ Wallpaper with subtle pulse */
-.chat-wallpaper {
-  background-image: url('/wallpaper/genie-chat-wallpaper.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0.2;
-  animation: bg-pulse 4s ease-in-out infinite;
+/* Kill pinch-zoom & text inflation */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
-@keyframes bg-pulse {
-  0%, 100% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 0.7; /* More visible peak */
-  }
+/* Remove tap grey flash */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
-@keyframes ticker {
-0%   { transform: translate3d(0, 0, 0); }
-100% { transform: translate3d(-50%, 0, 0); }
+
+/* Apple HIG minimum tap target */
+button, a, input, select, textarea, label {
+  min-height: 44px;
+  min-width: 44px;
 }
-.animate-ticker {
-display: inline-block;
-animation: ticker 25s linear infinite;
+
+/* Break long words (emails, hashes) */
+.break-word {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Smooth momentum scroll */
+.scroll-momentum {
+  -webkit-overflow-scrolling: touch;
 }

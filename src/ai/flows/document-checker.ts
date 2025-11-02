@@ -1,16 +1,6 @@
 'use server';
 
-/**
- * @fileOverview AI-powered document checker flow.
- *
- * This flow allows users to upload visa application documents and identifies any missing or incorrectly formatted information.
- *
- * - documentChecker - A function that accepts document data and returns a report of errors.
- * - DocumentCheckerInput - The input type for the documentChecker function.
- * - DocumentCheckerOutput - The return type for the documentChecker function.
- */
-
-import { ai } from '@/ai/genkit';
+import { ai, geminiFlash } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const DocumentCheckerInputSchema = z.object({
@@ -33,7 +23,7 @@ export async function documentChecker(input: DocumentCheckerInput): Promise<Docu
 
 const documentCheckerPrompt = ai.definePrompt({
   name: 'documentCheckerPrompt',
-  model: 'gemini-1.5-flash',  // Fixed from 'gemini-2.0-flash'
+  model: geminiFlash,
   input: { schema: DocumentCheckerInputSchema },
   output: { schema: DocumentCheckerOutputSchema },
   prompt: `You are an AI assistant that checks visa application documents for errors.
