@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
     // Check if user was trying to access checkout
     const next = requestUrl.searchParams.get('next');
     if (next) {
-      return NextResponse.redirect(`${origin}/dashboard`);return NextResponse.redirect(`${origin}/dashboard`);
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
   
-  // Default redirect to home
-  return NextResponse.redirect(origin);
+  // Default redirect to DASHBOARD for signed-in users
+  return NextResponse.redirect(`${origin}/dashboard`);
 }

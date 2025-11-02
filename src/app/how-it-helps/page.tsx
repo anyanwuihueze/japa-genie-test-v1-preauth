@@ -1,3 +1,7 @@
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
 export default function HowItHelps() {
   return (
     <section className="py-20 bg-gray-50">
@@ -112,9 +116,9 @@ export default function HowItHelps() {
                       </div>
                       <p className="text-sm opacity-90">Get 1-on-1 coaching with our verified visa experts</p>
                     </div>
-                    <button className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
-                      Connect with Expert
-                    </button>
+                    <Button asChild className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
+                      <Link href="/experts">Connect with Expert</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -397,9 +401,9 @@ export default function HowItHelps() {
                       </div>
                       <p className="text-sm opacity-90">Book a session with our verified interview coaches</p>
                     </div>
-                    <button className="bg-white text-purple-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-colors">
-                      Book Coach Session
-                    </button>
+                    <Button asChild className="bg-white text-purple-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-colors">
+                      <Link href="/experts">Book Coach Session</Link>
+                    </Button>
                   </div>
                 </div>
 
