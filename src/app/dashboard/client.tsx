@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
-import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { DocumentUpload } from '@/components/dashboard/document-upload';
+import { ProofOfFundsCard } from '@/components/dashboard/proof-of-funds-card';
 
 // Real progress calculation function
 const calculateRealProgress = async (userId: string) => {
@@ -191,6 +192,33 @@ export default function DashboardClient({ user }: { user: any }) {
       fetchDashboardData();
     }
   }, [user]);
+
+  // SMOOTH SCROLLING EFFECT
+  useEffect(() => {
+    // Check if we need to scroll to a specific section
+    const scrollTo = sessionStorage.getItem('scrollTo');
+    if (scrollTo === 'proof-of-funds') {
+      // Small delay to ensure the page is fully loaded
+      setTimeout(() => {
+        const pofSection = document.getElementById('proof-of-funds-section');
+        if (pofSection) {
+          pofSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+          
+          // Add a highlight effect
+          pofSection.classList.add('ring-2', 'ring-orange-500', 'rounded-lg', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            pofSection.classList.remove('ring-2', 'ring-orange-500', 'rounded-lg');
+          }, 3000);
+        }
+      }, 800);
+      
+      // Clean up
+      sessionStorage.removeItem('scrollTo');
+    }
+  }, []);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -400,10 +428,15 @@ export default function DashboardClient({ user }: { user: any }) {
         </Card>
       </div>
 
-      {/* Action Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Action Cards - WITH ANCHOR ID FOR SMOOTH SCROLLING */}
+      <div className="grid md:grid-cols-3 gap-6">
         <DocumentUpload />
-
+        
+        {/* PROOF OF FUNDS SECTION WITH ANCHOR ID */}
+        <div id="proof-of-funds-section" className="scroll-mt-20">
+          <ProofOfFundsCard userId={user.id} />
+        </div>
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -420,26 +453,6 @@ export default function DashboardClient({ user }: { user: any }) {
                 Find Visa Experts
               </Link>
             </Button>
-            
-            {/* Proof of Funds Expert CTA */}
-            <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5" />
-                <div>
-                  <div className="font-semibold text-orange-800 text-sm">
-                    Proof of Funds Help
-                  </div>
-                  <p className="text-xs text-orange-700 mt-1">
-                    Complex finances? Our experts help with business income, gifts, sponsorships
-                  </p>
-                  <Button variant="link" className="h-auto p-0 text-orange-600 text-xs" asChild>
-                    <Link href="/experts?service=proof-of-funds">
-                      Get Funds Review →
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

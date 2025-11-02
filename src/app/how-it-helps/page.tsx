@@ -1,6 +1,6 @@
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 
 export default function HowItHelps() {
   return (
@@ -117,7 +117,9 @@ export default function HowItHelps() {
                       <p className="text-sm opacity-90">Get 1-on-1 coaching with our verified visa experts</p>
                     </div>
                     <Button asChild className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
-                      <Link href="/experts">Connect with Expert</Link>
+                      <Link href="/experts">
+                        Connect with Expert
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -208,6 +210,7 @@ export default function HowItHelps() {
                   </div>
                 </div>
 
+                {/* UPDATED: Proof of Funds CTA with Anchor Link */}
                 <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
@@ -219,9 +222,16 @@ export default function HowItHelps() {
                       </div>
                       <p className="text-sm opacity-90">Our experts help with business income, gifts, sponsorships</p>
                     </div>
-                    <button className="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-50 transition-colors">
-                      Get Funds Review
-                    </button>
+                    <Button asChild className="bg-white text-green-600 hover:bg-green-50">
+                      <Link 
+                        href="/dashboard" 
+                        onClick={() => {
+                          sessionStorage.setItem('scrollTo', 'proof-of-funds');
+                        }}
+                      >
+                        Get Funds Review <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -402,7 +412,9 @@ export default function HowItHelps() {
                       <p className="text-sm opacity-90">Book a session with our verified interview coaches</p>
                     </div>
                     <Button asChild className="bg-white text-purple-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-colors">
-                      <Link href="/experts">Book Coach Session</Link>
+                      <Link href="/experts">
+                        Book Coach Session
+                      </Link>
                     </Button>
                   </div>
                 </div>
