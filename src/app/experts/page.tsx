@@ -142,8 +142,8 @@ export default function ExpertsPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="bg-orange-100 text-orange-800">Premium Feature</Badge>
-                    <Button asChild className="bg-orange-500 hover:bg-orange-600">
-                      <Link href="/contact-us">Contact Japa Genie</Link>
+                    <Button asChild className="bg-orange-500 hover:bg-orange-600 text-sm px-3">
+                      <Link href="/contact-us">Book Now</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -189,7 +189,7 @@ export default function ExpertsPage() {
                 <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50" asChild>
                   <Link href="/contact-us">Get Matched with an Expert</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600" asChild>
                   <Link href="/contact-us">Speak to Our Team</Link>
                 </Button>
               </div>
