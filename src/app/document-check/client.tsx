@@ -30,52 +30,53 @@ export default function DocumentCheckClient() {
       return;
     }
 
+    console.log('File selected:', file.name, file.type, file.size);
+
     setIsLoading(true);
     setError(null);
     setReport(null);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+    try {
+      // Read file immediately using Promise-based approach
+      const documentDataUri = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
 
-    reader.onload = async () => {
-      const documentDataUri = reader.result as string;
+      console.log('File loaded successfully, Data URI length:', documentDataUri.length);
 
-      try {
-        const response = await fetch('/api/document-check', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ documentDataUri }),
-        });
+      console.log('Calling API...');
+      const response = await fetch('/api/document-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentDataUri }),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to analyze document');
-        }
+      console.log('API response status:', response.status);
 
-        const result = await response.json();
-        setReport(result.report);
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred during analysis.';
-        setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error Checking Document',
-          description: errorMessage,
-        });
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('API error:', errorData);
+        throw new Error('Failed to analyze document');
       }
-    };
 
-    reader.onerror = () => {
-      const errorMessage = 'Failed to read the file.';
+      const result = await response.json();
+      console.log('Analysis complete');
+      setReport(result.report);
+    } catch (e) {
+      console.error('Error:', e);
+      const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred during analysis.';
       setError(errorMessage);
       toast({
         variant: 'destructive',
-        title: 'File Read Error',
+        title: 'Error Checking Document',
         description: errorMessage,
       });
+    } finally {
       setIsLoading(false);
-    };
+    }
   };
 
   return (
