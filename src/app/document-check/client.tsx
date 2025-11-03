@@ -86,15 +86,14 @@ export default function DocumentCheckClient() {
           <CardDescription>Select a document file (e.g., PDF, DOCX, PNG, JPG) to be analyzed.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid w-full items-center gap-1.5">
+          <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="document">Document</Label>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Input id="document" type="file" onChange={handleFileChange} className="flex-grow" />
+            <div className="flex gap-4">
+              <Input id="document" type="file" onChange={handleFileChange} />
               <Button
                 onClick={handleCheckDocument}
                 disabled={!file || isLoading}
                 type="button"
-                className="flex-shrink-0"
               >
                 {isLoading ? (
                   <>
