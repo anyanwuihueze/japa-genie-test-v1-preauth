@@ -90,19 +90,23 @@ export default function DocumentCheckClient() {
             <Label htmlFor="document">Document</Label>
             <div className="flex gap-4">
               <Input id="document" type="file" onChange={handleFileChange} />
-              <Button onClick={handleCheckDocument} disabled={!file || isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <FileCheck2 className="mr-2 h-4 w-4" />
-                    Check Document
-                  </>
-                )}
-              </Button>
+              <Button
+  onClick={handleCheckDocument}
+  disabled={!file || isLoading}
+  type="button"
+>
+  {isLoading ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Analyzing...
+    </>
+  ) : (
+    <>
+      <FileCheck2 className="mr-2 h-4 w-4" />
+      Check Document
+    </>
+  )}
+</Button>
             </div>
           </div>
           {file && <p className="text-sm text-muted-foreground">Selected file: {file.name}</p>}
