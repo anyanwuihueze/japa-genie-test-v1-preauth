@@ -29,7 +29,7 @@ export function AppHeader() {
   const navLinks = [
     { href: "/where-youre-stuck", label: "Where You're Stuck" },
     { href: "/how-it-helps", label: "How It Helps" },
-    { href: "/experts", label: "Expert Help" }, // ← ADDED THIS LINE
+    { href: "/experts", label: "Expert Help" },
     { href: "/your-next-steps", label: "Japa Pricing" },
     { href: "/blog", label: "Japa news" },
     { href: "/about-us", label: "About Us" },
@@ -57,7 +57,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 glass-effect">
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center gap-2">
-          {pathname === '/chat' && <SidebarTrigger />}
+          {pathname !== '/' && <SidebarTrigger />}
           <Link href="/" className="flex items-center gap-2">
             <JapaGenieLogo className="h-8 w-8" />
             <span className="text-xl font-bold hidden sm:inline-block">Japa Genie</span>
@@ -70,21 +70,33 @@ export function AppHeader() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
           {user ? (
-            <Button variant="ghost" onClick={() => signOut()}>
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link href="/dashboard">My Dashboard</Link>
+              </Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground" 
+                asChild
+              >
+                <Link href="/chat">Ask AI <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button variant="outline" onClick={() => signOut()}>
+                Sign Out
+              </Button>
+            </div>
           ) : (
-            <Button variant="ghost" onClick={() => signInWithGoogle()}>
-              Log In
-            </Button>
+            <>
+              <Button variant="ghost" onClick={() => signInWithGoogle()}>
+                Log In
+              </Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground" 
+                asChild
+              >
+                <Link href="/chat">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </>
           )}
-          
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground" 
-            asChild
-          >
-            <Link href="/chat">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
-          </Button>
         </div>
 
         <button
@@ -99,6 +111,32 @@ export function AppHeader() {
         <div className="md:hidden border-t">
           <nav className="container py-4 flex flex-col gap-4">
             <NavLinkItems />
+            
+            {/* Mobile auth buttons */}
+            <div className="flex flex-col gap-2 pt-4 border-t">
+              {user ? (
+                <>
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link href="/dashboard">My Dashboard</Link>
+                  </Button>
+                  <Button asChild className="justify-start">
+                    <Link href="/chat">Ask AI</Link>
+                  </Button>
+                  <Button variant="outline" onClick={() => signOut()} className="justify-start">
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" onClick={() => signInWithGoogle()} className="justify-start">
+                    Log In
+                  </Button>
+                  <Button asChild className="justify-start">
+                    <Link href="/chat">Get Started</Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       )}

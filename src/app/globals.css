@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 93% 96%; /* Light Desaturated Blue */
+    --foreground: 220 15% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 25%;
+    --primary: 222 89% 60%; /* Sophisticated Blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 45 100% 51%; /* Refined Gold */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222 89% 60%; /* Match primary */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* === ENHANCED MOBILE HANDLING === */
+  html, body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
+  }
+  
+  /* Better touch targets for mobile */
+  @media (max-width: 768px) {
+    button, 
+    [role="button"], 
+    a:not(.no-touch-target) {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Prevent zoom on input focus for iOS */
+    input, select, textarea {
+      font-size: 16px;
+    }
+  }
+  
+  /* Improved mobile typography */
+  @media (max-width: 640px) {
+    .prose {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* Better scrolling on iOS */
+    .overflow-auto, .overflow-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+
+.glass-effect {
+  @apply bg-background/80 backdrop-blur-sm;
+}
