@@ -10,12 +10,15 @@ import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckC
 import Link from 'next/link';
 import { DocumentUpload } from '@/components/dashboard/document-upload';
 import { ProofOfFundsCard } from '@/components/dashboard/proof-of-funds-card';
-import VisaPulseTicker from '@/components/visa-pulse-ticker';   //  ➜  NEW IMPORT
+import VisaPulseTicker from '@/components/visa-pulse-ticker';
 
-// … (keep every existing helper exactly as you had them) …
+// ADD USERPROFILE PROP (NEW)
+interface DashboardClientProps {
+  user: any;
+  userProfile?: any; // ADD THIS LINE
+}
 
-export default function DashboardClient({ user }: { user: any }) {
-  const [userProfile, setUserProfile] = useState<any>(null);
+export default function DashboardClient({ user, userProfile }: DashboardClientProps) { // ADD userProfile HERE
   const [progress, setProgress] = useState(0);
   const [metrics, setMetrics] = useState({
     documentsCompleted: 0,
@@ -26,30 +29,38 @@ export default function DashboardClient({ user }: { user: any }) {
     nextMilestone: "Complete Your Profile",
     successProbability: 65
   });
-  const [loading, setLoading] = useState(true);
 
-  /* … (keep ALL your existing useEffects & helpers unchanged) … */
+  // REPLACE ENTIRE useEffect (UPDATE):
+  useEffect(() => {
+    if (userProfile) {
+      calculateProgress(userProfile);
+    }
+  }, [userProfile]); // RUN WHEN USERPROFILE CHANGES
 
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6 space-y-8">
-        <div className="text-center">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-          </div>
-        </div>
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const calculateProgress = (profile: any) => {
+    let currentProgress = 0;
+    let nextMilestone = "Complete Your Profile";
+
+    if (profile?.destination_country && profile?.visa_type) {
+      currentProgress += 25;
+      nextMilestone = "Upload Key Documents";
+    }
+    
+    const docsCompleted = 3; 
+    currentProgress += (docsCompleted / metrics.totalDocuments) * 50;
+    
+    if (docsCompleted > 5) {
+        nextMilestone = "Practice Mock Interview";
+    }
+    
+    setProgress(Math.round(currentProgress));
+    setMetrics(prev => ({
+        ...prev,
+        documentsCompleted: docsCompleted,
+        nextMilestone: nextMilestone,
+        successProbability: 65 + Math.round(currentProgress / 4)
+    }));
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-8">
@@ -70,10 +81,8 @@ export default function DashboardClient({ user }: { user: any }) {
         </p>
       </header>
 
-      {/*  ➜  VISA PULSE TICKER  (full-width, above all cards)  */}
       <VisaPulseTicker />
 
-      {/*  ➜  EXISTING HERO CARD  (Progress, Insights, etc.)  */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -98,11 +107,9 @@ export default function DashboardClient({ user }: { user: any }) {
             <span>Getting Started</span>
             <span>Visa Approved</span>
           </div>
-          {/*  … keep your existing breakdown grid …  */}
         </CardContent>
       </Card>
 
-      {/*  ➜  KEEP EVERYTHING ELSE EXACTLY AS IT WAS  */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-6 text-center">
           <div className="text-2xl font-bold text-blue-600">{metrics.documentsCompleted}/{metrics.totalDocuments}</div>

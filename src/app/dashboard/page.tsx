@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DashboardClient from './client';
@@ -10,6 +9,14 @@ export default async function DashboardPage() {
   if (!user) {
     redirect('/chat');
   }
-  
-  return <DashboardClient user={user} />;
+
+  // FETCH USER PROFILE ON SERVER (NEW)
+  const { data: userProfile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  // PASS BOTH USER AND USERPROFILE TO CLIENT (NEW)
+  return <DashboardClient user={user} userProfile={userProfile} />;
 }
