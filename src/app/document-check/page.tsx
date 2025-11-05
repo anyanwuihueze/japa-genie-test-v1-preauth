@@ -1,10 +1,12 @@
-'use client';
-
 import DocumentCheckClient from './client';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle, Shield, FileWarning } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
-export default function DocumentCheckPage() {
+export default async function DocumentCheckPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="space-y-8">
       <header className="space-y-2 text-center max-w-3xl mx-auto">
@@ -15,7 +17,6 @@ export default function DocumentCheckPage() {
           80% of visa rejections stem from document errors. Use our AI to scan, verify, and fortify your application against common red flags before you submit.
         </p>
       </header>
-
       <div className="grid md:grid-cols-3 gap-6 text-center">
         <Card>
           <CardHeader>
@@ -45,8 +46,7 @@ export default function DocumentCheckPage() {
           </CardHeader>
         </Card>
       </div>
-
-      <DocumentCheckClient />
+      <DocumentCheckClient user={user} />
     </div>
   );
 }
