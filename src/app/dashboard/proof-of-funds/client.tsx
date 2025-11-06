@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Save, AlertCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, TrendingUp, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -78,6 +78,38 @@ export default function ProofOfFundsClient({ user }: { user: any }) {
       setSaving(false);
     }
   };
+  
+  const handleDownload = () => {
+    const reportContent = `
+      <html>
+        <head>
+          <title>Proof of Funds Report</title>
+          <style>
+            body { font-family: sans-serif; margin: 2rem; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <h1>Proof of Funds Summary</h1>
+          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          <table>
+            <tr><th>Item</th><th>Value</th></tr>
+            <tr><td>Required Amount</td><td>${pofData.currency} ${pofData.required_amount.toLocaleString()}</td></tr>
+            <tr><td>Current Amount</td><td>${pofData.currency} ${pofData.current_amount.toLocaleString()}</td></tr>
+            <tr><td>Funds Progress</td><td>${calculateProgress().toFixed(2)}%</td></tr>
+            <tr><td>Account Seasoning</td><td>${pofData.account_seasoning_days} / ${pofData.target_seasoning_days} days</td></tr>
+            <tr><td>Seasoning Progress</td><td>${((pofData.account_seasoning_days / pofData.target_seasoning_days) * 100).toFixed(2)}%</td></tr>
+          </table>
+        </body>
+      </html>
+    `;
+    const reportWindow = window.open('', '_blank');
+    reportWindow?.document.write(reportContent);
+    reportWindow?.document.close();
+  };
 
   const calculateProgress = () => {
     if (pofData.required_amount === 0) return 0;
@@ -111,9 +143,9 @@ export default function ProofOfFundsClient({ user }: { user: any }) {
         <CardContent>
           <Progress value={calculateProgress()} className="w-full h-3 mb-2" />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{pofData.currency} {pofData.current_amount.toLocaleString()}</span>
-            <span>{Math.round(calculateProgress())}%</span>
-            <span>{pofData.currency} {pofData.required_amount.toLocaleString()}</span>
+            <span>${pofData.currency} ${pofData.current_amount.toLocaleString()}</span>
+            <span>${Math.round(calculateProgress())}%</span>
+            <span>${pofData.currency} ${pofData.required_amount.toLocaleString()}</span>
           </div>
         </CardContent>
       </Card>
@@ -202,8 +234,9 @@ export default function ProofOfFundsClient({ user }: { user: any }) {
       </div>
 
       <div className="flex justify-end gap-4">
-        <Button variant="outline" asChild>
-          <Link href="/dashboard">Cancel</Link>
+        <Button variant="secondary" onClick={handleDownload}>
+          <Download className="w-4 h-4 mr-2" />
+          Download Report
         </Button>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save Changes'}

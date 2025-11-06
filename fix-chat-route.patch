@@ -1,0 +1,11 @@
+--- a/src/app/api/chat/route.ts
++++ b/src/app/api/chat/route.ts
+@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
+     let configuredVisa = null;
+     let isJourneyChange = false;
+ 
+-    if (currentUser && conversationHistory.length >= 1) {
++    if (currentUser) {
+       try {
+         const chatContext = [...conversationHistory, { role: 'user', content: question }];
+         const visaIntent = await extractVisaIntent(chatContext);

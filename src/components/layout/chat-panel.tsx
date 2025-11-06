@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Sparkles } from 'lucide-react';
-import Link from 'next/link';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface Message {
@@ -15,18 +14,46 @@ interface Message {
 }
 
 const MAX_FREE_QUESTIONS = 5;
+const SESSION_KEY = 'chat_session_id';
+const QUESTIONS_KEY = 'chat_questions_count';
+const EMAIL_KEY = 'user_email_captured';
 
 export default function ChatPanel() {
+  // Generate or retrieve session ID (persists across page refreshes)
+  const [sessionId] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  });
+
+  // Track questions across refreshes
+  const [questionsAsked, setQuestionsAsked] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const stored = localStorage.getItem(QUESTIONS_KEY);
+    return stored ? parseInt(stored) : 0;
+  });
+
+  // Check if email already captured
+  const [emailCaptured, setEmailCaptured] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(EMAIL_KEY) === 'true';
+  });
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi! I'm the Japa Genie site assistant. I can answer questions about our services, features, and pricing. What would you like to know?",
+      content: emailCaptured 
+        ? "Welcome back! I can answer any questions about Japa Genie's features, pricing, and how to use the app. For visa-specific guidance, click 'Start Your Journey' to use our full AI assistant."
+        : "Hi! I'm the Japa Genie site assistant. I can answer questions about our services, features, and pricing. What would you like to know?",
       sender: 'assistant',
     },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [questionsAsked, setQuestionsAsked] = useState(0);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
@@ -45,16 +72,18 @@ export default function ChatPanel() {
 
   useEffect(scrollToBottom, [messages]);
 
+  // Update localStorage whenever questions change
   useEffect(() => {
-    if (questionsAsked >= MAX_FREE_QUESTIONS) {
-      setShowUpgradeSheet(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(QUESTIONS_KEY, questionsAsked.toString());
     }
   }, [questionsAsked]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
-    if (questionsAsked >= MAX_FREE_QUESTIONS) {
+    // If email NOT captured and hit limit, show upgrade sheet
+    if (!emailCaptured && questionsAsked >= MAX_FREE_QUESTIONS) {
       setShowUpgradeSheet(true);
       return;
     }
@@ -76,6 +105,8 @@ export default function ChatPanel() {
         body: JSON.stringify({
           message: inputValue,
           conversationHistory: messages,
+          sessionId: sessionId,
+          emailCaptured: emailCaptured,
         }),
       });
 
@@ -90,7 +121,11 @@ export default function ChatPanel() {
         sender: 'assistant',
       };
       setMessages((prev) => [...prev, assistantMessage]);
-      setQuestionsAsked((prev) => prev + 1);
+      
+      // Only increment question count if email NOT captured
+      if (!emailCaptured) {
+        setQuestionsAsked((prev) => prev + 1);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -113,9 +148,27 @@ export default function ChatPanel() {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('prospectEmail', userEmail);
+    
+    if (typeof window !== 'undefined') {
+      // Mark email as captured
+      localStorage.setItem(EMAIL_KEY, 'true');
+      localStorage.setItem('prospect_email', userEmail);
+      
+      // Reset question count (unlimited general questions now)
+      localStorage.setItem(QUESTIONS_KEY, '0');
+      setQuestionsAsked(0);
+    }
+    
+    setEmailCaptured(true);
     setShowUpgradeSheet(false);
-    window.location.href = '/chat';
+    
+    // Show success message
+    const successMessage: Message = {
+      id: Date.now().toString(),
+      content: "Great! You now have unlimited access to ask about Japa Genie's features and pricing. For personalized visa guidance, click 'Start Your Journey' at the top to use the full AI assistant.",
+      sender: 'assistant',
+    };
+    setMessages((prev) => [...prev, successMessage]);
   };
 
   return (
@@ -161,21 +214,23 @@ export default function ChatPanel() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={isLoading || questionsAsked >= MAX_FREE_QUESTIONS}
+            disabled={isLoading}
             className="flex-1"
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading || questionsAsked >= MAX_FREE_QUESTIONS}
+            disabled={!inputValue.trim() || isLoading}
             size="icon"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          {MAX_FREE_QUESTIONS - questionsAsked > 0
-            ? `${MAX_FREE_QUESTIONS - questionsAsked} questions remaining.`
-            : "You've reached the question limit."}
+          {emailCaptured ? (
+            "Unlimited general questions available ✨"
+          ) : (
+            `${MAX_FREE_QUESTIONS - questionsAsked} ${MAX_FREE_QUESTIONS - questionsAsked === 1 ? 'question' : 'questions'} remaining`
+          )}
         </p>
       </div>
 
@@ -184,10 +239,10 @@ export default function ChatPanel() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Sparkles className="text-amber-500" />
-              Unlock Your Visa Journey
+              Unlock Unlimited Questions
             </SheetTitle>
             <SheetDescription>
-              You've asked all the right questions! To get unlimited, personalized visa guidance from Japa Genie, enter your email below.
+              You've used your 5 free questions! Enter your email to continue asking about Japa Genie's features, pricing, and services.
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleEmailSubmit} className="py-8 space-y-4">
@@ -199,11 +254,11 @@ export default function ChatPanel() {
               required
             />
             <Button type="submit" className="w-full">
-              Unlock Your 3 Visa Wishes
+              Continue Asking Questions
             </Button>
           </form>
           <p className="text-xs text-center text-muted-foreground">
-            You'll be redirected to the full AI assistant to start your journey.
+            For personalized visa guidance, you'll need to create a full account.
           </p>
         </SheetContent>
       </Sheet>

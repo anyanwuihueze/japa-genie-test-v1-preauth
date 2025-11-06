@@ -3,6 +3,8 @@ import { visaChatAssistant } from '@/ai/flows/visa-chat-assistant';
 import { createClient } from '@/lib/supabase/server';
 import { extractVisaIntent, configureUserFromIntent } from '@/lib/visa-intent';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -49,21 +51,22 @@ export async function POST(request: NextRequest) {
       console.error('Auth/profile fetch error:', error);
     }
 
-    // ✅ VISA INTENT EXTRACTION & AUTO-CONFIGURATION
-    let visaIntentExtracted = false;
+    // VISA INTENT DETECTION - WORKS FOR ALL USERS
+    let visaIntentDetected = null;
     let enhancedAnswer = null;
     let configuredVisa = null;
+    let isJourneyChange = false;
 
-    if (currentUser && conversationHistory.length >= 1) {
-      try {
-        // Combine new question with conversation history for context
-        const chatContext = [...conversationHistory, { role: 'user', content: question }];
-        const visaIntent = await extractVisaIntent(chatContext);
-        
-        if (visaIntent && visaIntent.destination_country && visaIntent.visa_type) {
-          console.log('🎯 Extracted visa intent:', visaIntent);
-          
-          // Check if user profile needs updating
+    try {
+      const chatContext = [...conversationHistory, { role: 'user', content: question }];
+      const visaIntent = await extractVisaIntent(chatContext);
+      
+      if (visaIntent && visaIntent.destination_country && visaIntent.visa_type) {
+        visaIntentDetected = visaIntent;
+        console.log('🎯 Extracted visa intent:', visaIntent);
+
+        // FOR SIGNED-IN USERS: Auto-configure profile
+        if (currentUser) {
           const supabase = await createClient();
           const { data: currentProfile } = await supabase
             .from('user_profiles')
@@ -71,33 +74,43 @@ export async function POST(request: NextRequest) {
             .eq('id', currentUser.id)
             .single();
 
+          const isChangingDestination = currentProfile?.destination_country && 
+                                       currentProfile.destination_country !== visaIntent.destination_country;
+          const isChangingVisaType = currentProfile?.visa_type && 
+                                    currentProfile.visa_type !== visaIntent.visa_type;
+
+          isJourneyChange = isChangingDestination || isChangingVisaType;
+
           const needsUpdate = !currentProfile?.destination_country || 
                              !currentProfile?.visa_type ||
-                             currentProfile.destination_country !== visaIntent.destination_country ||
-                             currentProfile.visa_type !== visaIntent.visa_type;
+                             isJourneyChange;
 
           if (needsUpdate) {
-            await configureUserFromIntent(currentUser.id, visaIntent);
-            visaIntentExtracted = true;
+            await configureUserFromIntent(currentUser.id, visaIntent, currentProfile);
             configuredVisa = {
               type: visaIntent.visa_type,
-              country: visaIntent.destination_country
+              country: visaIntent.destination_country,
+              isChange: isJourneyChange,
+              from: isJourneyChange ? {
+                country: currentProfile?.destination_country,
+                visaType: currentProfile?.visa_type
+              } : null
             };
             
-            // Update userContext with new visa info for the chat response
             userContext = {
               ...userContext,
               destination: visaIntent.destination_country,
               visaType: visaIntent.visa_type
             };
-
-            console.log(`✅ Auto-configured user for ${visaIntent.visa_type} visa to ${visaIntent.destination_country}`);
           }
         }
-      } catch (error) {
-        console.error('Error processing visa intent:', error);
-        // Don't fail the chat if intent extraction fails
+        // FOR ANONYMOUS USERS: Just detect and suggest
+        else {
+          console.log('👤 Visa intent detected for anonymous user');
+        }
       }
+    } catch (error) {
+      console.error('Error processing visa intent:', error);
     }
 
     // Get chat response from AI
@@ -109,15 +122,26 @@ export async function POST(request: NextRequest) {
       isSignedIn
     });
 
-    // ✅ Enhance response if visa intent was detected and configured
-    if (visaIntentExtracted && result.answer && configuredVisa) {
-      enhancedAnswer = `🎯 **Visa Profile Configured!** I've set up your profile for **${configuredVisa.type} Visa** to **${configuredVisa.country}**. ${result.answer}`;
+    // ENHANCE RESPONSE BASED ON USER TYPE
+    if (visaIntentDetected) {
+      if (currentUser && configuredVisa) {
+        // Signed-in user: Show configuration message
+        if (isJourneyChange) {
+          enhancedAnswer = `🔄 **Visa Journey Updated!** I've changed your profile from **${configuredVisa.from?.visaType} Visa to ${configuredVisa.from?.country}** to **${configuredVisa.type} Visa to ${configuredVisa.country}**. Your progress has been reset for the new requirements. \n\n${result.answer}`;
+        } else {
+          enhancedAnswer = `🎯 **Visa Profile Configured!** I've set up your profile for **${configuredVisa.type} Visa** to **${configuredVisa.country}**. \n\n${result.answer}`;
+        }
+      } else if (!currentUser) {
+        // Anonymous user: Show suggestion message
+        enhancedAnswer = `${result.answer}\n\n---\n\n🎯 **I see you're interested in ${visaIntentDetected.visa_type} visa for ${visaIntentDetected.destination_country}!** \n\nWant to track your progress and get personalized document checklist? **Sign up now** to:\n• Track your application progress\n• Get document verification\n• Receive deadline reminders\n• Access visa success predictors`;
+      }
     }
 
     return NextResponse.json({
       answer: enhancedAnswer || result.answer,
       insights: result.insights,
-      visaIntentDetected: visaIntentExtracted,
+      visaIntentDetected: !!visaIntentDetected,
+      isSignedIn: !!currentUser,
       ...(configuredVisa && { configuredVisa })
     });
 

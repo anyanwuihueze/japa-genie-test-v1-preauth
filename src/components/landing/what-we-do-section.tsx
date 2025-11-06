@@ -1,10 +1,17 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { FileText, Users, Briefcase, Video } from 'lucide-react';
+import { FileText, Users, Briefcase, Target } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
+  {
+    icon: Target,
+    title: "AI Visa Matchmaker",
+    description: "Get matched to countries with the highest approval rates for your specific profile.",
+    details: "Our AI analyzes your qualifications and budget to recommend the best visa pathways for you.",
+    href: "/visa-matchmaker"
+  },
   {
     icon: FileText,
     title: "Visa Rejection Reversal",
@@ -25,13 +32,6 @@ const features = [
     description: "Trusted pathways to meet financial requirements without stress.",
     details: "Learn safe, verifiable methods to present proof of funds that embassies accept with confidence.",
     href: "/proof-of-funds"
-  },
-  {
-    icon: Video,
-    title: "Priority Processing Tips",
-    description: "Insider strategies to fast-track your visa approval.",
-    details: "Discover country-specific hacks, premium options, and timing strategies to cut waiting times in half.",
-    href: "/priority-processing"
   }
 ];
 

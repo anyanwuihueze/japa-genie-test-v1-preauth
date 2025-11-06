@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export interface VisaRequirement {
   id: string;
@@ -128,7 +128,6 @@ export class VisaRequirementsService {
     };
   }
 
-  // Get all available countries for a visa type
   async getAvailableCountries(visaCategory: string): Promise<string[]> {
     const supabase = await createClient();
     
@@ -139,10 +138,9 @@ export class VisaRequirementsService {
       .eq('is_active', true);
 
     if (requirements && requirements.length > 0) {
-      return [...new Set(requirements.map(r => r.country_name))].sort();
+      return Array.from(new Set(requirements.map((r: any) => r.country_name))).sort();
     }
 
-    // Fallback to common countries
     return [
       "United States", "Canada", "United Kingdom", "Australia", "Germany", 
       "France", "Japan", "South Korea", "Singapore", "United Arab Emirates",

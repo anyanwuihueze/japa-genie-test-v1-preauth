@@ -8,7 +8,7 @@ const features = [
     icon: Target,
     title: 'AI Visa Matchmaker',
     description: 'Get matched to countries with highest acceptance rates for YOUR specific profile, qualifications, and budget.',
-    href: '/chat',
+    href: '/visa-matchmaker',
   },
   {
     icon: BarChart,
