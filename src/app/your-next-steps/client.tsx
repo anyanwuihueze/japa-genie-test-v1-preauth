@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { plans } from '@/lib/plans';
+import { allPlans as plans } from '@/lib/pricing'; // Import from new unified file
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { 
@@ -85,7 +86,7 @@ export default function YourNextStepsClient() {
               onClick={() => handlePlanClick(plan)}
             >
               <h2 className="text-xl font-bold mb-2">{plan.name}</h2>
-              <p className="text-3xl font-bold text-blue-600 mb-4">${plan.price}</p>
+              <p className="text-3xl font-bold text-blue-600 mb-4">${plan.price}{plan.frequency}</p>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="text-sm">{feature}</li>
@@ -112,9 +113,9 @@ export default function YourNextStepsClient() {
               />
               <label htmlFor="terms" className="text-sm">
                 I agree to the{' '}
-                <Link href="/terms" className="text-blue-600 underline">Terms & Conditions</Link>
+                <Link href="/terms-and-conditions" className="text-blue-600 underline" target="_blank">Terms & Conditions</Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="text-blue-600 underline">Privacy Policy</Link>
+                <Link href="/privacy-policy" className="text-blue-600 underline" target="_blank">Privacy Policy</Link>
               </label>
             </div>
             <AlertDialogFooter>

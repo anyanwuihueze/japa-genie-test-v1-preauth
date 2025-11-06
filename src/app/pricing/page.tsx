@@ -3,88 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const oneTimeCredits = [
-  {
-    name: '1 Week Access',
-    price: '$10',
-    description: 'Perfect for a quick, focused effort.',
-    features: [
-      'Unlimited AI Wishes',
-      'Full Access to All Tools',
-      'Document Checker',
-      'Mock Interviews',
-    ],
-    cta: 'Purchase for $10',
-  },
-  {
-    name: '2 Weeks Access',
-    price: '$15',
-    description: 'Great for getting your application ready.',
-    features: [
-      'Unlimited AI Wishes',
-      'Full Access to All Tools',
-      'Document Checker',
-      'Mock Interviews',
-    ],
-    cta: 'Purchase for $15',
-  },
-  {
-    name: '3 Weeks Access',
-    price: '$25',
-    description: 'For a comprehensive review.',
-    features: [
-      'Unlimited AI Wishes',
-      'Full Access to All Tools',
-      'Document Checker',
-      'Mock Interviews',
-    ],
-    cta: 'Purchase for $25',
-  },
-  {
-    name: '4 Weeks Access',
-    price: '$30',
-    description: 'The best value for a full month.',
-    features: [
-      'Unlimited AI Wishes',
-      'Full Access to All Tools',
-      'Document Checker',
-      'Mock Interviews',
-    ],
-    cta: 'Purchase for $30',
-  },
-];
-
-const subscriptionTiers = [
-  {
-    name: 'Pro',
-    price: '$20',
-    frequency: '/month',
-    description: 'For ongoing support and peace of mind.',
-    features: [
-      'Everything in one-time plans',
-      'Continuous access',
-      'Priority email support',
-      'Cancel anytime',
-    ],
-    cta: 'Subscribe to Pro',
-    popular: true,
-  },
-  {
-    name: 'Premium',
-    price: '$40',
-    frequency: '/month',
-    description: 'For those who want expert human help.',
-    features: [
-      'Everything in Pro, plus:',
-      'Verified Agent Consultation (separate fee)',
-      '1-on-1 Onboarding Call',
-      'Dedicated Account Manager',
-    ],
-    cta: 'Subscribe to Premium',
-    popular: false,
-  },
-];
+import { oneTimeCredits, subscriptionTiers } from '@/lib/pricing'; // Import from the new unified file
 
 export default function PricingPage() {
   return (
@@ -123,7 +42,7 @@ export default function PricingPage() {
                     <CardTitle className="text-2xl md:text-3xl">{tier.name}</CardTitle>
                     <CardDescription>{tier.description}</CardDescription>
                     <div className="pt-4">
-                      <span className="text-3xl md:text-4xl font-bold">{tier.price}</span>
+                      <span className="text-3xl md:text-4xl font-bold">${tier.price}</span>
                       <span className="text-muted-foreground">{tier.frequency}</span>
                     </div>
                   </CardHeader>
@@ -153,7 +72,7 @@ export default function PricingPage() {
                 <Card key={plan.name} className="flex flex-col h-full">
                   <CardHeader>
                     <CardTitle className="text-xl md:text-2xl">{plan.name}</CardTitle>
-                    <p className="text-2xl md:text-3xl font-bold pt-2">{plan.price}</p>
+                    <p className="text-2xl md:text-3xl font-bold pt-2">${plan.price}</p>
                     <CardDescription className="text-sm md:text-base">
                       {plan.description}
                     </CardDescription>
