@@ -108,7 +108,7 @@ export default function PricingPage() {
           </div>
 
           <TabsContent value="subscriptions" className="mt-8">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 max-w-3xl mx-auto justify-center">
               {subscriptionTiers.map((tier) => (
                 <Card
                   key={tier.name}

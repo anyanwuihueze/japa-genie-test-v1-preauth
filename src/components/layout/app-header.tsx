@@ -8,6 +8,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/lib/AuthContext';
+import HelpButtonWrapper from './help-button-wrapper';
 
 export function AppHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,19 +38,28 @@ export function AppHeader() {
   
   const NavLinkItems = () => (
     <>
-      {navLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          onClick={() => isMobileMenuOpen && toggleMobileMenu()}
-          className={cn(
-            "text-sm font-medium text-muted-foreground hover:text-primary transition-colors",
-            pathname === link.href && "text-primary"
-          )}
-        >
-          {link.label}
-        </Link>
-      ))}
+      {navLinks.map((link) => {
+        if (link.label === 'How It Helps') {
+          return (
+            <HelpButtonWrapper key={link.href} href={link.href}>
+              {link.label}
+            </HelpButtonWrapper>
+          );
+        }
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => isMobileMenuOpen && toggleMobileMenu()}
+            className={cn(
+              "text-sm font-medium text-muted-foreground hover:text-primary transition-colors",
+              pathname === link.href && "text-primary"
+            )}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </>
   );
 
