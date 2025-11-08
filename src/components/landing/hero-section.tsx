@@ -31,8 +31,8 @@ export function HeroSection() {
                   </>
                 ) : (
                   <>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter bg-gradient-to-r from-amber-400 to-primary bg-clip-text text-transparent leading-tight">
-                      STOP Getting <span className="text-red-500">Scammed</span> by <span className="text-red-500">Fake</span> Visa Agents. START Getting Real Results.
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
+                      <span className="text-slate-50">STOP Getting </span><span className="text-red-500">Scammed</span><span className="text-slate-50"> by </span><span className="text-red-500">Fake</span><span className="text-slate-50"> Visa Agents. START Getting </span><span className="text-yellow-400">Real Results.</span>
                     </h1>
                     <p className="max-w-[600px] text-slate-300 text-base sm:text-lg md:text-xl">
                       Japa Genie is your AI-powered guide for navigating the complex world of visas. Get personalized recommendations and a clear roadmap to your destination.
@@ -45,11 +45,11 @@ export function HeroSection() {
                   <>
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-blue-500 text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/dashboard" className="flex items-center justify-center gap-2">
-                        <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-12 transition-transform" />
+                        <Sparkles className="h-4 w-4 sm:h-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                         <span>Go to Dashboard</span>
                       </Link>
                     </Button>
@@ -69,11 +69,11 @@ export function HeroSection() {
                   <>
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-yellow-400 to-blue-600 text-white hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold"
                       asChild
                     >
                       <Link href="/chat" className="flex items-center justify-center gap-2">
-                        <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-12 transition-transform" />
+                        <Sparkles className="h-4 w-4 sm:h-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                         <span>Start Your Journey</span>
                       </Link>
                     </Button>

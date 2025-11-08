@@ -250,7 +250,7 @@ export default function UserChat() {
           {showBanner && !user && messages.length <= 1 && (
             <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
               <div className="max-w-2xl mx-auto">
-                <h3 className="font-semibold text-xs sm:text-sm mb-2 flex items-center gap-2">
+                <h3 className="font-semibold text-sm sm:text-base mb-2 flex items-center gap-2">
                   <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />Make Your 3 Wishes Count!
                 </h3>
                 <ul className="text-xs text-gray-600 space-y-1 ml-4">
@@ -275,7 +275,7 @@ export default function UserChat() {
           <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-2 sm:space-y-3">
             {messages.map((msg, idx) => (
               <div key={msg.id || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm break-words ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border rounded-bl-none shadow'}`}>
+                <div className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-sm sm:text-base break-words ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border rounded-bl-none shadow'}`}>
                   {msg.role === 'assistant' ? <div className="prose prose-sm max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div> : msg.content}
                 </div>
               </div>
@@ -357,7 +357,7 @@ export default function UserChat() {
               {insights.suggestedCountries.map((country, idx) => (
                 <div key={idx} className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow space-y-2">
                   <h4 className="font-bold text-sm sm:text-base">{country.name}</h4>
-                  <p className="text-xs sm:text-sm text-blue-600">{country.visaType}</p>
+                  <p className="text-sm sm:text-base text-blue-600">{country.visaType}</p>
                   <div className="text-xs text-gray-600">
                     <p>💰 ${country.estimatedCost.toLocaleString()}</p>
                     <p>⏱️ {country.processingTimeMonths} months</p>
@@ -392,9 +392,9 @@ export default function UserChat() {
                   <h4 className="font-semibold text-gray-700 text-sm sm:text-base">Timeline</h4>
                   {insights.timeline.map((step, idx) => (
                     <div key={idx} className="flex gap-2 sm:gap-3">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">{idx + 1}</div>
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm sm:text-base shrink-0">{idx + 1}</div>
                       <div className="flex-1 bg-white p-2 sm:p-3 rounded-lg shadow">
-                        <p className="text-xs sm:text-sm font-medium">{step.step}</p>
+                        <p className="text-sm sm:text-base font-medium">{step.step}</p>
                         <p className="text-xs text-gray-500">~{step.durationWeeks} weeks</p>
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export default function UserChat() {
                   {insights.alternativeStrategies.map((strategy, idx) => (
                     <div key={idx} className="flex gap-2 bg-yellow-50 p-2 sm:p-3 rounded-lg">
                       <span className="text-yellow-500 shrink-0">💡</span>
-                      <span className="text-xs sm:text-sm">{strategy}</span>
+                      <span className="text-sm sm:text-base">{strategy}</span>
                     </div>
                   ))}
                 </div>
@@ -417,7 +417,7 @@ export default function UserChat() {
           ) : (
             <div className="text-center py-6 sm:py-8">
               <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto text-gray-300 mb-2 sm:mb-3" />
-              <p className="text-gray-500 text-xs sm:text-sm px-4">Ask a visa-related question to see insights.</p>
+              <p className="text-gray-500 text-sm sm:text-base px-4">Ask a visa-related question to see insights.</p>
             </div>
           )}
         </div>

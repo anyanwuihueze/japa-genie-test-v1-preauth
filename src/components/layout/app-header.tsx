@@ -31,7 +31,7 @@ export function AppHeader() {
     { href: "/where-youre-stuck", label: "Where You're Stuck" },
     { href: "/how-it-helps", label: "How It Helps" },
     { href: "/experts", label: "Expert Help" },
-    { href: "/your-next-steps", label: "Japa Pricing" },
+    { href: "/pricing", label: "Japa Pricing" },
     { href: "/blog", label: "Japa news" },
     { href: "/about-us", label: "About Us" },
   ];
@@ -84,13 +84,7 @@ export function AppHeader() {
               <Button variant="ghost" asChild>
                 <Link href="/dashboard">My Dashboard</Link>
               </Button>
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground" 
-                asChild
-              >
-                <Link href="/chat">Ask AI <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-              <Button variant="outline" onClick={() => signOut()}>
+              <Button onClick={() => signOut()}>
                 Sign Out
               </Button>
             </div>
@@ -122,7 +116,6 @@ export function AppHeader() {
           <nav className="container py-4 flex flex-col gap-4">
             <NavLinkItems />
             
-            {/* Mobile auth buttons */}
             <div className="flex flex-col gap-2 pt-4 border-t">
               {user ? (
                 <>
@@ -153,3 +146,5 @@ export function AppHeader() {
     </header>
   );
 }
+
+export default AppHeader;

@@ -57,20 +57,23 @@ export default function ChatPanel() {
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  // Improved auto-scroll function
   const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (viewport) {
-          viewport.scrollTop = viewport.scrollHeight;
-        }
-      }
-    }, 100);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
   };
 
-  useEffect(scrollToBottom, [messages]);
+  // Scroll to bottom when messages change or loading state changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   // Update localStorage whenever questions change
   useEffect(() => {
@@ -203,6 +206,8 @@ export default function ChatPanel() {
               </div>
             </div>
           )}
+          {/* Invisible element at the bottom for auto-scroll */}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 

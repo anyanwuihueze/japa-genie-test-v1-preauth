@@ -3,7 +3,7 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import ChatLayout from './ChatLayout'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { AppHeader } from './app-header'
+import AppHeader from './app-header'
 import { AppFooter } from './app-footer'
 import { AppSidebar } from '@/components/app-sidebar' // corrected import
 

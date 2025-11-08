@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Home, BarChart3, FileText, HelpCircle, Menu, X } from "lucide-react";
+import HelpButtonWrapper from './help-button-wrapper';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -52,14 +53,12 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
                   <FileText className="w-4 h-4 mr-1" />
                   Features
                 </Link>
-                <Link 
-                  href="/how-it-works" 
-                  className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors"
-                  title="How it Works"
-                >
-                  <HelpCircle className="w-4 h-4 mr-1" />
-                  Help
-                </Link>
+                <HelpButtonWrapper href="/how-it-works">
+                  <div className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                    <HelpCircle className="w-4 h-4 mr-1" />
+                    Help
+                  </div>
+                </HelpButtonWrapper>
                 <Link 
                   href="/" 
                   className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors font-medium"
@@ -81,41 +80,44 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
 
-          {/* Mobile Menu Dropdown */}
+          {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t py-3 space-y-2 bg-white">
-              <Link 
-                href="/progress-map" 
-                className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <BarChart3 className="w-4 h-4 mr-3" />
-                Progress Map
-              </Link>
-              <Link 
-                href="/features" 
-                className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <FileText className="w-4 h-4 mr-3" />
-                Features
-              </Link>
-              <Link 
-                href="/how-it-works" 
-                className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <HelpCircle className="w-4 h-4 mr-3" />
-                How it Works
-              </Link>
-              <Link 
-                href="/" 
-                className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors font-medium text-sm mt-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Home className="w-4 h-4 mr-2" />
-                Home
-              </Link>
+            <div className="md:hidden py-4 border-t border-gray-200">
+              <div className="flex flex-col space-y-3">
+                <Link 
+                  href="/progress-map" 
+                  className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <BarChart3 className="w-4 h-4 mr-3" />
+                  Progress Map
+                </Link>
+                <Link 
+                  href="/features" 
+                  className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FileText className="w-4 h-4 mr-3" />
+                  Features
+                </Link>
+                <HelpButtonWrapper href="/how-it-works">
+                  <div 
+                    className="flex items-center text-gray-600 hover:text-blue-600 text-sm transition-colors py-2 px-2 rounded-lg hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <HelpCircle className="w-4 h-4 mr-3" />
+                    Help
+                  </div>
+                </HelpButtonWrapper>
+                <Link 
+                  href="/" 
+                  className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors font-medium text-sm mt-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Link>
+              </div>
             </div>
           )}
         </div>

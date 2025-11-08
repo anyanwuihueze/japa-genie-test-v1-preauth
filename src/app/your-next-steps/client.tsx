@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { allPlans as plans } from '@/lib/pricing'; // Import from new unified file
+import { allPlans } from '@/lib/pricing'; // Import from new unified file
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { 
@@ -69,7 +69,7 @@ export default function YourNextStepsClient() {
               <span>Please log in to purchase a plan</span>
               <Button 
                 size="sm" 
-                onClick={() => signInWithGoogle()}
+                onClick={() => signInWithGoogle('/your-next-steps')}
                 className="ml-4"
               >
                 Log In Now
@@ -79,7 +79,7 @@ export default function YourNextStepsClient() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map((plan) => (
+          {allPlans.map((plan) => (
             <div
               key={plan.name}
               className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition cursor-pointer"
@@ -102,7 +102,7 @@ export default function YourNextStepsClient() {
             <AlertDialogHeader>
               <AlertDialogTitle>Accept Terms & Conditions</AlertDialogTitle>
               <AlertDialogDescription>
-                Please accept our terms to proceed with {selectedPlan?.name}
+                Please accept our terms to proceed with your purchase of the {selectedPlan?.name}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex items-start space-x-2 my-4">
@@ -115,7 +115,7 @@ export default function YourNextStepsClient() {
                 I agree to the{' '}
                 <Link href="/terms-and-conditions" className="text-blue-600 underline" target="_blank">Terms & Conditions</Link>
                 {' '}and{' '}
-                <Link href="/privacy-policy" className="text-blue-600 underline" target="_blank">Privacy Policy</Link>
+                <Link href="/privacy-policy" className="text-blue-600 underline" target="_blank">Privacy Policy</Link>.
               </label>
             </div>
             <AlertDialogFooter>
