@@ -4,77 +4,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 218 91% 95%; /* Light Desaturated Blue */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 217 90% 61%; /* Sophisticated Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    --accent: 45 98% 52%; /* Refined Gold */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 217 90% 61%;
     --radius: 0.5rem;
   }
 }
 
 @layer base {
-  /* MOBILE-FIRST: Bigger base font for readability */
+  * {
+    @apply border-border;
+  }
   body {
     @apply bg-background text-foreground;
-    font-size: 18px; /* 18px on mobile for easy reading */
-    line-height: 1.6;
   }
-  
-  /* Scale down on larger screens (desktop users sit further away) */
-  @media (min-width: 768px) {
-    body {
-      font-size: 16px;
-    }
-  }
-  
-  /* === ENHANCED MOBILE HANDLING === */
-  html, body {
-    overflow-x: hidden;
-    -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
-  }
-  
-  /* Minimum touch targets for mobile (44px is Apple's guideline) */
-  button, a, input, select, textarea {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Make sure links and buttons are easy to tap */
-  @media (max-width: 767px) {
-    button, .btn, a.button {
-      padding: 12px 24px;
-      font-size: 16px;
-    }
-  }
-}
-
-/* Preserve your existing animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }

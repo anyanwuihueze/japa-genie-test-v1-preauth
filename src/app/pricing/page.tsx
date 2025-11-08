@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check } from 'lucide-react';
@@ -13,9 +12,6 @@ export default function PricingPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
             Find the Plan That's Right for You
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
-            Start with 3 free wishes. No credit card required.
-          </p>
         </header>
 
         <div className="space-y-12">
