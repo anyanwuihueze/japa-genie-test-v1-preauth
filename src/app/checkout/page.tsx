@@ -80,7 +80,7 @@ function CheckoutContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">No Plan Selected</h2>
-          <Button onClick={() => window.location.href = '/your-next-steps'}>
+          <Button onClick={() => window.location.href = '/pricing'}>
             Back to Plans
           </Button>
         </div>
@@ -143,7 +143,7 @@ function CheckoutContent() {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => window.location.href = '/your-next-steps'}
+              onClick={() => window.location.href = '/pricing'}
               className="w-full"
             >
               Back to Plans

@@ -7,7 +7,7 @@ export default function CheckoutButton() {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push('/your-next-steps');
+    router.push('/pricing');
   };
 
   return (
