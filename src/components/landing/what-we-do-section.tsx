@@ -50,27 +50,27 @@ export function WhatWeDoSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature) => (
-            <Link 
+            <Card 
               key={feature.title}
-              href={feature.href}
-              className="block h-full group"
+              className="cursor-pointer text-center p-6 h-full flex flex-col group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-slate-800/50 border-slate-700 hover:border-primary"
             >
-              <Card className="cursor-pointer text-center p-6 h-full flex flex-col group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-slate-800/50 border-slate-700 hover:border-primary">
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <feature.icon className="w-8 h-8" />
+              <Link href={feature.href} className="flex flex-col flex-grow h-full">
+                <div className="flex-grow">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-3 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <feature.icon className="w-8 h-8" />
+                    </div>
                   </div>
+                  <h3 className="font-bold text-lg text-slate-100 mb-2">{feature.title}</h3>
+                  <p className="text-sm text-slate-400 mb-4">{feature.description}</p>
                 </div>
-                <h3 className="font-bold text-lg text-slate-100 mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-400 mb-4 flex-grow">{feature.description}</p>
-                
                 <div className="mt-auto">
                   <div className="text-sm text-primary group-hover:text-amber-400 transition-colors font-medium">
                     Learn More →
                   </div>
                 </div>
-              </Card>
-            </Link>
+              </Link>
+            </Card>
           ))}
         </div>
       </div>
