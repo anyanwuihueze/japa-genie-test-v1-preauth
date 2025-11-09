@@ -31,7 +31,7 @@ const features = [
     title: "Proof of Funds Guidance",
     description: "Trusted pathways to meet financial requirements without stress.",
     details: "Learn safe, verifiable methods to present proof of funds that embassies accept with confidence.",
-    href: "/proof-of-funds"
+    href: "/public-proof-of-funds"
   }
 ];
 

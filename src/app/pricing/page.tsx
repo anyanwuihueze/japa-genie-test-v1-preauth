@@ -19,6 +19,29 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info, Check } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
+// Define proper types for your plans
+interface OneTimeCreditPlan {
+  name: string;
+  price: number;
+  priceId: string;
+  duration: string;
+  features: string[];
+  cta: string;
+  description?: string; // Make description optional
+}
+
+interface SubscriptionTier {
+  name: string;
+  price: number;
+  priceId: string;
+  frequency: string;
+  duration: string;
+  features: string[];
+  cta: string;
+  popular: boolean;
+  description: string; // Description is required for subscription tiers
+}
+
 export default function PricingPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
@@ -76,7 +99,7 @@ export default function PricingPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {oneTimeCredits.map((plan) => (
+          {(oneTimeCredits as OneTimeCreditPlan[]).map((plan) => (
             <Card
               key={plan.name}
               onClick={() => handlePlanClick(plan)}
@@ -86,7 +109,8 @@ export default function PricingPage() {
                 <CardTitle className="text-xl md:text-2xl">{plan.name}</CardTitle>
                 <p className="text-2xl md:text-3xl font-bold pt-2">${plan.price}</p>
                 <CardDescription className="text-sm md:text-base">
-                  {plan.description}
+                  {/* Fixed: Use optional chaining and provide fallback */}
+                  {plan.description || ''}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
@@ -109,7 +133,7 @@ export default function PricingPage() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto mt-12">
-            {subscriptionTiers.map((tier) => (
+            {(subscriptionTiers as SubscriptionTier[]).map((tier) => (
             <Card
                 key={tier.name}
                 onClick={() => handlePlanClick(tier)}

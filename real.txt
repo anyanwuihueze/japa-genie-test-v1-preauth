@@ -1,0 +1,4 @@
+Bank: Access Bank
+Balance: 8 200 000 NGN
+Avg 6M: 7 800 000 NGN
+Lump credit: 3 000 000 NGN 2024-05-22 no note

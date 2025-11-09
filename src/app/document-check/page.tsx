@@ -2,10 +2,16 @@ import DocumentCheckClient from './client';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle, Shield, FileWarning } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function DocumentCheckPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // FIX: Redirect if not authenticated
+  if (!user) {
+    redirect('/sign-in');
+  }
 
   return (
     <div className="space-y-8">
