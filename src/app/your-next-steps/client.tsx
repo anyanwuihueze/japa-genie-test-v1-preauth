@@ -86,7 +86,7 @@ export default function YourNextStepsClient() {
               onClick={() => handlePlanClick(plan)}
             >
               <h2 className="text-xl font-bold mb-2">{plan.name}</h2>
-              <p className="text-3xl font-bold text-blue-600 mb-4">${plan.price}{plan.frequency}</p>
+              <p className="text-3xl font-bold text-blue-600 mb-4">${plan.price}</p>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="text-sm">{feature}</li>

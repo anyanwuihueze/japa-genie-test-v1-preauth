@@ -74,7 +74,7 @@ export default function AmaraStory() {
               Get your personalized visa analysis like Amara did. Discover what's holding you back and get your roadmap to success.
             </p>
             <Button className="bg-primary hover:bg-primary/90" asChild>
-              <a href="/chat">Start Your Japa Journey</a>
+              <a href="/kyc">Start Your Japa Journey</a>
             </Button>
           </div>
         </article>

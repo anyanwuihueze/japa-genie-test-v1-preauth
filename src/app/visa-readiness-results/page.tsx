@@ -162,7 +162,7 @@ export default function VisaReadinessResults() {
             className="bg-white text-purple-600 hover:bg-purple-50 text-lg px-8 py-6"
             asChild
           >
-            <a href="/chat">
+            <a href="/kyc">
               Get Your Action Plan <ArrowRight className="ml-2 h-5 w-5" />
             </a>
           </Button>

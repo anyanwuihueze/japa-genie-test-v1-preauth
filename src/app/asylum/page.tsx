@@ -166,7 +166,7 @@ export default function AsylumPage() {
                 className="border-blue-500 text-blue-600 hover:bg-blue-50" 
                 asChild
               >
-                <Link href="/chat">Get General Guidance First</Link>
+                <Link href="/kyc">Get General Guidance First</Link>
               </Button>
               <p className="text-xs text-gray-500 mt-2">
                 Start with our AI assistant for basic information
@@ -181,7 +181,7 @@ export default function AsylumPage() {
             You don't have to navigate this alone. We're here to help guide you with compassion and expertise.
           </p>
           <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 text-white hover:opacity-90" asChild>
-            <Link href="/chat">Begin Your Safe Journey <span className="ml-2">🕊️</span></Link>
+            <Link href="/kyc">Begin Your Safe Journey <span className="ml-2">🕊️</span></Link>
           </Button>
         </div>
       </div>

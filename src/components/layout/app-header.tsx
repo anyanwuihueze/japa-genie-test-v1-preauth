@@ -12,10 +12,15 @@ import HelpButtonWrapper from './help-button-wrapper';
 
 export function AppHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { user, signInWithGoogle, signOut } = useAuth();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -79,7 +84,15 @@ export function AppHeader() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
-          {user ? (
+          {!mounted ? (
+            // Show static content during SSR to prevent hydration mismatch
+            <Button 
+              className="bg-primary hover:bg-primary/90 text-primary-foreground" 
+              asChild
+            >
+              <Link href="/kyc">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+          ) : user ? (
             <div className="flex items-center gap-2">
               <Button variant="ghost" asChild>
                 <Link href="/dashboard">My Dashboard</Link>
@@ -117,7 +130,12 @@ export function AppHeader() {
             <NavLinkItems />
             
             <div className="flex flex-col gap-2 pt-4 border-t">
-              {user ? (
+              {!mounted ? (
+                // Show static content during SSR
+                <Button asChild className="justify-start">
+                  <Link href="/kyc">Get Started</Link>
+                </Button>
+              ) : user ? (
                 <>
                   <Button variant="ghost" asChild className="justify-start">
                     <Link href="/dashboard">My Dashboard</Link>

@@ -182,7 +182,7 @@ export function HowItWorksAnimated() {
         
         <div className="text-center">
           <Button asChild size="lg" className="text-sm sm:text-base">
-            <Link href="/chat">
+            <Link href="/kyc">
               Start Your Journey <Sparkles className="ml-2 w-4 h-4" />
             </Link>
           </Button>

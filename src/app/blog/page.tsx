@@ -255,7 +255,7 @@ export default function JapaNewsPage() {
                 </p>
               </div>
               <Button className="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm" asChild>
-                <a href="/chat">Start Now</a>
+                <a href="/kyc">Start Now</a>
               </Button>
             </div>
           </div>

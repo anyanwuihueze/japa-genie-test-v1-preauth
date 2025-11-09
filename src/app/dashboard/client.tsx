@@ -379,7 +379,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         <CardContent>
           <div className="flex gap-4 flex-wrap">
             <Button asChild variant="outline">
-              <Link href="/chat">Ask AI Assistant</Link>
+              <Link href="/kyc">Ask AI Assistant</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/interview">Practice Interview</Link>

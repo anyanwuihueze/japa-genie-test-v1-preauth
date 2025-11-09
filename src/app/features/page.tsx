@@ -14,7 +14,7 @@ const features = [
     icon: BarChart,
     title: 'Real-Time Success Rates',
     description: 'Live data on visa acceptance rates, processing times, and costs updated by our AI agents daily.',
-    href: '/chat',
+    href: '/kyc',
   },
   {
     icon: Clock,
@@ -26,13 +26,13 @@ const features = [
     icon: CheckCircle,
     title: '24/7 AI Guidance',
     description: 'Get instant answers to your visa questions. No more waiting for consultants or outdated forums.',
-    href: '/chat',
+    href: '/kyc',
   },
   {
     icon: Building2,
     title: 'Jobs in Demand',
     description: 'Discover which skills are most wanted in your target countries and how to position yourself.',
-    href: '/chat',
+    href: '/kyc',
   },
   {
     icon: Users,
@@ -73,7 +73,7 @@ export default function FeaturesPage() {
 
         <div className="text-center mt-16">
           <Button asChild size="lg" className="bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-10 py-6 text-lg font-bold">
-            <Link href="/chat">
+            <Link href="/kyc">
               Get Answers Now <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>

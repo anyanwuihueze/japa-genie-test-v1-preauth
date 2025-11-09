@@ -32,7 +32,7 @@ export default function TalkToSomeone() {
 
         <div className="space-y-4">
           <Button size="lg" className="w-full max-w-md" asChild>
-            <Link href="/chat">
+            <Link href="/kyc">
               Start Chatting Now <span className="ml-2">💬</span>
             </Link>
           </Button>

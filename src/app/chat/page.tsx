@@ -1,14 +1,13 @@
-// src/app/chat/page.tsx - EXACT ORIGINAL + KYC DATA
+// src/app/chat/page.tsx - FIXED WITH SUSPENSE
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { WelcomeNameModal } from '@/components/onboarding/welcome-name-modal';
 import ChatClient from './client';
 import { useSearchParams } from 'next/navigation';
 
-export default function ChatPage() {
+function ChatPageContent() {
   const { user, loading: authLoading } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -60,6 +59,7 @@ export default function ChatPage() {
         if (error || !profile?.preferred_name) {
           setShowModal(true);
         }
+
         setIsCheckingProfile(false);
       } catch (error) {
         console.error('Error checking profile:', error);
@@ -86,5 +86,17 @@ export default function ChatPage() {
       />
       <ChatClient />
     </>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <ChatPageContent />
+    </Suspense>
   );
 }

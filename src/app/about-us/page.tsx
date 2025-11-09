@@ -118,7 +118,7 @@ export default function AboutUs() {
 
         <div className="text-center">
           <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:opacity-90" asChild>
-            <a href="/chat">
+            <a href="/kyc">
               Start Your Journey <span className="ml-2">✨</span>
             </a>
           </Button>

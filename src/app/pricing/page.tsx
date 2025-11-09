@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,7 @@ interface OneTimeCreditPlan {
   duration: string;
   features: string[];
   cta: string;
-  description?: string; // Make description optional
+  description?: string;
 }
 
 interface SubscriptionTier {
@@ -39,10 +39,18 @@ interface SubscriptionTier {
   features: string[];
   cta: string;
   popular: boolean;
-  description: string; // Description is required for subscription tiers
+  description: string;
 }
 
 export default function PricingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading pricing...</div>}>
+      <PricingContent />
+    </Suspense>
+  );
+}
+
+function PricingContent() {
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -109,7 +117,6 @@ export default function PricingPage() {
                 <CardTitle className="text-xl md:text-2xl">{plan.name}</CardTitle>
                 <p className="text-2xl md:text-3xl font-bold pt-2">${plan.price}</p>
                 <CardDescription className="text-sm md:text-base">
-                  {/* Fixed: Use optional chaining and provide fallback */}
                   {plan.description || ''}
                 </CardDescription>
               </CardHeader>

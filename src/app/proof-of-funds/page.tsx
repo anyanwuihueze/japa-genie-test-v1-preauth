@@ -67,7 +67,7 @@ export default function ProofOfFundsPage() {
                 Our AI assistant can analyze your specific situation and provide a personalized financial documentation strategy.
             </CardDescription>
             <Button asChild>
-                <Link href="/chat">Ask Japa Genie</Link>
+                <Link href="/kyc">Ask Japa Genie</Link>
             </Button>
         </CardHeader>
       </Card>

@@ -30,7 +30,7 @@ const menuItems = [
   { href: '/progress', label: 'Visa Journey', icon: Map },
   { href: '/document-check', label: 'Document Checker', icon: CheckCircle2 },
   { href: '/rejection-reversal', label: 'Rejection Reversal', icon: Repeat },
-  { href: '/chat', label: 'AI Assistant', icon: Bot },
+  { href: '/kyc', label: 'AI Assistant', icon: Bot },
   { href: '/how-it-works', label: 'How It Works', icon: Rocket },
   { href: '/features', label: 'Features', icon: Star },
   { href: '/pricing', label: 'Pricing', icon: DollarSign },

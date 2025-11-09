@@ -123,7 +123,7 @@ export default function RejectionRiskScorePost() {
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:opacity-90"
               asChild
             >
-              <a href="/chat">Get My Free Score Now</a>
+              <a href="/kyc">Get My Free Score Now</a>
             </Button>
             
             <p className="text-xs text-gray-500 mt-3">

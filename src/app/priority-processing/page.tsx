@@ -76,7 +76,7 @@ export default function PriorityProcessingPage() {
           <CardTitle>Ready to Speed Things Up?</CardTitle>
           <CardDescription className="mb-4">Let Japa Genie build a personalized priority roadmap for you.</CardDescription>
           <Button asChild>
-            <Link href="/chat">Get My Priority Plan</Link>
+            <Link href="/kyc">Get My Priority Plan</Link>
           </Button>
         </CardHeader>
       </Card>

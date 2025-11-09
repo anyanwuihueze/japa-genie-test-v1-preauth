@@ -77,7 +77,7 @@ export default function KwameStory() {
               Like Kwame, you might be closer to your visa goal than you think. Let Japa Genie's AI analyze your unique profile and find your pathway.
             </p>
             <Button className="bg-primary hover:bg-primary/90" asChild>
-              <a href="/chat">Discover Your Potential</a>
+              <a href="/kyc">Discover Your Potential</a>
             </Button>
           </div>
         </article>
