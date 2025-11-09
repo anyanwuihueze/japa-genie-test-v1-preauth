@@ -78,7 +78,7 @@ export default function KYCPage() {
           {/* Header with background image */}
           <CardHeader className="text-center pb-4 relative min-h-[200px] flex items-center justify-center bg-gradient-to-r from-blue-600/10 to-purple-600/10">
             {/* The image will be placed in the public folder */}
-            <div className="absolute inset-0 bg-[url('/passport-stamps-collage.jpg')] bg-cover bg-center opacity-10"></div>
+            <div className="absolute inset-0 bg-[url('/passport-stamps-collage.jpg')] bg-cover bg-center opacity-40"></div>
             <div className="relative z-10">
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Your Global Journey Starts Here

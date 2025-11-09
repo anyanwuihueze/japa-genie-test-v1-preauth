@@ -55,6 +55,53 @@ export default function UserChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // ========== ENHANCED KYC INTEGRATION ==========
+  useEffect(() => {
+    const storedKyc = sessionStorage.getItem('kycData');
+    if (storedKyc && messages.length === 0) {
+      const kycData = JSON.parse(storedKyc);
+      console.log('🎯 KYC Data loaded, calling AI for personalized response:', kycData);
+      
+      // Clear KYC data immediately so we don't repeat
+      sessionStorage.removeItem('kycData');
+      
+      // Set a temporary "Analyzing your profile..." message
+      setMessages([{ role: 'assistant', content: "🎯 Analyzing your profile for personalized visa advice..." }]);
+      setIsTyping(true);
+
+      // Call the AI immediately with the KYC context for a robust response
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          question: `Provide comprehensive ${kycData.visaType} advice for ${kycData.destination} for a ${kycData.age}-year-old from ${kycData.country}${kycData.profession ? ` working as ${kycData.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
+          userContext: kycData,
+          conversationHistory: []
+        }),
+      })
+      .then(response => response.json())
+      .then(chatResult => {
+        if (chatResult.answer) {
+          setMessages([{ role: 'assistant', content: chatResult.answer }]);
+          if (chatResult.insights) {
+            setInsights(chatResult.insights);
+          }
+        } else {
+          // Fallback to robust welcome message
+          setMessages([{ role: 'assistant', content: `Welcome! Based on your profile:\n\n**📍 From:** ${kycData.country}\n**🎯 Destination:** ${kycData.destination}\n**📋 Visa Type:** ${kycData.visaType}\n**👤 Age:** ${kycData.age}${kycData.profession ? `\n**💼 Profession:** ${kycData.profession}` : ''}\n\nI'm ready to provide specific advice for your ${kycData.destination} ${kycData.visaType.toLowerCase()} journey. What would you like to know first?` }]);
+        }
+      })
+      .catch(err => {
+        // Enhanced fallback welcome message
+        setMessages([{ role: 'assistant', content: `Welcome! I see you're exploring ${kycData.visaType} opportunities in ${kycData.destination} from ${kycData.country}. As a ${kycData.age}-year-old${kycData.profession ? ` ${kycData.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` }]);
+      })
+      .finally(() => {
+        setIsTyping(false);
+      });
+    }
+  }, [messages.length]);
+  // ========== END ENHANCED KYC INTEGRATION ==========
+
   useEffect(() => {
     async function fetchUserName() {
       if (!user) return;
@@ -157,11 +204,22 @@ export default function UserChat() {
         if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
+      // ========== KYC INTEGRATION IN CONVERSATION ==========
+      // Get any remaining KYC data for context-aware responses
+      const storedKyc = sessionStorage.getItem('kycData');
+      const kycData = storedKyc ? JSON.parse(storedKyc) : null;
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ question: trimmed, conversationHistory, ...(user ? {} : { wishCount: newWishCount }) }),
+        body: JSON.stringify({ 
+          question: trimmed, 
+          conversationHistory, 
+          userContext: kycData || undefined,
+          ...(user ? {} : { wishCount: newWishCount }) 
+        }),
       });
+      // ========== END KYC INTEGRATION ==========
 
       const chatResult = await response.json();
       if (!response.ok) throw new Error(chatResult.error || 'Failed');

@@ -97,7 +97,7 @@ export function AppHeader() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground" 
                 asChild
               >
-                <Link href="/chat">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link href="/kyc">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </>
           )}
@@ -123,7 +123,7 @@ export function AppHeader() {
                     <Link href="/dashboard">My Dashboard</Link>
                   </Button>
                   <Button asChild className="justify-start">
-                    <Link href="/chat">Ask AI</Link>
+                    <Link href="/kyc">Ask AI</Link>
                   </Button>
                   <Button variant="outline" onClick={() => signOut()} className="justify-start">
                     Sign Out
@@ -135,7 +135,7 @@ export function AppHeader() {
                     Log In
                   </Button>
                   <Button asChild className="justify-start">
-                    <Link href="/chat">Get Started</Link>
+                    <Link href="/kyc">Get Started</Link>
                   </Button>
                 </>
               )}
