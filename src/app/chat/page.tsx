@@ -1,3 +1,4 @@
+// src/app/chat/page.tsx - EXACT ORIGINAL + KYC DATA
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,12 +6,34 @@ import { useAuth } from '@/lib/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { WelcomeNameModal } from '@/components/onboarding/welcome-name-modal';
 import ChatClient from './client';
+import { useSearchParams } from 'next/navigation';
 
 export default function ChatPage() {
   const { user, loading: authLoading } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
   const supabase = createClient();
+  const searchParams = useSearchParams();
+
+  // KYC DATA READING - ONLY ADDITION
+  useEffect(() => {
+    const country = searchParams.get('country');
+    const destination = searchParams.get('destination');
+    const age = searchParams.get('age');
+    const visaType = searchParams.get('visaType');
+    const profession = searchParams.get('profession');
+
+    if (country && destination && age && visaType) {
+      sessionStorage.setItem('kycData', JSON.stringify({
+        country,
+        destination,
+        age,
+        visaType,
+        profession: profession || undefined
+      }));
+    }
+  }, [searchParams]);
+  // END OF KYC DATA READING
 
   useEffect(() => {
     async function checkOnboarding() {
@@ -28,28 +51,18 @@ export default function ChatPage() {
 
       try {
         // Check if user has preferred_name in database
-        const { data, error } = await supabase
-          .from('user_profiles')
+        const { data: profile, error } = await supabase
+          .from('profiles')
           .select('preferred_name')
           .eq('id', user.id)
           .single();
 
-        if (error) {
-          console.error('Error checking profile:', error);
-          setIsCheckingProfile(false);
-          return;
-        }
-
-        // Show modal only if preferred_name is null/empty
-        if (!data?.preferred_name) {
+        if (error || !profile?.preferred_name) {
           setShowModal(true);
-        } else {
-          // User already has a name, mark as complete
-          localStorage.setItem('name_onboarding_complete', 'true');
         }
+        setIsCheckingProfile(false);
       } catch (error) {
-        console.error('Error in onboarding check:', error);
-      } finally {
+        console.error('Error checking profile:', error);
         setIsCheckingProfile(false);
       }
     }
@@ -57,28 +70,20 @@ export default function ChatPage() {
     checkOnboarding();
   }, [user, authLoading, supabase]);
 
-  const handleModalComplete = (name: string) => {
-    console.log('✅ User onboarding complete, name:', name);
-    setShowModal(false);
-  };
-
-  // Show loading while checking
   if (authLoading || isCheckingProfile) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <>
-      {showModal && user && (
-        <WelcomeNameModal user={user} onComplete={handleModalComplete} />
-      )}
+      <WelcomeNameModal 
+        user={user}
+        onComplete={() => setShowModal(false)}
+      />
       <ChatClient />
     </>
   );

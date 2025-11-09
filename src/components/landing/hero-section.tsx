@@ -59,7 +59,7 @@ export function HeroSection() {
                       className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
                       asChild
                     >
-                      <Link href="/chat">
+                      <Link href="/kyc">
                         <span className="text-sm sm:text-base">Ask AI Assistant</span>
                         <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
@@ -72,7 +72,7 @@ export function HeroSection() {
                       className="group w-full min-[400px]:w-auto bg-gradient-to-r from-yellow-400 to-blue-600 text-white hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold"
                       asChild
                     >
-                      <Link href="/chat" className="flex items-center justify-center gap-2">
+                      <Link href="/kyc" className="flex items-center justify-center gap-2">
                         <Sparkles className="h-4 w-4 sm:h-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                         <span>Start Your Journey</span>
                       </Link>
