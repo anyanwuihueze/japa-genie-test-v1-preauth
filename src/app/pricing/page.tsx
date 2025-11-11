@@ -78,7 +78,10 @@ function PricingContent() {
 
   const handleAccept = () => {
     localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
-    window.location.href = `/checkout`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnTo = urlParams.get('returnTo');
+    const checkoutUrl = returnTo ? `/checkout?returnTo=${encodeURIComponent(returnTo)}` : '/checkout';
+    window.location.href = checkoutUrl;
   };
 
   return (

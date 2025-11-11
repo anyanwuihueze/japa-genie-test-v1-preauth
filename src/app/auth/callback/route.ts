@@ -16,13 +16,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/?error=${encodeURIComponent(error.message)}`);
     }
     
-    // Check if user was trying to access checkout
+    // Check if user was trying to access a specific page
     const next = requestUrl.searchParams.get('next');
     if (next) {
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
   
-  // Default redirect to DASHBOARD for signed-in users
-  return NextResponse.redirect(`${origin}/dashboard`);
+  // Check for returnTo parameter or default to dashboard
+  const returnTo = requestUrl.searchParams.get('returnTo') || '/dashboard';
+  return NextResponse.redirect(`${origin}${returnTo}`);
 }
