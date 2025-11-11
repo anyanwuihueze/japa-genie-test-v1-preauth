@@ -55,8 +55,106 @@ export interface DocumentCheckerOutput {
   };
 }
 
+// ENHANCED: Country-specific rules database
+const COUNTRY_RULES: Record<string, string> = {
+  'UK': `
+    STUDENT VISA REQUIREMENTS (2024):
+    - Financial proof: £1,334/month in London, £1,023/month outside London (9 months coverage)
+    - Bank statements: Must show 28 consecutive days, ending within 31 days of application
+    - Passport validity: 6 months beyond course end date minimum
+    - CAS (Confirmation of Acceptance): From licensed Tier 4 sponsor, valid 6 months
+    - English language: IELTS 5.5+ or equivalent (UKVI-approved test)
+    
+    WORK VISA REQUIREMENTS:
+    - Certificate of Sponsorship from licensed sponsor
+    - Salary: Minimum £38,700 or going rate for occupation (whichever higher)
+    - Passport validity: 6 months minimum
+    
+    COMMON REJECTION REASONS:
+    - Large unexplained deposits in 28-day bank statement period
+    - Insufficient funds or incorrect calculation
+    - CAS from unlicensed institution
+    - Passport expiring soon or damaged pages
+  `,
+  
+  'USA': `
+    F-1 STUDENT VISA REQUIREMENTS (2024):
+    - Form I-20 from SEVP-certified school (signed by student and school official)
+    - SEVIS fee payment: $350 receipt required
+    - Financial proof: Cover full first year tuition + living expenses ($60,000-$80,000 typical)
+    - Strong home ties: Property ownership, family commitments, job to return to
+    - DS-160 confirmation with compliant photo (2x2 inches, white background)
+    - Passport validity: 6 months beyond program end recommended
+    
+    B-1/B-2 TOURIST VISA:
+    - Strong home ties essential (job, property, family)
+    - Bank statements: 6 months showing consistent income (no sudden large deposits)
+    - Purpose of visit clearly documented
+    - Return ticket or travel itinerary
+    
+    COMMON REJECTION REASONS (214(b)):
+    - Weak home ties (officer believes you'll overstay)
+    - Insufficient financial proof or suspicious funds
+    - Inconsistent information or poor interview performance
+    - Previous visa violations
+  `,
+  
+  'Canada': `
+    STUDENT VISA (Study Permit) REQUIREMENTS (2024):
+    - Letter of Acceptance from DLI (Designated Learning Institution)
+    - Guaranteed Investment Certificate (GIC): Exactly $20,635 CAD mandatory
+    - Proof of tuition payment: First year or full program if less than 1 year
+    - Bank statements: Show additional funds beyond GIC+tuition, must be notarized
+    - Passport validity: Duration of studies + 6 months
+    - Medical exam: Required for programs over 6 months
+    - Police certificate: If staying over 6 months
+    
+    COMMON REJECTION REASONS:
+    - GIC amount incorrect or not from approved bank
+    - Bank statements not notarized
+    - LOA from non-DLI institution
+    - Weak study plan or purpose statement
+  `,
+  
+  'Australia': `
+    STUDENT VISA (Subclass 500) REQUIREMENTS (2024):
+    - Confirmation of Enrolment (CoE) from registered provider
+    - Financial capacity: AUD $24,505/year living expenses + tuition + travel
+    - Overseas Student Health Cover (OSHC): Full visa duration
+    - Genuine Temporary Entrant (GTE) statement: Explain study plans and intention to return
+    - English proficiency: IELTS 5.5+ or equivalent
+    - Financial documents: Must be certified by accountant/bank
+    
+    COMMON REJECTION REASONS:
+    - Weak GTE statement (looks like immigration intent)
+    - Insufficient funds or uncertified financial documents
+    - No OSHC or incorrect coverage period
+    - Previous visa breaches
+  `,
+  
+  'Germany': `
+    STUDENT VISA REQUIREMENTS (2024):
+    - University admission letter (Zulassungsbescheid)
+    - Blocked account (Sperrkonto): €11,208 minimum for one year
+    - Health insurance: Valid from arrival date
+    - Proof of accommodation in Germany
+    - Passport validity: 6 months beyond intended stay
+    
+    COMMON REJECTION REASONS:
+    - Blocked account below required amount
+    - No valid health insurance
+    - Admission letter not authenticated
+  `
+};
+
 export async function documentChecker(input: DocumentCheckerInput): Promise<DocumentCheckerOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.0-flash-exp",
+    generationConfig: {
+      temperature: 0.4, // CHANGED: Lower temp for more factual analysis
+      maxOutputTokens: 3000 // CHANGED: Increased for detailed analysis
+    }
+  });
   
   const targetCountry = input.targetCountry || 'General';
   const visaType = input.visaType || 'Tourist';
@@ -74,115 +172,171 @@ export async function documentChecker(input: DocumentCheckerInput): Promise<Docu
   
   console.log('📄 Document type:', mimeType);
 
+  // ENHANCED: Get country-specific rules
+  const countrySpecificRules = COUNTRY_RULES[targetCountry] || `
+    GENERAL VISA REQUIREMENTS:
+    - Passport validity: 6 months minimum beyond intended stay
+    - Financial proof: Bank statements 3-6 months, sufficient funds for stay
+    - All documents: Recent (within 30-90 days), clear quality
+    - Supporting docs: Employment letter, property ownership, family ties
+  `;
+
   const prompt = `
-ACT AS: Elite visa document reviewer with 20+ years experience across 50+ countries.
+ACT AS: Senior ${targetCountry} Embassy Visa Officer with 15+ years experience reviewing ${visaType} visa applications.
 
 DOCUMENT CONTEXT:
 - Target Country: ${targetCountry}
 - Visa Type: ${visaType}
-- Analysis Date: ${new Date().toISOString().split('T')[0]}
+- Review Date: ${new Date().toISOString().split('T')[0]}
 
-YOUR MISSION:
-Perform FORENSIC-LEVEL analysis of this visa document. Embassy officers reject 80% of applications for document issues - find EVERY problem before they do.
+YOUR MINDSET:
+You are STRICT. Embassy officers reject 70% of applications for document issues. Your job is to find problems that would cause rejection. Assume document is flawed until proven perfect. Be harsh but fair.
 
-CRITICAL ANALYSIS AREAS:
+${targetCountry.toUpperCase()} ${visaType.toUpperCase()} VISA - MANDATORY REQUIREMENTS:
+${countrySpecificRules}
 
-1. DOCUMENT IDENTIFICATION
-   - What type of document is this? (passport, bank statement, employment letter, etc.)
-   - Is it REQUIRED for ${visaType} visa to ${targetCountry}?
-   - Which application stage does it belong to?
+FORENSIC DOCUMENT ANALYSIS - 7-STEP PROCESS:
 
-2. AUTHENTICITY & VALIDITY
-   - Are there official stamps, signatures, letterheads?
-   - Is the document recent (within 30-90 days)?
-   - Does it show signs of alteration or forgery?
-   - Are dates consistent and logical?
+1. DOCUMENT IDENTIFICATION & RELEVANCE
+   - What exact type of document is this? (passport bio page, bank statement, employment letter, etc.)
+   - Is it REQUIRED or OPTIONAL for ${targetCountry} ${visaType} visa?
+   - Application stage: Initial submission, interview prep, or post-approval?
+   - If not visa-related, explain why
 
-3. CONTENT QUALITY
-   - Is all required information present?
-   - Are numbers/amounts clearly visible?
-   - Is text legible and professionally formatted?
-   - Any spelling errors or poor grammar?
+2. AUTHENTICITY & FRAUD DETECTION
+   ⚠️ RED FLAGS - Mark as HIGH/CRITICAL risk if you see:
+   - Missing official stamps, watermarks, or letterheads
+   - Inconsistent fonts or formatting (sign of tampering)
+   - Dates that are illogical (issue date after expiry, future dates, etc.)
+   - Amounts that seem inflated or unrealistic
+   - Poor image quality hiding details (possible screenshot/edit)
+   - Signatures missing or appear digitally added
+   
+3. LEGAL COMPLIANCE CHECK (AGAINST ${targetCountry} RULES ABOVE)
+   Compare document against the mandatory requirements listed above:
+   - Financial docs: Does amount meet minimum threshold?
+   - Validity periods: Does it cover required timeframe?
+   - Date ranges: Falls within acceptable windows?
+   - Certifications: Is notarization/certification required but missing?
+   - Format: Meets official standards for this document type?
+   
+   BE SPECIFIC: If document fails a requirement, cite the exact rule it violates.
 
-4. COMPLIANCE CHECKS (${targetCountry} Standards)
-   - Does it meet embassy formatting requirements?
-   - Are all mandatory fields filled?
-   - Does it include required certifications?
-   - Is it translated if needed?
+4. CONTENT QUALITY & COMPLETENESS
+   - Text legibility: Any blur, glare, shadows obscuring critical info?
+   - Page completeness: All pages present? (check page numbers like "1 of 3")
+   - Key fields: Name, dates, amounts, signatures all visible?
+   - Professional quality: Would embassy accept this quality or request resubmission?
 
-5. RED FLAGS & REJECTION RISKS
-   - Missing signatures or dates
-   - Expired validity periods
-   - Insufficient amounts (for financial docs)
-   - Inconsistent information
-   - Poor image quality
-   - Suspicious patterns
+5. RISK SCORING LOGIC
+   Assign overall risk score based on:
+   - LOW: Perfect compliance, crystal clear, certified/official, recent
+   - MEDIUM: Minor quality issues OR missing optional supporting info
+   - HIGH: Missing required information OR authenticity concerns OR borderline compliance
+   - CRITICAL: Legal requirement violations OR fraud indicators OR guaranteed rejection reasons
 
-6. VISA-SPECIFIC REQUIREMENTS
-   For ${visaType} visa to ${targetCountry}:
-   - Does this document fulfill specific checklist items?
-   - How critical is it for approval?
-   - What additional documents should accompany it?
+6. EMBASSY OFFICER SIMULATION
+   Put yourself at the ${targetCountry} embassy visa counter TODAY:
+   - Would you APPROVE or REJECT this document? Be honest.
+   - What additional documents would you demand?
+   - Would you flag for fraud investigation team?
+   - How does this compare to typical successful applications?
 
-OUTPUT FORMAT: Return ONLY valid JSON (no markdown, no backticks):
+7. ACTIONABLE RECOMMENDATIONS
+   For EACH issue found, provide:
+   - Specific problem (not generic like "needs improvement")
+   - Real-world impact (how this affects approval odds)
+   - Exact fix (step-by-step action user must take)
+   
+   Priority levels:
+   - HIGH: Must fix or guaranteed rejection
+   - MEDIUM: Strongly recommended to avoid delays
+   - LOW: Nice-to-have improvements
+
+CRITICAL OUTPUT RULES:
+- Be brutally honest about rejection risks
+- Use EXACT numbers from rules (don't say "sufficient funds" - say "need £12,006 for 9 months")
+- If document passes, still find ways to strengthen it
+- Cite specific ${targetCountry} requirements when relevant
+- Respond with ONLY valid JSON (no markdown, no code blocks, no explanations)
+
+JSON FORMAT:
 {
-  "documentType": "Passport Bio Page",
+  "documentType": "Bank Statement - Chase Bank",
   "isVisaRelated": true,
-  "overallRiskScore": "LOW",
-  "summary": "Valid passport with 2+ years validity remaining. All information clearly visible.",
+  "overallRiskScore": "MEDIUM",
+  "summary": "3-month bank statement showing average balance of £8,500. Falls short of UK student visa requirement of £12,006 for 9 months.",
   "strengths": [
-    "Clear, high-quality scan",
-    "Passport valid until 2027",
-    "All fields legible"
+    "Clear official bank letterhead and stamps",
+    "All transaction details legible", 
+    "Recent statement (dated 2 weeks ago)"
   ],
   "criticalIssues": [
     {
-      "issue": "Passport expires within 6 months of travel",
-      "impact": "Automatic rejection - most embassies require 6+ months validity",
-      "recommendation": "Renew passport immediately before applying"
+      "issue": "Statement period is only 90 days, UK requires 28 consecutive days PLUS sufficient total funds",
+      "impact": "Current balance of £8,500 is £3,506 short of £12,006 minimum for 9-month course in London",
+      "recommendation": "Deposit additional £3,600 and wait 28 days, then request new statement showing 28-day period with full amount"
     }
   ],
   "warnings": [
     {
-      "issue": "Photo partially obscured by glare",
-      "impact": "May require re-submission",
-      "recommendation": "Rescan without flash/glare"
+      "issue": "Large deposit of £2,000 made 12 days ago with reference 'Loan from Dad'",
+      "impact": "Embassy may question if funds are genuinely available or temporary loan",
+      "recommendation": "Obtain signed letter from father confirming it's a gift (not loan) with his own bank statements as proof of his capacity"
     }
   ],
-  "missingInformation": ["No visible MRZ (Machine Readable Zone)"],
-  "qualityIssues": ["Slight blur in signature area"],
+  "missingInformation": [
+    "Bank verification letter on letterhead confirming account authenticity"
+  ],
+  "qualityIssues": [
+    "Page 2 has slight glare on top right corner obscuring one transaction"
+  ],
   "complianceChecks": {
-    "validityPeriod": "PASS - Valid until 2027",
-    "formatCompliance": "PASS - Standard ICAO format",
-    "signatures": "PASS - Signature present",
-    "dates": "PASS - Issue/expiry dates clear"
+    "validityPeriod": "PARTIAL - Shows 90 days but need specific 28-day window meeting threshold",
+    "formatCompliance": "PASS - Official bank statement format",
+    "signatures": "PASS - Bank stamp and authorized signatory present",
+    "dates": "PASS - Statement dated within 30 days"
   },
   "actionItems": [
     {
       "priority": "HIGH",
-      "action": "Verify passport expiry extends 6 months beyond intended stay",
-      "reason": "Embassy requirement for ${targetCountry}"
+      "action": "Increase balance to £12,006+ and maintain for 28 consecutive days, then request new statement",
+      "reason": "Mandatory UK requirement - current funds insufficient for 9-month course in London"
+    },
+    {
+      "priority": "HIGH",
+      "action": "Obtain gift letter from father plus his bank statements",
+      "reason": "Explain large recent deposit to avoid fraud suspicions"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Request bank verification letter on official letterhead",
+      "reason": "Strengthens authenticity, common embassy request"
     }
   ],
-  "countrySpecificNotes": "${targetCountry} requires bio-data page + all used pages. Include blank pages showing 'no stamps'.",
-  "detailedReport": "Comprehensive 2-3 sentence analysis of document readiness",
+  "countrySpecificNotes": "UK student visa financial requirements are strict: £1,334/month for London (£12,006 for 9 months) shown in 28 consecutive days, ending within 31 days of application. Large deposits within 28-day window commonly trigger additional scrutiny.",
+  "detailedReport": "This Chase Bank statement shows 3 months of transactions with average balance around £8,500. While the document quality is good and appears authentic, it falls short of UK student visa requirements in two critical ways: (1) Total funds of £8,500 are £3,506 below the mandatory £12,006 for a 9-month London course, and (2) Recent £2,000 deposit raises questions about fund availability. Visa officers are trained to spot temporary fund parking. Recommend depositing £3,600 more, waiting 28 days to establish the pattern, then requesting a fresh statement with all requirements met.",
   "visaRelevance": {
     "isRequiredForVisa": true,
-    "requiredStage": "Initial application",
+    "requiredStage": "Initial application - mandatory financial proof document",
     "importance": "CRITICAL",
     "specificRequirements": [
-      "Must be valid for 6+ months beyond stay",
-      "Bio-data page must be clear",
-      "All used pages required"
+      "Must show £1,334/month × 9 months = £12,006 minimum for London",
+      "28 consecutive days with balance above threshold",
+      "Statement must end within 31 days of visa application date",
+      "Large deposits must be explained with source documentation"
     ]
   },
   "progressImpact": {
-    "milestoneProgress": 100,
+    "milestoneProgress": 45,
     "nextRecommendedActions": [
-      "✅ Passport ready - proceed to financial documents",
-      "📋 Next: Upload bank statements (last 6 months)"
+      "🚫 DO NOT APPLY YET - funds insufficient",
+      "💰 Deposit £3,600 to reach £12,006 total",
+      "📅 Wait 28 days to establish fund history",
+      "📄 Get gift letter + father's bank statements",
+      "✅ Request new 28-day statement after waiting period"
     ],
-    "estimatedTimelineImpact": "On track - no delays"
+    "estimatedTimelineImpact": "1-2 month delay required to meet financial requirements properly"
   }
 }`;
 
@@ -205,21 +359,26 @@ OUTPUT FORMAT: Return ONLY valid JSON (no markdown, no backticks):
     const response = await result.response;
     rawText = response.text();
     
-    console.log('✅ Raw Document Analysis:', rawText.substring(0, 500) + '...');
+    console.log('✅ Raw Document Analysis received');
     
-    // Clean up response
+    // ENHANCED: More aggressive cleaning
     let cleanedText = rawText
-      .replace(/```json\n?/g, '')
+      .replace(/```json\n?/gi, '')
       .replace(/```\n?/g, '')
       .replace(/^[^{]*/, '')
       .replace(/[^}]*$/, '')
       .trim();
     
-    console.log('🧹 Cleaned response');
+    console.log('🧹 Response cleaned, parsing JSON...');
     
-    const parsed = JSON.parse(cleanedText);
+    const parsed: DocumentCheckerOutput = JSON.parse(cleanedText);
     
-    console.log('🎉 Document analysis complete!');
+    // ENHANCED: Validation layer
+    if (!parsed.documentType || !parsed.summary) {
+      throw new Error('Invalid AI response structure');
+    }
+    
+    console.log('🎉 Document analysis complete:', parsed.documentType);
     
     return parsed;
     
@@ -227,71 +386,79 @@ OUTPUT FORMAT: Return ONLY valid JSON (no markdown, no backticks):
     console.error('❌ Document Analysis Error:', error);
     console.error('Failed raw text:', rawText.substring(0, 1000));
     
-    // Return fallback response
+    // ENHANCED: Better fallback with country context
     console.log('⚠️ Using fallback document analysis');
     
     return {
-      documentType: "Document (analysis incomplete)",
+      documentType: "Document (AI analysis incomplete)",
       isVisaRelated: true,
       overallRiskScore: "MEDIUM",
-      summary: `AI had trouble analyzing this document. Please ensure it's a clear, high-quality image or PDF.`,
+      summary: `Automated analysis encountered difficulties processing this document for ${targetCountry} ${visaType} visa. This may be due to image quality, document format, or technical issues.`,
       strengths: [
-        "Document uploaded successfully"
+        "Document uploaded successfully",
+        "File format accepted"
       ],
       criticalIssues: [
         {
-          issue: "Document quality may be insufficient",
-          impact: "AI couldn't extract all details - embassy may also struggle",
-          recommendation: "Try uploading a clearer scan or photo"
+          issue: "AI could not fully analyze document content",
+          impact: "Cannot verify if document meets embassy standards",
+          recommendation: "Try: (1) Re-upload with better lighting/quality, (2) Ensure entire document is visible, (3) Consider professional document review service"
         }
       ],
       warnings: [
         {
-          issue: "Incomplete automated analysis",
-          impact: "Manual review recommended",
-          recommendation: "Consider professional document verification service"
+          issue: "Automated verification incomplete",
+          impact: "Embassy may also struggle to read this document",
+          recommendation: "Before submitting to embassy, verify document is crystal clear, all text readable, and meets quality standards"
         }
       ],
-      missingInformation: ["AI couldn't verify all fields"],
-      qualityIssues: ["Image quality may be too low"],
+      missingInformation: ["AI unable to extract document details"],
+      qualityIssues: ["Image quality may be insufficient for automated analysis"],
       complianceChecks: {
-        validityPeriod: "Unable to verify",
-        formatCompliance: "Unable to verify",
-        signatures: "Unable to verify",
-        dates: "Unable to verify"
+        validityPeriod: "Unable to verify automatically",
+        formatCompliance: "Unable to verify automatically",
+        signatures: "Unable to verify automatically",
+        dates: "Unable to verify automatically"
       },
       actionItems: [
         {
           priority: "HIGH",
-          action: "Re-upload document with better quality",
-          reason: "Current quality insufficient for automated analysis"
+          action: "Re-upload document with improved quality",
+          reason: "Current upload insufficient for AI analysis - embassy will likely reject if quality this poor"
+        },
+        {
+          priority: "HIGH",
+          action: `Manually verify document meets ${targetCountry} ${visaType} visa requirements`,
+          reason: "Automated checks failed - manual verification essential"
         },
         {
           priority: "MEDIUM",
-          action: "Verify document meets embassy standards manually",
-          reason: "AI analysis incomplete"
+          action: "Consider professional document verification service",
+          reason: "Expert human review recommended when AI analysis incomplete"
         }
       ],
-      countrySpecificNotes: `For ${targetCountry} ${visaType} visa, ensure all documents are recent, certified, and clearly legible.`,
-      detailedReport: "Automated analysis encountered difficulties. Please ensure your document is a clear, complete, and recent scan or photo. Consider re-uploading or consulting our expert review service for manual verification.",
+      countrySpecificNotes: countrySpecificRules.trim(),
+      detailedReport: `Automated AI analysis was unable to fully process this document. This could indicate: (1) Poor image quality (blurry, dark, or obscured), (2) Unsupported document format, or (3) Complex layout AI couldn't parse. For ${targetCountry} ${visaType} visa applications, all documents must be crystal clear and fully legible. Embassy visa officers will reject unclear documents immediately. RECOMMENDATION: Take a new high-quality photo/scan in good lighting, ensure entire document is visible and in focus, then re-upload. If issues persist, consider our premium manual review service where human experts verify your documents against embassy requirements.`,
       visaRelevance: {
         isRequiredForVisa: true,
-        requiredStage: "Application",
+        requiredStage: "Unknown - analysis incomplete",
         importance: "IMPORTANT",
         specificRequirements: [
-          "Document must be clear and legible",
-          "Should be recent (within 30-90 days)",
-          "Must meet embassy formatting requirements"
+          "Document must be clear and fully legible",
+          "Should be recent (typically within 30-90 days)",
+          `Must meet ${targetCountry} embassy formatting requirements`,
+          "All text, dates, and amounts must be readable"
         ]
       },
       progressImpact: {
-        milestoneProgress: 30,
+        milestoneProgress: 20,
         nextRecommendedActions: [
-          "🔧 Re-upload document with better quality",
-          "📋 Ensure document meets embassy requirements",
-          "💡 Consider professional document review"
+          "🔧 Re-upload document with better quality (good lighting, in focus)",
+          "📋 Verify document meets basic requirements manually",
+          `💡 Check ${targetCountry} embassy website for document specifications`,
+          "🆘 Consider professional document review if AI continues to fail"
         ],
-        estimatedTimelineImpact: "Minor delay - quality issues need resolution"
+        estimatedTimelineImpact: "Minor delay - quality issues need resolution before proceeding"
       }
     };
   }

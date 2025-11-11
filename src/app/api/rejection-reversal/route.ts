@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal-flow';
+import { generateRejectionStrategy } from '@/ai/flows/rejection-reversal';
 
 export async function POST(request: NextRequest) {
   try {
