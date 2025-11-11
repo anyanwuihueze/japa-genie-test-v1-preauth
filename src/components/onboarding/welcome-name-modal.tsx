@@ -16,6 +16,7 @@ interface WelcomeNameModalProps {
 export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
   const [preferredName, setPreferredName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(true);
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,50 +24,41 @@ export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
     if (!preferredName.trim() || !user) return;
 
     setLoading(true);
+    
+    // SAVE TO SUPABASE - FEED THE AGENT
     try {
-      console.log('🔄 Saving name to Supabase...');
-      
-      // Try BOTH table names to ensure it works
-      let error = null;
-      
-      // Try 'profiles' table first
-      const result1 = await supabase
-        .from('profiles')
+      const { error } = await supabase
+        .from('user_profiles')
         .update({ preferred_name: preferredName.trim() })
         .eq('id', user.id);
 
-      error = result1.error;
-
-      // If 'profiles' fails, try 'user_profiles'
       if (error) {
-        console.log('❌ profiles table failed, trying user_profiles...');
-        const result2 = await supabase
-          .from('user_profiles')
-          .update({ preferred_name: preferredName.trim() })
-          .eq('id', user.id);
-        error = result2.error;
+        console.error('Supabase save error:', error);
+        // CONTINUE ANYWAY - DON'T BLOCK USER
       }
-
-      if (error) throw error;
-
-      console.log('✅ Name saved successfully!');
-      localStorage.setItem('name_onboarding_complete', 'true');
-      onComplete();
-      
     } catch (error) {
-      console.error('❌ Error saving name:', error);
-      // Even if Supabase fails, close modal and continue
-      localStorage.setItem('name_onboarding_complete', 'true');
-      onComplete();
-    } finally {
-      setLoading(false);
+      console.error('Unexpected error:', error);
+      // CONTINUE ANYWAY - DON'T BLOCK USER
     }
+    
+    // GUARANTEED CLOSE - ALWAYS EXECUTES
+    localStorage.setItem('name_onboarding_complete', 'true');
+    setOpen(false);
+    onComplete();
+    setLoading(false);
   };
 
-  if (!user) return null;
+  const handleClose = () => {
+    // STILL MARK AS COMPLETE BUT DON'T SAVE NAME
+    localStorage.setItem('name_onboarding_complete', 'true');
+    setOpen(false);
+    onComplete();
+  };
+
+  if (!user || !open) return null;
 
   return (
-    <Dialog open={true}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Welcome! Let's Get Personal 🎉</DialogTitle>
@@ -90,9 +82,12 @@ export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
               />
               <p className="text-xs text-gray-500">This is how I'll address you in our conversations</p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading || !preferredName.trim()}>
-              {loading ? 'Saving...' : 'Continue to Chat'}
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={handleClose} className="flex-1">Skip</Button>
+              <Button type="submit" className="flex-1" disabled={loading || !preferredName.trim()}>
+                {loading ? 'Saving...' : 'Continue'}
+              </Button>
+            </div>
           </form>
         </div>
       </DialogContent>

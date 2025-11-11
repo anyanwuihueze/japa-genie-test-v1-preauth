@@ -51,12 +51,13 @@ function ChatPageContent() {
       try {
         // Check if user has preferred_name in database
         const { data: profile, error } = await supabase
-          .from('user_profiles')  // ✅ CHANGED: 'profiles' → 'user_profiles'
+          .from('user_profiles')
           .select('preferred_name')
           .eq('id', user.id)
           .single();
 
-        if (error || !profile?.preferred_name) {
+        // ✅ FIXED LINE: Only show modal if no name AND not completed onboarding
+        if ((error || !profile?.preferred_name) && !localStorage.getItem('name_onboarding_complete')) {
           setShowModal(true);
         }
 
@@ -80,10 +81,12 @@ function ChatPageContent() {
 
   return (
     <>
-      <WelcomeNameModal 
-        user={user}
-        onComplete={() => setShowModal(false)}
-      />
+      {showModal && (
+        <WelcomeNameModal 
+          user={user}
+          onComplete={() => setShowModal(false)}
+        />
+      )}
       <ChatClient />
     </>
   );
