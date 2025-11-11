@@ -10,7 +10,7 @@ import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckC
 import Link from 'next/link';
 import { DocumentUpload } from '@/components/dashboard/document-upload';
 import { ProofOfFundsCard } from '@/components/dashboard/proof-of-funds-card';
-import { UserProfileCard } from '@/components/dashboard/user-profile-card';
+import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
 import VisaPulseTicker from '@/components/visa-pulse-ticker';
 
 interface DashboardClientProps {
@@ -50,7 +50,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
     }
   }, [userProfile]);
 
-  // NEW: Load visa-specific progress from database
+  // Load visa-specific progress from database
   const loadVisaProgress = async () => {
     if (!user) return;
 
@@ -106,7 +106,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
     }));
   };
 
-  // NEW: Get visa type icon
+  // Get visa type icon
   const getVisaIcon = (visaType: string) => {
     switch (visaType?.toLowerCase()) {
       case 'student': return <BookOpen className="w-5 h-5" />;
@@ -119,7 +119,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
     }
   };
 
-  // NEW: Get timeline estimate based on visa type
+  // Get timeline estimate based on visa type
   const getTimelineEstimate = (visaType: string, country: string) => {
     const timelines: any = {
       student: { canada: '12-16 weeks', usa: '8-12 weeks', uk: '3-6 weeks', general: '8-12 weeks' },
@@ -236,11 +236,11 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         </CardContent>
       </Card>
 
-      {/* ENHANCED: Profile Card + Metrics Grid */}
+      {/* ENHANCED: Beacon Profile Card + Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Profile Card - First position */}
+        {/* Enhanced Profile Card - First position */}
         <div className="md:col-span-1">
-          <UserProfileCard userProfile={userProfile} />
+          <EnhancedProfileCard userProfile={userProfile} />
         </div>
         
         {/* Existing metrics cards */}
@@ -379,6 +379,9 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           <div className="flex gap-4 flex-wrap">
             <Button asChild variant="outline">
               <Link href="/kyc">Ask AI Assistant</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/kyc-profile">Update Profile</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/interview">Practice Interview</Link>
