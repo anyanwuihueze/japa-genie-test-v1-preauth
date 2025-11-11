@@ -54,6 +54,7 @@ export default function UserChat() {
   const [userName, setUserName] = useState<string>('Pathfinder');
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null); // ✅ AUTO-SCROLL REF ADDED
 
   // ========== ENHANCED KYC INTEGRATION ==========
   useEffect(() => {
@@ -141,6 +142,11 @@ export default function UserChat() {
     }
     if (!authLoading && userName !== 'Pathfinder') loadMessages();
   }, [user, authLoading, userName, supabase]);
+
+  // ✅ AUTO-SCROLL TO BOTTOM WHEN NEW MESSAGES ARRIVE
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
   const handleClearChat = async () => {
     if (!user) return;
@@ -338,6 +344,7 @@ export default function UserChat() {
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} /> {/* ✅ AUTO-SCROLL ANCHOR ADDED */}
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-white border rounded-lg px-3 sm:px-4 py-2 shadow">
@@ -418,7 +425,7 @@ export default function UserChat() {
                   <p className="text-sm sm:text-base text-blue-600">{country.visaType}</p>
                   <div className="text-xs text-gray-600">
                     <p>💰 ${country.estimatedCost.toLocaleString()}</p>
-                    <p>⏱️ {country.processingTimeMonths} months</p>
+                    <p>⏱️ ${country.processingTimeMonths} months</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-green-700">Pros:</p>
