@@ -1,4 +1,5 @@
 // src/components/onboarding/welcome-name-modal.tsx - FIXED VERSION
+// Replace the entire file with this:
 
 'use client';
 
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
 interface WelcomeNameModalProps {
-  user: any;
+  user: any; // This can be null for non-logged-in users
   onComplete: () => void;
 }
 
@@ -25,13 +26,15 @@ export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
 
     setLoading(true);
     try {
+      // Update user profile with preferred name
       const { error } = await supabase
-        .from('profiles')  // ✅ FIXED: Changed back to 'profiles'
+        .from('profiles')
         .update({ preferred_name: preferredName.trim() })
         .eq('id', user.id);
 
       if (error) throw error;
 
+      // Mark onboarding as complete
       localStorage.setItem('name_onboarding_complete', 'true');
       onComplete();
     } catch (error) {
@@ -41,6 +44,7 @@ export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
     }
   };
 
+  // Don't show modal if no user (for non-logged-in visitors)
   if (!user) {
     return null;
   }
