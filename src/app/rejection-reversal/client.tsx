@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Sparkles, Wand2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { generateRejectionStrategy, type RejectionStrategyInput, type RejectionStrategyOutput } from '@/ai/flows/rejection-reversal-flow';
+import { generateRejectionStrategy, type RejectionStrategyInput, type RejectionStrategyOutput } from '@/ai/flows/rejection-reversal';
 import { RejectionStrategyInputSchema } from '@/ai/schemas/rejection-reversal-schema';
 
 type FormValues = RejectionStrategyInput;
