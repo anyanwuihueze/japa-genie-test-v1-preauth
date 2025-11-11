@@ -51,7 +51,7 @@ function ChatPageContent() {
       try {
         // Check if user has preferred_name in database
         const { data: profile, error } = await supabase
-          .from('profiles')
+          .from('user_profiles')  // ✅ CHANGED: 'profiles' → 'user_profiles'
           .select('preferred_name')
           .eq('id', user.id)
           .single();

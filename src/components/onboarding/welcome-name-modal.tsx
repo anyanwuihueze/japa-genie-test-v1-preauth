@@ -1,5 +1,4 @@
 // src/components/onboarding/welcome-name-modal.tsx - FIXED VERSION
-// Replace the entire file with this:
 
 'use client';
 
@@ -28,7 +27,7 @@ export function WelcomeNameModal({ user, onComplete }: WelcomeNameModalProps) {
     try {
       // Update user profile with preferred name
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')  // ✅ CHANGED: 'profiles' → 'user_profiles'
         .update({ preferred_name: preferredName.trim() })
         .eq('id', user.id);
 
