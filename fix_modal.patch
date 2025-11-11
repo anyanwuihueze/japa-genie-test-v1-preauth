@@ -1,0 +1,9 @@
+--- a/src/app/chat/page.tsx
++++ b/src/app/chat/page.tsx
+@@ -51,7 +51,7 @@
+           .single();
+ 
+-        if (error || !profile?.preferred_name) {
++        if ((error || !profile?.preferred_name) && !localStorage.getItem('name_onboarding_complete')) {
+           setShowModal(true);
+         }

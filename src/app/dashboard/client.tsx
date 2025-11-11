@@ -10,6 +10,7 @@ import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckC
 import Link from 'next/link';
 import { DocumentUpload } from '@/components/dashboard/document-upload';
 import { ProofOfFundsCard } from '@/components/dashboard/proof-of-funds-card';
+import { UserProfileCard } from '@/components/dashboard/user-profile-card';
 import VisaPulseTicker from '@/components/visa-pulse-ticker';
 
 interface DashboardClientProps {
@@ -235,8 +236,14 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         </CardContent>
       </Card>
 
-      {/* Enhanced Metrics with Visa Context */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ENHANCED: Profile Card + Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Profile Card - First position */}
+        <div className="md:col-span-1">
+          <UserProfileCard userProfile={userProfile} />
+        </div>
+        
+        {/* Existing metrics cards */}
         <Card>
           <CardContent className="pt-6 text-center">
             <div className="text-2xl font-bold text-blue-600">
@@ -259,14 +266,6 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
             <div className="text-xs text-muted-foreground mt-1">
               {visaProgress?.visa_type || 'Visa'}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              ₦{(metrics.moneySaved / 1000000).toFixed(1)}M
-            </div>
-            <div className="text-sm text-muted-foreground">Saved vs Agents</div>
           </CardContent>
         </Card>
         <Card>
