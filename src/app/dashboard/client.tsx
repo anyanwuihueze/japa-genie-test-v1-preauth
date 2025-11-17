@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
 import { 
   TrendingUp, Users, Target, Clock, MessageSquare, Loader2, 
-  CheckCircle2, Circle, Calendar, AlertCircle, Zap 
+  CheckCircle2, Circle, Calendar, AlertCircle, Zap, Upload 
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
