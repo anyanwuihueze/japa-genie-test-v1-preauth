@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
-import { TrendingUp, Upload, Users, Target, Clock, FileText, AlertCircle, CheckCircle, ArrowRight, Calendar, MapPin, BookOpen, Briefcase, Heart, Plane } from 'lucide-react';
+import { 
+  TrendingUp, Users, Target, Clock, MessageSquare, Loader2, 
+  CheckCircle2, Circle, Calendar, AlertCircle, Zap 
+} from 'lucide-react';
 import Link from 'next/link';
-import { DocumentUpload } from '@/components/dashboard/document-upload';
-import { ProofOfFundsCard } from '@/components/dashboard/proof-of-funds-card';
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
 import VisaPulseTicker from '@/components/visa-pulse-ticker';
 
@@ -18,376 +19,450 @@ interface DashboardClientProps {
   userProfile?: any;
 }
 
-interface VisaProgress {
-  progress_percentage: number;
-  visa_type: string;
+interface Milestone {
+  id: string;
+  label: string;
+  completed: boolean;
+  icon: any;
+}
+
+interface ProgressData {
+  overall_progress: number;
+  current_stage: string;
   target_country: string;
-  completed_documents: string[];
-  missing_documents: string[];
-  current_milestone: string;
-  estimated_timeline: string;
+  visa_type: string;
+  target_travel_date: string;
+  application_deadline: string;
+  profile_completed: boolean;
+  documents_uploaded: boolean;
+  documents_verified: boolean;
+  financial_ready: boolean;
+  interview_prep_done: boolean;
+  application_submitted: boolean;
+  decision_received: boolean;
 }
 
 export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
-  const [progress, setProgress] = useState(0);
-  const [visaProgress, setVisaProgress] = useState<VisaProgress | null>(null);
-  const [metrics, setMetrics] = useState({
-    documentsCompleted: 0,
-    totalDocuments: 12,
-    daysToDeadline: 30,
-    moneySaved: 2400000,
-    aheadOfPercentage: 50,
-    nextMilestone: "Complete Your Profile",
-    successProbability: 65
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalChats: 0,
+    totalInsights: 0,
+    progress: 0,
+    currentStage: 'Getting Started'
+  });
+  const [progressData, setProgressData] = useState<ProgressData | null>(null);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [timelineStats, setTimelineStats] = useState({
+    daysUntilDeadline: 0,
+    daysUntilTravel: 0,
+    isUrgent: false
   });
 
   const supabase = createClient();
 
   useEffect(() => {
-    if (userProfile) {
-      calculateProgress(userProfile);
-      loadVisaProgress();
-    }
-  }, [userProfile]);
+    loadDashboardData();
+  }, []);
 
-  // Load visa-specific progress from database
-  const loadVisaProgress = async () => {
-    if (!user) return;
-
+  async function loadDashboardData() {
     try {
-      const { data: progressData } = await supabase
+      // Fetch chat sessions
+      const { data: chats } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('user_id', user.id);
+
+      // Fetch insights
+      const { data: insights } = await supabase
+        .from('visa_insights')
+        .select('id')
+        .eq('user_id', user.id);
+
+      // Fetch progress data
+      const { data: progress } = await supabase
         .from('user_progress')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (progressData) {
-        setVisaProgress(progressData);
-        setProgress(progressData.progress_percentage || 0);
+      if (progress) {
+        setProgressData(progress);
         
-        // Update metrics with real data
-        setMetrics(prev => ({
-          ...prev,
-          documentsCompleted: progressData.completed_documents?.length || 0,
-          totalDocuments: (progressData.completed_documents?.length || 0) + (progressData.missing_documents?.length || 0),
-          nextMilestone: progressData.current_milestone || "Complete Your Profile",
-          successProbability: Math.min(95, 65 + (progressData.progress_percentage || 0) / 2)
-        }));
+        // Calculate auto progress from milestones
+        const calculatedProgress = calculateProgress(progress);
+        
+        // Build milestones list
+        const milestonesData = buildMilestones(progress);
+        setMilestones(milestonesData);
+        
+        // Calculate timeline
+        const timeline = calculateTimeline(progress);
+        setTimelineStats(timeline);
+
+        setStats({
+          totalChats: chats?.length || 0,
+          totalInsights: insights?.length || 0,
+          progress: calculatedProgress,
+          currentStage: progress.current_stage || determineStage(milestonesData)
+        });
+      } else {
+        // No progress record yet, create one
+        await createInitialProgress();
       }
+
     } catch (error) {
-      console.error('Error loading visa progress:', error);
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  const calculateProgress = (profile: any) => {
-    if (visaProgress) return; // Use real progress if available
+  // AUTO-CALCULATE PROGRESS FROM MILESTONES
+  function calculateProgress(data: ProgressData): number {
+    const milestoneChecks = [
+      data.profile_completed,
+      data.documents_uploaded,
+      data.documents_verified,
+      data.financial_ready,
+      data.interview_prep_done,
+      data.application_submitted,
+      data.decision_received
+    ];
+    
+    const completed = milestoneChecks.filter(Boolean).length;
+    return Math.round((completed / 7) * 100);
+  }
 
-    let currentProgress = 0;
-    let nextMilestone = "Complete Your Profile";
+  // BUILD MILESTONES ARRAY
+  function buildMilestones(data: ProgressData): Milestone[] {
+    return [
+      {
+        id: 'profile',
+        label: 'Complete Profile',
+        completed: data.profile_completed || false,
+        icon: Users
+      },
+      {
+        id: 'documents',
+        label: 'Upload Documents',
+        completed: data.documents_uploaded || false,
+        icon: Upload
+      },
+      {
+        id: 'verified',
+        label: 'Documents Verified',
+        completed: data.documents_verified || false,
+        icon: CheckCircle2
+      },
+      {
+        id: 'financial',
+        label: 'Financial Proof Ready',
+        completed: data.financial_ready || false,
+        icon: Target
+      },
+      {
+        id: 'interview',
+        label: 'Interview Preparation',
+        completed: data.interview_prep_done || false,
+        icon: MessageSquare
+      },
+      {
+        id: 'submit',
+        label: 'Submit Application',
+        completed: data.application_submitted || false,
+        icon: Zap
+      },
+      {
+        id: 'decision',
+        label: 'Decision Received',
+        completed: data.decision_received || false,
+        icon: CheckCircle2
+      }
+    ];
+  }
 
-    if (profile?.destination_country && profile?.visa_type) {
-      currentProgress += 25;
-      nextMilestone = "Upload Key Documents";
+  // DETERMINE CURRENT STAGE
+  function determineStage(milestones: Milestone[]): string {
+    const completed = milestones.filter(m => m.completed).length;
+    if (completed === 0) return 'Getting Started';
+    if (completed <= 2) return 'Building Profile';
+    if (completed <= 4) return 'Preparing Documents';
+    if (completed <= 5) return 'Ready to Apply';
+    if (completed === 6) return 'Application Submitted';
+    return 'Completed';
+  }
+
+  // CALCULATE TIMELINE
+  function calculateTimeline(data: ProgressData) {
+    const now = new Date();
+    
+    let daysUntilDeadline = 0;
+    let daysUntilTravel = 0;
+    
+    if (data.application_deadline) {
+      const deadline = new Date(data.application_deadline);
+      daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     }
     
-    const docsCompleted = 3; 
-    currentProgress += (docsCompleted / metrics.totalDocuments) * 50;
-    
-    if (docsCompleted > 5) {
-        nextMilestone = "Practice Mock Interview";
+    if (data.target_travel_date) {
+      const travelDate = new Date(data.target_travel_date);
+      daysUntilTravel = Math.ceil((travelDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     }
     
-    setProgress(Math.round(currentProgress));
-    setMetrics(prev => ({
-        ...prev,
-        documentsCompleted: docsCompleted,
-        nextMilestone: nextMilestone,
-        successProbability: 65 + Math.round(currentProgress / 4)
-    }));
-  };
-
-  // Get visa type icon
-  const getVisaIcon = (visaType: string) => {
-    switch (visaType?.toLowerCase()) {
-      case 'student': return <BookOpen className="w-5 h-5" />;
-      case 'work': return <Briefcase className="w-5 h-5" />;
-      case 'tourist': return <Plane className="w-5 h-5" />;
-      case 'family': return <Heart className="w-5 h-5" />;
-      case 'business': return <Briefcase className="w-5 h-5" />;
-      case 'asylum': return <AlertCircle className="w-5 h-5" />;
-      default: return <Target className="w-5 h-5" />;
-    }
-  };
-
-  // Get timeline estimate based on visa type
-  const getTimelineEstimate = (visaType: string, country: string) => {
-    const timelines: any = {
-      student: { canada: '12-16 weeks', usa: '8-12 weeks', uk: '3-6 weeks', general: '8-12 weeks' },
-      work: { canada: '8-12 weeks', usa: '6-10 weeks', uk: '4-8 weeks', general: '6-10 weeks' },
-      tourist: { canada: '4-8 weeks', usa: '3-6 weeks', uk: '3-5 weeks', general: '4-6 weeks' },
-      business: { canada: '4-8 weeks', usa: '3-6 weeks', uk: '3-5 weeks', general: '4-6 weeks' },
-      family: { canada: '12-24 months', usa: '10-18 months', uk: '6-12 months', general: '12-18 months' },
-      asylum: { canada: 'Varies (Expedited)', usa: 'Varies', uk: 'Varies', general: 'Case-dependent' }
+    return {
+      daysUntilDeadline,
+      daysUntilTravel,
+      isUrgent: daysUntilDeadline > 0 && daysUntilDeadline < 30
     };
-    
-    const countryKey = country?.toLowerCase() || 'general';
-    return timelines[visaType?.toLowerCase()]?.[countryKey] || timelines[visaType?.toLowerCase()]?.general || '4-8 weeks';
-  };
+  }
+
+  // CREATE INITIAL PROGRESS RECORD
+  async function createInitialProgress() {
+    const { data } = await supabase
+      .from('user_progress')
+      .insert({
+        user_id: user.id,
+        current_stage: 'Getting Started',
+        overall_progress: 0,
+        profile_completed: false,
+        documents_uploaded: false,
+        documents_verified: false,
+        financial_ready: false,
+        interview_prep_done: false,
+        application_submitted: false,
+        decision_received: false
+      })
+      .select()
+      .single();
+      
+    if (data) {
+      setProgressData(data);
+      setMilestones(buildMilestones(data));
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const nextMilestone = milestones.find(m => !m.completed);
 
   return (
     <div className="container mx-auto p-6 space-y-8">
       <header className="text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          {visaProgress?.visa_type && getVisaIcon(visaProgress.visa_type)}
-          <h1 className="text-4xl font-bold">
-            {visaProgress ? (
-              <>Your {visaProgress.visa_type} Journey to {visaProgress.target_country}</>
-            ) : userProfile?.destination_country ? (
-              <>Your Journey to {userProfile.destination_country}</>
-            ) : (
-              'Your Visa Dashboard'
-            )}
-          </h1>
-        </div>
+        <h1 className="text-4xl font-bold">
+          Welcome back, {userProfile?.full_name || 'Traveler'}! 👋
+        </h1>
         <p className="text-lg text-muted-foreground mt-2">
-          {progress < 20 
-            ? "Let's get started! Complete your profile to begin." 
-            : progress < 50 
-            ? "Great start! Keep building your application."
-            : "You're making excellent progress! Almost there."
+          {progressData?.target_country && progressData?.visa_type 
+            ? `Your ${progressData.visa_type} visa journey to ${progressData.target_country}`
+            : 'Your visa journey dashboard'
           }
-          {visaProgress?.current_milestone && (
-            <span className="block text-sm text-blue-600 mt-1">
-              Current: {visaProgress.current_milestone}
-            </span>
-          )}
         </p>
       </header>
 
       <VisaPulseTicker />
 
-      {/* Enhanced Progress Card with Visa Details */}
+      {/* TIMELINE URGENCY BANNER */}
+      {timelineStats.isUrgent && (
+        <Card className="border-orange-500 bg-orange-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-orange-600" />
+              <div>
+                <h3 className="font-bold text-orange-800">Urgent: Deadline Approaching!</h3>
+                <p className="text-sm text-orange-700">
+                  Only {timelineStats.daysUntilDeadline} days until application deadline
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PROGRESS CARD WITH STAGE */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>
-              {visaProgress ? `${visaProgress.visa_type} Visa Progress` : 'Overall Progress'}
-            </CardTitle>
-            <div className="flex gap-2">
-              <Badge className="bg-green-100 text-green-800">{progress}% Complete</Badge>
-              {visaProgress && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {visaProgress.target_country}
+            <div>
+              <CardTitle>Your Visa Journey Progress</CardTitle>
+              <CardDescription className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="bg-white">
+                  {stats.currentStage}
                 </Badge>
-              )}
-              {progress > 25 && (
-                <Badge className="bg-orange-100 text-orange-800">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Ahead of {metrics.aheadOfPercentage}%
-                </Badge>
-              )}
+                {nextMilestone && (
+                  <span className="text-sm">
+                    Next: {nextMilestone.label}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-blue-600">{stats.progress}%</div>
+              <div className="text-sm text-muted-foreground">Complete</div>
             </div>
           </div>
-          <CardDescription>
-            {visaProgress ? (
-              <div className="flex items-center gap-4">
-                <span>Next: {metrics.nextMilestone}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Timeline: {getTimelineEstimate(visaProgress.visa_type, visaProgress.target_country)}
-                </span>
-              </div>
-            ) : (
-              `Next: ${metrics.nextMilestone} • ${metrics.daysToDeadline} days until deadline`
-            )}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Progress value={progress} className="w-full h-3" />
-          <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>Getting Started</span>
+          <Progress value={stats.progress} className="w-full h-4 mb-4" />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Started</span>
+            <span>{milestones.filter(m => m.completed).length} of 7 milestones</span>
             <span>Visa Approved</span>
           </div>
-
-          {/* Visa-Specific Document Tracking */}
-          {visaProgress && visaProgress.missing_documents && visaProgress.missing_documents.length > 0 && (
-            <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Missing Required Documents
-              </h4>
-              <div className="grid grid-cols-2 gap-1 text-sm">
-                {visaProgress.missing_documents.slice(0, 4).map((doc, index) => (
-                  <div key={index} className="flex items-center gap-1 text-amber-700">
-                    <AlertCircle className="w-3 h-3" />
-                    {doc}
-                  </div>
-                ))}
-                {visaProgress.missing_documents.length > 4 && (
-                  <div className="text-amber-600">
-                    +{visaProgress.missing_documents.length - 4} more...
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* ENHANCED: Beacon Profile Card + Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Enhanced Profile Card - First position */}
-        <div className="md:col-span-1">
-          <EnhancedProfileCard userProfile={userProfile} />
-        </div>
-        
-        {/* Existing metrics cards */}
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {metrics.documentsCompleted}/{metrics.totalDocuments}
-            </div>
-            <div className="text-sm text-muted-foreground">Documents</div>
-            {visaProgress && (
-              <div className="text-xs text-green-600 mt-1">
-                {visaProgress.completed_documents?.length || 0} verified
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {getTimelineEstimate(visaProgress?.visa_type, visaProgress?.target_country).split(' ')[0]}
-            </div>
-            <div className="text-sm text-muted-foreground">Est. Timeline</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {visaProgress?.visa_type || 'Visa'}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-2xl font-bold text-orange-600">
-              {metrics.successProbability}%
-            </div>
-            <div className="text-sm text-muted-foreground">Success Chance</div>
-            {visaProgress && (
-              <div className="text-xs text-orange-600 mt-1">
-                Based on {visaProgress.target_country} requirements
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Visa-Specific Guidance */}
-      {visaProgress?.visa_type && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border-green-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-green-600" />
-                <CardTitle className="text-lg">Visa Success Probability</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {metrics.successProbability}%
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Based on your current progress and {visaProgress.target_country} {visaProgress.visa_type} visa requirements
-              </p>
-              {visaProgress.missing_documents && visaProgress.missing_documents.length > 0 && (
-                <div className="mt-3 p-2 bg-yellow-50 rounded text-xs">
-                  <strong>Improve to 85%+ by completing:</strong>
-                  <div className="mt-1">
-                    {visaProgress.missing_documents.slice(0, 2).map((doc, i) => (
-                      <div key={i}>• {doc}</div>
-                    ))}
-                  </div>
+      {/* TIMELINE CARDS */}
+      {(timelineStats.daysUntilDeadline > 0 || timelineStats.daysUntilTravel > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {timelineStats.daysUntilDeadline > 0 && (
+            <Card className={timelineStats.isUrgent ? 'border-orange-400' : 'border-blue-200'}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Application Deadline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {timelineStats.daysUntilDeadline} days
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {new Date(progressData?.application_deadline || '').toLocaleDateString()}
+                </p>
+                {timelineStats.isUrgent && (
+                  <Badge className="mt-2 bg-orange-500">Urgent</Badge>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="border-blue-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
-                <CardTitle className="text-lg">Recommended Timeline</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                {getTimelineEstimate(visaProgress.visa_type, visaProgress.target_country)}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {progress > 70 ? 'You\'re moving fast! Maintain momentum. ⚡' : 
-                 progress > 40 ? 'Good pace! Keep uploading required documents.' : 
-                 `Typical processing for ${visaProgress.visa_type} visa to ${visaProgress.target_country}`}
-              </p>
-              {visaProgress.missing_documents && visaProgress.missing_documents.length > 0 && (
-                <div className="mt-2 text-xs text-blue-600">
-                  <strong>Next:</strong> Upload {visaProgress.missing_documents[0]}
+          {timelineStats.daysUntilTravel > 0 && (
+            <Card className="border-green-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Target Travel Date
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-600">
+                  {timelineStats.daysUntilTravel} days
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {new Date(progressData?.target_travel_date || '').toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
-      {/* Rest of your existing dashboard components */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <DocumentUpload />
-        <div id="proof-of-funds-section" className="scroll-mt-20">
-          <ProofOfFundsCard userId={user.id} />
-        </div>
+      {/* MILESTONES CHECKLIST */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Journey Milestones</CardTitle>
+          <CardDescription>Track your progress step by step</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {milestones.map((milestone, index) => {
+              const Icon = milestone.icon;
+              return (
+                <div 
+                  key={milestone.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                    milestone.completed 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className={`flex-shrink-0 ${milestone.completed ? 'text-green-600' : 'text-gray-400'}`}>
+                    {milestone.completed ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <Circle className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      <span className={`font-medium ${milestone.completed ? 'text-green-800' : 'text-gray-700'}`}>
+                        {milestone.label}
+                      </span>
+                    </div>
+                  </div>
+                  {milestone.completed && (
+                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                      Complete
+                    </Badge>
+                  )}
+                  {!milestone.completed && index === milestones.findIndex(m => !m.completed) && (
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                      Current
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <EnhancedProfileCard userProfile={userProfile} />
+        
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Expert Help
-            </CardTitle>
-            <CardDescription>Get 1-on-1 guidance when you're stuck</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button asChild className="w-full bg-orange-500 hover:bg-orange-600">
-              <Link href="/experts">Find Visa Experts</Link>
-            </Button>
-            {visaProgress && (
-              <div className="text-xs text-muted-foreground text-center">
-                Specialists in {visaProgress.target_country} {visaProgress.visa_type} visas
-              </div>
-            )}
+          <CardContent className="pt-6 text-center">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+            <div className="text-2xl font-bold">{stats.totalChats}</div>
+            <div className="text-sm text-muted-foreground">Chat Sessions</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Target className="w-8 h-8 mx-auto mb-2 text-green-600" />
+            <div className="text-2xl font-bold">{stats.totalInsights}</div>
+            <div className="text-sm text-muted-foreground">Insights Generated</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+            <div className="text-2xl font-bold">{milestones.filter(m => m.completed).length}/7</div>
+            <div className="text-sm text-muted-foreground">Milestones</div>
           </CardContent>
         </Card>
       </div>
 
+      {/* QUICK ACTIONS */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
-          {visaProgress?.missing_documents && visaProgress.missing_documents.length > 0 && (
+          {nextMilestone && (
             <CardDescription>
-              Priority: Upload {visaProgress.missing_documents[0]}
+              Recommended: Complete "{nextMilestone.label}"
             </CardDescription>
           )}
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 flex-wrap">
-            <Button asChild variant="outline">
-              <Link href="/kyc">Ask AI Assistant</Link>
+            <Button asChild>
+              <Link href="/chat">Continue Chat</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/kyc-profile">Update Profile</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/interview">Practice Interview</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/progress">View Full Timeline</Link>
+              <Link href="/dashboard/proof-of-funds">Proof of Funds</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/document-check">Upload Documents</Link>

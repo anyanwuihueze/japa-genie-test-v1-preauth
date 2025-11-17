@@ -59,23 +59,59 @@ export async function POST(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
-        userProgress = progress;
+        let userProgress = progress;
+        if (!progress) {
+          const { data: newProgress } = await supabase
+            .from('user_progress')
+            .insert({
+              user_id: user.id,
+              profile_completed: !!profile,
+              overall_progress: profile ? 14 : 0,
+              current_stage: 'Getting Started',
+              next_recommended_action: 'Upload required documents'
+            })
+            .select()
+            .single();
+          
+          userProgress = newProgress;
+          console.log('✅ Created initial progress record for:', user.id);
+        } else {
+          userProgress = progress;
+        }
 
         // PHASE 2: Detect and update milestones from user message
+        // ✅ FIXED: Only process if progress exists and wrapped in try-catch
         if (progress) {
-          const milestoneUpdate = await detectMilestoneFromMessage(question, user.id);
+          try {
+            const milestoneUpdate = await detectMilestoneFromMessage(question, user.id);
           if (milestoneUpdate) {
-            console.log('🎯 Milestone updated from chat:', milestoneUpdate);
+            
+            const milestoneNames: Record<string, string> = {
+              'documents_uploaded': '📄 Documents Uploaded',
+              'financial_ready': '💰 Financial Proof Ready',
+              'interview_prep_done': '🎤 Interview Prepared',
+              'application_submitted': '🎉 Application Submitted'
+            };
+            
+            const milestoneName = milestoneNames[milestoneUpdate.field] || '✅ Milestone Completed';
+            enhancedAnswer = enhancedAnswer || result.answer;
+            enhancedAnswer = `**${milestoneName}!**\n\n${enhancedAnswer}`;
           }
+            if (milestoneUpdate) {
+            }
 
-          // Update chat session count
-          await supabase
-            .from('user_progress')
-            .update({
-              total_chat_messages: (progress?.total_chat_messages || 0) + 1,
-              last_chat_date: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
+            // Update chat session count
+            await supabase
+              .from('user_progress')
+              .update({
+                total_chat_messages: (progress?.total_chat_messages || 0) + 1,
+                last_chat_date: new Date().toISOString()
+              })
+              .eq('user_id', user.id);
+          } catch (milestoneError) {
+            console.error('⚠️ Milestone detection failed (non-critical):', milestoneError);
+            // ✅ Don't fail entire request if milestone detection fails
+          }
         }
       }
     } catch (error) {
@@ -88,10 +124,6 @@ export async function POST(request: NextRequest) {
     let configuredVisa = null;
     let isJourneyChange = false;
 
-    // Only extract intent on:
-    // 1. First message (conversationHistory empty)
-    // 2. Explicit journey change keywords
-    // 3. First 2 messages if visa not set (allow context building)
     const needsVisaSetup = !userContext?.destination || !userContext?.visaType;
     const isExplicitChange = /\b(instead|change to|switch to|now i want|actually)\b/i.test(question);
     const isFirstFewMessages = conversationHistory.length < 2;
@@ -159,9 +191,7 @@ export async function POST(request: NextRequest) {
                 visaType: visaIntent.visa_type
               };
             }
-          }
-          // FOR ANONYMOUS USERS: Just detect (don't spam)
-          else {
+          } else {
             console.log('👤 Visa intent detected for anonymous user');
           }
         } else {
@@ -241,23 +271,13 @@ export async function POST(request: NextRequest) {
       console.log('ℹ️ No visa intent detected, returning plain answer');
     }
 
-    // SIMPLE UPLOAD DETECTION FOR ANONYMOUS USERS - NO REGEX BULLSHIT!
-    if (!isSignedIn && !enhancedAnswer) {
-      const lowerQuestion = question.toLowerCase();
+    // ✅ VISUAL FEEDBACK: Add hints for anonymous users
+    if (!isSignedIn) {
+      const hasUploadMention = /\b(upload|submit|attach|sent|provided|have|got)\b/i.test(question);
+      const hasDocMention = /\b(passport|document|certificate|bank statement|financial|proof)\b/i.test(question);
       
-      // Simple keyword detection - NO COMPLEX REGEX
-      const hasUpload = lowerQuestion.includes('upload') || lowerQuestion.includes('uploaded') || 
-                       lowerQuestion.includes('submit') || lowerQuestion.includes('submitted') ||
-                       lowerQuestion.includes('attach') || lowerQuestion.includes('attached');
-      
-      const hasDocument = lowerQuestion.includes('passport') || lowerQuestion.includes('document') || 
-                         lowerQuestion.includes('certificate') || lowerQuestion.includes('bank') ||
-                         lowerQuestion.includes('financial') || lowerQuestion.includes('visa');
-      
-      console.log("📊 Simple upload detection:", { hasUpload, hasDocument, question: lowerQuestion });
-      
-      if (hasUpload && hasDocument) {
-        enhancedAnswer = `📄 **I see you're preparing documents!**\n\n${result.answer}\n\n💡 *Tip: Sign up to track progress and get deadline reminders.*`;
+      if (hasUploadMention && hasDocMention && !enhancedAnswer) {
+        enhancedAnswer = `📄 **I see you're preparing documents!**\n\n${result.answer}\n\n💡 *Tip: Sign up to track progress, get deadline reminders, and verify documents automatically.*`;
       }
     }
 

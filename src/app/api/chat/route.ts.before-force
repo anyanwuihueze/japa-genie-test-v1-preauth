@@ -1,4 +1,4 @@
-// src/app/api/chat/route.ts - FIXED VERSION
+// src/app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { visaChatAssistant } from '@/ai/flows/visa-chat-assistant';
 import { createClient } from '@/lib/supabase/server';
@@ -52,46 +52,54 @@ export async function POST(request: NextRequest) {
           };
         }
 
-        // PHASE 1: Get user progress data for Genie context
         const { data: progress } = await supabase
           .from('user_progress')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        userProgress = progress;
-
-        // PHASE 2: Detect and update milestones from user message
-        if (progress) {
-          const milestoneUpdate = await detectMilestoneFromMessage(question, user.id);
-          if (milestoneUpdate) {
-            console.log('🎯 Milestone updated from chat:', milestoneUpdate);
-          }
-
-          // Update chat session count
-          await supabase
+        if (!progress) {
+          const { data: newProgress } = await supabase
             .from('user_progress')
-            .update({
-              total_chat_messages: (progress?.total_chat_messages || 0) + 1,
-              last_chat_date: new Date().toISOString()
+            .insert({
+              user_id: user.id,
+              profile_completed: !!profile,
+              overall_progress: profile ? 14 : 0,
+              current_stage: 'Getting Started',
+              next_recommended_action: 'Upload required documents'
             })
-            .eq('user_id', user.id);
+            .select()
+            .single();
+          
+          userProgress = newProgress;
+          console.log('✅ Created initial progress record for:', user.id);
+        } else {
+          userProgress = progress;
+        }
+
+        if (userProgress) {
+          try {
+            await supabase
+              .from('user_progress')
+              .update({
+                total_chat_messages: (userProgress?.total_chat_messages || 0) + 1,
+                last_chat_date: new Date().toISOString()
+              })
+              .eq('user_id', user.id);
+          } catch (err) {
+            console.error('⚠️ Chat count update failed:', err);
+          }
         }
       }
     } catch (error) {
       console.error('Auth/profile fetch error:', error);
     }
 
-    // VISA INTENT DETECTION - Smart triggering
     let visaIntentDetected = null;
     let enhancedAnswer = null;
     let configuredVisa = null;
     let isJourneyChange = false;
 
-    // Only extract intent on:
-    // 1. First message (conversationHistory empty)
-    // 2. Explicit journey change keywords
-    // 3. First 2 messages if visa not set (allow context building)
     const needsVisaSetup = !userContext?.destination || !userContext?.visaType;
     const isExplicitChange = /\b(instead|change to|switch to|now i want|actually)\b/i.test(question);
     const isFirstFewMessages = conversationHistory.length < 2;
@@ -99,14 +107,6 @@ export async function POST(request: NextRequest) {
     const shouldExtractIntent = (conversationHistory.length === 0) || 
                                isExplicitChange ||
                                (needsVisaSetup && isFirstFewMessages);
-
-    console.log('🔍 Intent detection decision:', {
-      shouldExtract: shouldExtractIntent,
-      conversationLength: conversationHistory.length,
-      needsVisaSetup,
-      isExplicitChange,
-      hasContext: !!userContext?.destination
-    });
 
     if (shouldExtractIntent) {
       try {
@@ -119,9 +119,7 @@ export async function POST(request: NextRequest) {
             visaIntent.confidence > 0.5) {
           
           visaIntentDetected = visaIntent;
-          console.log('🎯 Extracted visa intent:', visaIntent);
 
-          // FOR SIGNED-IN USERS: Auto-configure profile
           if (currentUser) {
             const supabase = await createClient();
             const { data: currentProfile } = await supabase
@@ -160,21 +158,12 @@ export async function POST(request: NextRequest) {
               };
             }
           }
-          // FOR ANONYMOUS USERS: Just detect (don't spam)
-          else {
-            console.log('👤 Visa intent detected for anonymous user');
-          }
-        } else {
-          console.log('⚠️ Intent extraction returned low confidence or incomplete data');
         }
       } catch (error) {
         console.error('Error processing visa intent:', error);
       }
-    } else {
-      console.log('⏭️ Skipping intent extraction (follow-up message)');
     }
 
-    // PHASE 1: Prepare progress context for Genie
     const progressContext = userProgress ? {
       progressPercentage: userProgress.overall_progress || 0,
       currentStage: userProgress.current_stage || 'Getting Started',
@@ -199,64 +188,57 @@ export async function POST(request: NextRequest) {
         : false
     } : null;
 
-    // Get chat response from AI with progress context
     const result = await visaChatAssistant({
       question,
       wishCount,
       conversationHistory,
       userContext,
-      progressContext, // PHASE 1: Pass progress data to Genie
+      progressContext,
       isSignedIn
     });
 
-    // ENHANCE RESPONSE - Only add CTA on FIRST detection for anonymous users
-    if (visaIntentDetected) {
-      console.log('🎨 Processing visa intent for enhancement:', {
-        country: visaIntentDetected.destination_country,
-        type: visaIntentDetected.visa_type,
-        isSignedIn: !!currentUser,
-        conversationLength: conversationHistory.length,
-        fullIntent: JSON.stringify(visaIntentDetected)
-      });
-      
-      if (currentUser && configuredVisa) {
-        // Signed-in user: Show configuration message
-        if (isJourneyChange) {
-          enhancedAnswer = `🔄 **Visa Journey Updated!** I've changed your profile from **${configuredVisa.from?.visaType} to ${configuredVisa.from?.country}** → **${configuredVisa.type} to ${configuredVisa.country}**. Your progress has been reset for the new requirements.\n\n${result.answer}`;
-        } else {
-          enhancedAnswer = `🎯 **Visa Profile Configured!** I've set up your profile for **${configuredVisa.type}** to **${configuredVisa.country}**.\n\n${result.answer}`;
+    let milestoneDetected = null;
+    if (userProgress && currentUser) {
+      try {
+        const milestoneUpdate = await detectMilestoneFromMessage(question, currentUser.id);
+        if (milestoneUpdate) {
+          console.log('🎯 Milestone detected:', milestoneUpdate);
+          
+          const milestoneNames: Record<string, string> = {
+            'documents_uploaded': '📄 Documents Uploaded',
+            'financial_ready': '💰 Financial Proof Ready',
+            'interview_prep_done': '🎤 Interview Prepared',
+            'application_submitted': '🎉 Application Submitted'
+          };
+          
+          milestoneDetected = milestoneNames[milestoneUpdate.field] || '✅ Milestone Completed';
         }
-      } else if (!currentUser && conversationHistory.length === 0) {
-        // Anonymous user: Show CTA ONLY on first message
-        console.log('👤 Adding signup CTA with:', {
-          visaType: visaIntentDetected.visa_type,
-          destination: visaIntentDetected.destination_country
-        });
-        
-        enhancedAnswer = `${result.answer}\n\n---\n\n🎯 **I see you're interested in ${visaIntentDetected.visa_type} visa for ${visaIntentDetected.destination_country}!**\n\nWant to track your progress and get a personalized document checklist? **Sign up now** to:\n• Track your application progress\n• Get document verification\n• Receive deadline reminders\n• Access visa success predictors`;
-      } else {
-        console.log('ℹ️ Skipping CTA (not first message or user signed in)');
+      } catch (err) {
+        console.error('⚠️ Milestone detection failed:', err);
       }
-    } else {
-      console.log('ℹ️ No visa intent detected, returning plain answer');
     }
 
-    // SIMPLE UPLOAD DETECTION FOR ANONYMOUS USERS - NO REGEX BULLSHIT!
+    if (milestoneDetected) {
+      enhancedAnswer = `**${milestoneDetected}!**\n\n${result.answer}`;
+    }
+
+    if (visaIntentDetected) {
+      if (currentUser && configuredVisa) {
+        if (isJourneyChange) {
+          enhancedAnswer = `🔄 **Visa Journey Updated!** I've changed your profile from **${configuredVisa.from?.visaType} to ${configuredVisa.from?.country}** → **${configuredVisa.type} to ${configuredVisa.country}**.\n\n${enhancedAnswer || result.answer}`;
+        } else {
+          enhancedAnswer = `🎯 **Visa Profile Configured!** I've set up your profile for **${configuredVisa.type}** to **${configuredVisa.country}**.\n\n${enhancedAnswer || result.answer}`;
+        }
+      } else if (!currentUser && conversationHistory.length === 0) {
+        enhancedAnswer = `${enhancedAnswer || result.answer}\n\n---\n\n🎯 **I see you're interested in ${visaIntentDetected.visa_type} visa for ${visaIntentDetected.destination_country}!**\n\nWant to track your progress? **Sign up now** to:\n• Track application progress\n• Get document verification\n• Receive deadline reminders\n• Access visa predictors`;
+      }
+    }
+
     if (!isSignedIn && !enhancedAnswer) {
-      const lowerQuestion = question.toLowerCase();
+      const hasUploadMention = /\b(upload|submit|attach|sent|provided|have)\b/i.test(question);
+      const hasDocMention = /\b(passport|document|certificate|bank statement|financial|visa|proof)\b/i.test(question);
       
-      // Simple keyword detection - NO COMPLEX REGEX
-      const hasUpload = lowerQuestion.includes('upload') || lowerQuestion.includes('uploaded') || 
-                       lowerQuestion.includes('submit') || lowerQuestion.includes('submitted') ||
-                       lowerQuestion.includes('attach') || lowerQuestion.includes('attached');
-      
-      const hasDocument = lowerQuestion.includes('passport') || lowerQuestion.includes('document') || 
-                         lowerQuestion.includes('certificate') || lowerQuestion.includes('bank') ||
-                         lowerQuestion.includes('financial') || lowerQuestion.includes('visa');
-      
-      console.log("📊 Simple upload detection:", { hasUpload, hasDocument, question: lowerQuestion });
-      
-      if (hasUpload && hasDocument) {
+      if ((hasUploadMention && hasDocMention) || (hasUploadMention && /\b(my|the)\b/i.test(question))) {
         enhancedAnswer = `📄 **I see you're preparing documents!**\n\n${result.answer}\n\n💡 *Tip: Sign up to track progress and get deadline reminders.*`;
       }
     }
@@ -266,7 +248,7 @@ export async function POST(request: NextRequest) {
       insights: result.insights,
       visaIntentDetected: !!visaIntentDetected,
       isSignedIn: !!currentUser,
-      progressContext, // PHASE 1: Return progress context to frontend
+      progressContext,
       ...(configuredVisa && { configuredVisa })
     });
 

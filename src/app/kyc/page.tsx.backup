@@ -1,4 +1,4 @@
-// src/app/kyc/page.tsx - NO AUTH WALL VERSION
+// src/app/kyc/page.tsx - ENHANCED WITH DATABASE SAVE
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,7 +26,6 @@ export default function KYCPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
-  
   const [formData, setFormData] = useState<KYCData>({
     country: '',
     destination: '',
@@ -37,88 +36,52 @@ export default function KYCPage() {
     timelineUrgency: ''
   });
   const [loading, setLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
 
-  // Fetch existing KYC data IF user is logged in
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        try {
-          const { data } = await supabase
-            .from('user_profiles')
-            .select('kyc_completed_at')
-            .eq('id', user.id)
-            .single();
-          setUserProfile(data);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        }
-      }
-    };
-
-    if (!authLoading && user) {
-      fetchUserProfile();
-    }
-  }, [user, authLoading, supabase]);
+  // 🔥 Redirect signed-in users to chat immediately
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      console.log('🔄 Submitting KYC for user:', user?.id || 'anonymous');
-      console.log('📋 Form data:', formData);
+      // ✅ KEEP EXISTING BEHAVIOR (for chat page)
+      sessionStorage.setItem('kycData', JSON.stringify(formData));
+      
+      // ✅ NEW: Save to database for returning users and dashboard
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user?.id,
+          country: formData.country,
+          destination_country: formData.destination,
+          age: parseInt(formData.age),
+          visa_type: formData.visaType,
+          profession: formData.profession,
+          user_type: formData.userType,
+          timeline_urgency: formData.timelineUrgency,
+          kyc_completed_at: new Date().toISOString()
+        });
 
-      // IF USER IS LOGGED IN: Save to database
-      if (user?.id) {
-        const { data: saveResult, error: saveError } = await supabase
-          .from('user_profiles')
-          .upsert({
-            id: user.id,
-            country: formData.country,
-            destination_country: formData.destination,
-            age: parseInt(formData.age),
-            visa_type: formData.visaType,
-            profession: formData.profession,
-            user_type: formData.userType,
-            timeline_urgency: formData.timelineUrgency,
-            kyc_completed_at: new Date().toISOString(),
-            kyc_last_updated: new Date().toISOString()
-          }, {
-            onConflict: 'id'
-          });
-
-        if (saveError) {
-          console.error('❌ Error saving KYC:', saveError);
-        } else {
-          console.log('✅ KYC saved to database');
-        }
-
-        // Check if returning user
-        if (userProfile?.kyc_completed_at) {
-          console.log('🔀 Returning user → Dashboard');
-          router.push('/dashboard');
-          return;
-        }
+      if (error) {
+        console.error('Error saving KYC data:', error);
+        // Continue anyway - sessionStorage will work for chat
+      } else {
+        console.log('✅ KYC data saved to database');
       }
 
-      // Build URL params for chat (works for logged in OR anonymous)
+      // ✅ KEEP EXISTING REDIRECT BEHAVIOR
       const params = new URLSearchParams({
         country: formData.country,
         destination: formData.destination,
         age: formData.age,
         visaType: formData.visaType,
-        userType: formData.userType,
-        timelineUrgency: formData.timelineUrgency,
         ...(formData.profession && { profession: formData.profession })
       });
 
-      console.log('🔀 New user → Chat');
       router.push(`/chat?${params.toString()}`);
 
     } catch (error) {
-      console.error('❌ KYC submission error:', error);
-      alert('Error saving data. Please try again.');
+      console.error('KYC submission error:', error);
     } finally {
       setLoading(false);
     }
@@ -128,12 +91,23 @@ export default function KYCPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // NO AUTH WALL - Show form to everyone
-  // Only show loading spinner while checking auth status
+  // Show loading while checking auth
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // 🔥 If user is signed in, show redirect message
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Redirecting to chat...</p>
+        </div>
       </div>
     );
   }
@@ -149,8 +123,13 @@ export default function KYCPage() {
   ];
 
   const visaTypes = [
-    'Study Visa', 'Work Visa', 'Tourist Visa', 'Business Visa', 
-    'Family Visa', 'Permanent Residency', 'Not Sure'
+    'Study Visa',
+    'Work Visa', 
+    'Tourist Visa',
+    'Business Visa',
+    'Family Visa',
+    'Permanent Residency',
+    'Not Sure'
   ];
 
   return (
@@ -158,7 +137,7 @@ export default function KYCPage() {
       <div className="container mx-auto px-4 max-w-2xl">
         <Card className="shadow-lg border-0 overflow-hidden">
           <CardHeader className="text-center pb-4 relative min-h-[200px] flex items-center justify-center bg-gradient-to-r from-blue-600/10 to-purple-600/10">
-            <div className="absolute inset-0 opacity-40 bg-gradient-to-br from-blue-100 to-purple-100"></div>
+            <div className="absolute inset-0 bg-[url('/passport-stamps-collage.jpg')] bg-cover bg-center opacity-40"></div>
             <div className="relative z-10">
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Your Global Journey Starts Here
@@ -265,7 +244,7 @@ export default function KYCPage() {
                 </Select>
               </div>
 
-              {/* Timeline */}
+              {/* Timeline Urgency */}
               <div className="space-y-3">
                 <Label htmlFor="timelineUrgency" className="flex items-center gap-2 text-lg font-semibold">
                   <Clock className="w-5 h-5 text-green-600" />
@@ -284,7 +263,7 @@ export default function KYCPage() {
                 </Select>
               </div>
 
-              {/* Profession */}
+              {/* Profession (Optional) */}
               <div className="space-y-3">
                 <Label htmlFor="profession" className="flex items-center gap-2 text-lg font-semibold">
                   <Briefcase className="w-5 h-5 text-gray-600" />
@@ -299,7 +278,7 @@ export default function KYCPage() {
                 />
               </div>
 
-              {/* Submit */}
+              {/* Submit Button */}
               <Button 
                 type="submit" 
                 className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"

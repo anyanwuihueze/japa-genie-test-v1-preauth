@@ -12,7 +12,7 @@ export interface VisaIntent {
 const COUNTRY_PATTERNS = {
   'Germany': ['germany', 'german', 'deutschland', 'berlin', 'munich'],
   'United Kingdom': ['uk', 'united kingdom', 'britain', 'great britain', 'england', 'london', 'scotland', 'wales'],
-  'United States': ['usa', 'united states', 'america', 'us', 'new york', 'california', 'american'],
+  'United States': ['usa', 'united states', 'america', 'new york', 'california', 'american'],
   'Canada': ['canada', 'canadian', 'toronto', 'vancouver', 'montreal'],
   'Australia': ['australia', 'australian', 'sydney', 'melbourne', 'aussie'],
   'France': ['france', 'french', 'paris'],
@@ -80,13 +80,19 @@ export async function extractVisaIntent(
     console.log('📝 Analyzing text length:', combinedText.length);
     console.log('💬 First 200 chars:', combinedText.substring(0, 200));
 
-    // STEP 1: DETECT COUNTRY
+    // STEP 1: DETECT COUNTRY (with word boundaries to avoid false matches)
     let detectedCountry: string | null = null;
     let countryConfidence = 0;
 
     for (const [country, patterns] of Object.entries(COUNTRY_PATTERNS)) {
       for (const pattern of patterns) {
-        if (combinedText.includes(pattern)) {
+        // Use word boundaries for short patterns like "us", "uk", "nz"
+        const needsWordBoundary = pattern.length <= 3;
+        const regex = needsWordBoundary 
+          ? new RegExp(`\\b${pattern}\\b`, 'i')
+          : new RegExp(pattern, 'i');
+        
+        if (regex.test(combinedText)) {
           detectedCountry = country;
           countryConfidence = 1.0;
           console.log(`🌍 COUNTRY DETECTED: ${country} (pattern: "${pattern}")`);

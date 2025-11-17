@@ -74,14 +74,14 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
   };
 
   // Empty state
-  if (!userProfile?.kyc_completed_at || completion < 30) {
+  if (completion < 50) {
     return (
       <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 to-purple-50 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/passport-stamps-collage.jpg')] bg-cover bg-center opacity-10" />
         <CardHeader className="relative z-10 text-center pb-3">
           <CardTitle className="text-xl flex items-center justify-center gap-2">
             <Plane className="w-6 h-6 text-blue-600" />
-            Your Global Journey Awaits
+            Complete Your Profile
           </CardTitle>
           <CardDescription className="text-lg">
             Complete your profile to unlock personalized visa guidance
@@ -97,7 +97,7 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
           <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
             <Link href="/kyc">
               <Target className="w-4 h-4 mr-2" />
-              Start Your Journey
+              Complete Profile
             </Link>
           </Button>
         </CardContent>
