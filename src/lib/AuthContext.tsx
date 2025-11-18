@@ -1,3 +1,4 @@
+// src/lib/AuthContext.tsx - FIXED TYPE SIGNATURE
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
@@ -7,7 +8,7 @@ import { createClient } from './supabase/client'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signInWithGoogle: (redirectPath?: string) => Promise<void>
+  signInWithGoogle: (redirectPath?: string) => Promise<void> // KEEP AS Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signInWithGoogle = async (redirectPath?: string) => {
+  const signInWithGoogle = async (redirectPath?: string): Promise<void> => {
     try {
       console.log('🚀 Starting Google sign in...')
       
@@ -77,12 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ Sign in error:', error)
         alert(`Login failed: ${error.message}`)
-      } else {
-        console.log('✅ Sign in initiated successfully:', data)
+        throw error
       }
+      // ✅ REMOVED: return data - just let it complete as Promise<void>
+      console.log('✅ Sign in initiated successfully')
     } catch (err) {
       console.error('💥 Unexpected error:', err)
       alert('An unexpected error occurred during login')
+      throw err
     }
   }
 
