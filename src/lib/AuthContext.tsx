@@ -1,6 +1,4 @@
-// src/lib/AuthContext.tsx - FIXED TYPE SIGNATURE
 'use client'
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from './supabase/client'
@@ -8,7 +6,7 @@ import { createClient } from './supabase/client'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signInWithGoogle: (redirectPath?: string) => Promise<void> // KEEP AS Promise<void>
+  signInWithGoogle: (redirectPath?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -30,21 +28,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        // FORCE refresh session from cookies
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('Error getting session:', error)
+        }
+        
+        console.log('🔐 Session check:', session ? 'Logged in' : 'Not logged in')
         setUser(session?.user ?? null)
         setLoading(false)
       } catch (error) {
-        console.error('Error getting session:', error)
+        console.error('Error initializing auth:', error)
         setLoading(false)
       }
     }
 
     initAuth()
 
+    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('�� Auth state changed:', event)
       setUser(session?.user ?? null)
+      
+      // Force reload on sign in to ensure UI updates
+      if (event === 'SIGNED_IN') {
+        console.log('✅ User signed in, forcing UI update')
+      }
     })
 
     return () => {
@@ -56,15 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🚀 Starting Google sign in...')
       
-      // Build callback URL with redirect info
       let callbackUrl = `${window.location.origin}/auth/callback`
       if (redirectPath) {
         callbackUrl += `?next=${encodeURIComponent(redirectPath)}`
       }
       
-      console.log('🌐 Redirect URL will be:', callbackUrl)
+      console.log('🌐 Callback URL:', callbackUrl)
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
@@ -80,10 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         alert(`Login failed: ${error.message}`)
         throw error
       }
-      // ✅ REMOVED: return data - just let it complete as Promise<void>
-      console.log('✅ Sign in initiated successfully')
+      
+      console.log('✅ OAuth initiated')
     } catch (err) {
-      console.error('💥 Unexpected error:', err)
+      console.error('💥 Error:', err)
       alert('An unexpected error occurred during login')
       throw err
     }
@@ -93,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('👋 Signing out...')
     await supabase.auth.signOut()
     setUser(null)
+    window.location.href = '/' // Force redirect to home
   }
 
   return (
