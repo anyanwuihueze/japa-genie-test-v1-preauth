@@ -189,7 +189,7 @@ export default function ExpertsPage() {
                 <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50" asChild>
                   <Link href="/contact-us">Get Matched with an Expert</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600" asChild>
+                <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10" asChild>
                   <Link href="/contact-us">Speak to Our Team</Link>
                 </Button>
               </div>
