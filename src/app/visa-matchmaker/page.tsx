@@ -287,9 +287,9 @@ export default function VisaMatchmakerReal() {
           ))}
         </div>
 
-        {/* Hidden Matches Teaser */}
+        {/* Hidden Matches Teaser - MOVED TO BOTTOM */}
         {!isPremium && hiddenMatchesCount > 0 && (
-          <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-2xl p-8 text-white text-center">
+          <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-2xl p-8 text-white text-center mt-8">
             <Lock className="w-16 h-16 mx-auto mb-4 opacity-80" />
             <h3 className="text-2xl font-bold mb-2">
               🔒 Unlock {hiddenMatchesCount} More Premium Matches
