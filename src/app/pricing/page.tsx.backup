@@ -16,7 +16,7 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info, Check, Sparkles, Lock, Zap, Ticket, Users, Calendar } from 'lucide-react';
+import { Info, Check, Sparkles, Lock, Zap } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 // Define proper types for your plans
@@ -55,12 +55,12 @@ function PricingContent() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
-  const [showPromo, setShowPromo] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoMessage, setPromoMessage] = useState('');
   const searchParams = useSearchParams();
   const { user, signInWithGoogle } = useAuth();
+
+  // ✅ ENHANCED: Get redirect reason for context-aware messaging
+  const redirectReason = searchParams?.get('reason');
+  const returnTo = searchParams?.get('returnTo');
 
   useEffect(() => {
     if (searchParams?.get('login_required') === 'true') {
@@ -69,10 +69,6 @@ function PricingContent() {
       return () => clearTimeout(timer);
     }
   }, [searchParams]);
-
-  // ✅ ENHANCED: Get redirect reason for context-aware messaging
-  const redirectReason = searchParams?.get('reason');
-  const returnTo = searchParams?.get('returnTo');
 
   // ✅ ENHANCED: Context-aware header messaging
   const getHeaderMessage = () => {
@@ -123,42 +119,6 @@ function PricingContent() {
     window.location.href = checkoutUrl;
   };
 
-  // ✅ NEW: Promo code handler
-  const handlePromoSubmit = async () => {
-    if (!promoCode.trim()) return;
-    
-    if (!user) {
-      setShowLoginAlert(true);
-      return;
-    }
-    
-    setPromoLoading(true);
-    setPromoMessage('');
-    
-    try {
-      const response = await fetch('/api/promo/use', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promoCode: promoCode.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setPromoMessage(`✅ ${data.message} Redirecting to dashboard...`);
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 2000);
-      } else {
-        setPromoMessage(`❌ ${data.error}`);
-      }
-    } catch (error: any) {
-      setPromoMessage('❌ Failed to activate promo code. Please try again.');
-    } finally {
-      setPromoLoading(false);
-    }
-  };
-
   // ✅ ENHANCED: Context-aware CTA button
   const getCtaButton = (plan: any) => {
     if (!user) {
@@ -203,71 +163,13 @@ function PricingContent() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {headerMessage.subtitle}
           </p>
-
-          {/* ✅ SECURE: Promo Code Section - NO CODE DISPLAY */}
-          {showPromo ? (
-            <div className="max-w-md mx-auto mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-dashed border-green-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Ticket className="w-5 h-5 text-green-600" />
-                <h3 className="text-lg font-semibold text-green-800">Enter Promo Code</h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-3">Enter your exclusive promo code for 7-day free access</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="Enter your code here"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-                <Button 
-                  onClick={handlePromoSubmit} 
-                  disabled={promoLoading || !promoCode.trim()}
-                  className="bg-green-600 hover:bg-green-700 whitespace-nowrap"
-                >
-                  {promoLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Applying...
-                    </>
-                  ) : (
-                    'Apply Code'
-                  )}
-                </Button>
-              </div>
-              {promoMessage && (
-                <p className={`mt-2 text-sm ${promoMessage.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
-                  {promoMessage}
-                </p>
-              )}
-              <div className="mt-3 text-xs text-gray-500">
-                <p>💡 <strong>Limited availability:</strong> 7-day trial codes are distributed privately</p>
-              </div>
-              <button 
-                onClick={() => setShowPromo(false)}
-                className="mt-3 text-sm text-gray-500 hover:text-gray-700 underline"
-              >
-                ← Back to pricing plans
-              </button>
-            </div>
-          ) : (
-            <div className="text-center mt-6">
-              <button 
-                onClick={() => setShowPromo(true)}
-                className="inline-flex items-center gap-2 text-green-600 hover:text-green-800 text-sm font-medium bg-green-50 hover:bg-green-100 px-4 py-2 rounded-full transition-colors"
-              >
-                <Ticket className="w-4 h-4" />
-                Have a promo code? Get 7-day free trial
-              </button>
-            </div>
-          )}
         </header>
 
         {showLoginAlert && (
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800 flex items-center justify-between">
-              <span>Please log in to purchase a plan or use promo codes.</span>
+              <span>Please log in to purchase a plan.</span>
               <Button 
                 size="sm" 
                 onClick={() => signInWithGoogle('/pricing')}

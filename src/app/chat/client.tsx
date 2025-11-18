@@ -53,8 +53,38 @@ export default function UserChat() {
   const [isClearing, setIsClearing] = useState(false);
   const [userName, setUserName] = useState<string>('Pathfinder');
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null); // ✅ AUTO-SCROLL REF ADDED
+
+  // ========== SUBSCRIPTION CHECK ==========
+  useEffect(() => {
+    async function checkUserSubscription() {
+      if (!user) {
+        setHasSubscription(false);
+        setCheckingSubscription(false);
+        return;
+      }
+      
+      try {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .single();
+        
+        setHasSubscription(!!subscription);
+      } catch (error) {
+        setHasSubscription(false);
+      } finally {
+        setCheckingSubscription(false);
+      }
+    }
+    
+    checkUserSubscription();
+  }, [user, supabase]);
 
   // ========== ENHANCED KYC INTEGRATION ==========
   useEffect(() => {
@@ -182,8 +212,10 @@ export default function UserChat() {
 
     if (showBanner) setShowBanner(false);
 
-    if (!user && wishCount >= MAX_WISHES) {
-      setMessages(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: "You've used all 3 wishes! Sign in with Google for unlimited visa guidance." }]);
+    // ✅ UPDATED: Check for both anonymous users AND logged-in users without subscriptions
+    const isBonusUser = user && !hasSubscription;
+    if ((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3)) {
+      setMessages(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: "You've used all your wishes! Choose a plan for unlimited visa guidance." }]);
       setCurrentInput('');
       return;
     }
@@ -264,9 +296,11 @@ export default function UserChat() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const wishesLeft = user ? Infinity : Math.max(0, MAX_WISHES - wishCount);
+  // ✅ UPDATED: Calculate wishes left based on user type
+  const isBonusUser = user && !hasSubscription;
+  const wishesLeft = hasSubscription ? Infinity : (isBonusUser ? Math.max(0, 3 - wishCount) : Math.max(0, MAX_WISHES - wishCount));
 
-  if (authLoading || isLoadingMessages) {
+  if (authLoading || isLoadingMessages || checkingSubscription) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="text-center">
@@ -361,9 +395,11 @@ export default function UserChat() {
           <div className="p-3 sm:p-4 border-t bg-white/80 backdrop-blur">
             <div className="flex items-center justify-between mb-2">
               <Badge variant={wishesLeft > 0 ? "default" : "secondary"} className="text-xs">
-                {user ? '✨ Unlimited wishes' : wishesLeft > 0 ? `${wishesLeft} wish${wishesLeft !== 1 ? 'es' : ''} left` : 'All wishes used'}
+                {hasSubscription ? '✨ Unlimited wishes' : wishesLeft > 0 ? `${wishesLeft} wish${wishesLeft !== 1 ? 'es' : ''} left` : 'All wishes used'}
               </Badge>
-              <div className="text-xs text-gray-500">{user ? `Wish ${wishCount}` : `Wish ${wishCount} of ${MAX_WISHES}`}</div>
+              <div className="text-xs text-gray-500">
+                {hasSubscription ? `Wish ${wishCount}` : `Wish ${wishCount} of ${isBonusUser ? 3 : MAX_WISHES}`}
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input 
@@ -371,19 +407,29 @@ export default function UserChat() {
                 type="text" 
                 value={currentInput} 
                 onChange={(e) => setCurrentInput(e.target.value)} 
-                placeholder={user ? "Ask your next wish..." : "Ask for your first wish..."} 
+                placeholder={hasSubscription ? "Ask your next wish..." : "Ask for your first wish..."} 
                 className="flex-1 p-2 sm:p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                disabled={isTyping || (!user && wishCount >= MAX_WISHES)} 
+                disabled={isTyping || ((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3))} 
               />
               <button 
                 type="submit" 
-                disabled={isTyping || !currentInput.trim() || (!user && wishCount >= MAX_WISHES)} 
+                disabled={isTyping || !currentInput.trim() || ((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3))} 
                 className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium rounded-lg text-sm whitespace-nowrap min-w-[60px]"
               >
                 {isTyping ? '...' : 'Send'}
               </button>
             </form>
-            {!user && wishCount >= MAX_WISHES && <div className="mt-3"><CheckoutButton /></div>}
+            {/* ✅ UPDATED: Show pricing CTA for both anonymous AND bonus users */}
+            {((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3)) ? (
+              <div className="mt-3">
+                <Button 
+                  onClick={() => router.push('/pricing')}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  Choose Plan for Unlimited Access
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
 

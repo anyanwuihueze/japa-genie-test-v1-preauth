@@ -1,3 +1,4 @@
+// src/app/api/create-checkout/route.ts - UPDATE SUCCESS URL ONLY
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/stripe-server';
 import { createClient } from '@/lib/supabase/server';
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${request.headers.get('origin')}/chat?success=true`,
+      // ✅ UPDATED: Point to our payment-success handler
+      success_url: `${request.headers.get('origin')}/api/payment-success?returnTo=/dashboard&plan=pro`,
       cancel_url: `${request.headers.get('origin')}/checkout?canceled=true`,
       client_reference_id: user.id,
       customer_email: user.email,

@@ -1,3 +1,4 @@
+// src/app/api/paystack/create/route.ts - UPDATE SUCCESS URL ONLY
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -37,7 +38,8 @@ export async function POST(request: NextRequest) {
         email: user.email,
         currency: 'NGN',
         reference,
-        callback_url: `${request.headers.get('origin')}/chat?success=true`,
+        // ✅ UPDATED: Point to our payment-success handler
+        callback_url: `${request.headers.get('origin')}/api/payment-success?returnTo=/dashboard&plan=pro`,
         metadata: {
           userId: user.id,
           planName: name,
