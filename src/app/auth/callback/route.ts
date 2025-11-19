@@ -3,26 +3,33 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  console.log('🚀 CALLBACK STARTED - DEBUG VERSION');
+  
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const origin = requestUrl.origin;
   
-  console.log('🔄 Callback received with code:', !!code);
+  console.log('URL:', request.url);
+  console.log('Code exists:', !!code);
   
-  if (code) {
+  try {
+    if (!code) {
+      return NextResponse.redirect(`${origin}/?error=no_code`);
+    }
+
+    console.log('🔧 Creating Supabase client...');
     const supabase = await createClient();
-    
-    // Exchange code for session
+    console.log('✅ Supabase client created');
+
+    console.log('🔄 Exchanging code for session...');
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     
     if (exchangeError) {
       console.error('❌ Exchange error:', exchangeError);
-      return NextResponse.redirect(`${origin}/?error=${encodeURIComponent(exchangeError.message)}`);
+      return NextResponse.redirect(`${origin}/?error=exchange_${exchangeError.message}`);
     }
-    
-    console.log('✅ Session established');
-    
-    // Get user
+    console.log('✅ Session exchange successful');
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
@@ -30,7 +37,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/?error=no_user`);
     }
     
-    console.log('👤 User ID:', user.id);
+    console.log('✅ User found:', user.id);
     
     // Try to get profile
     const { data: profile, error: profileError } = await supabase
@@ -60,50 +67,16 @@ export async function GET(request: NextRequest) {
       
       if (insertError) {
         console.error('❌ Profile creation error:', insertError);
-        // Try to continue anyway
+        return NextResponse.redirect(`${origin}/?error=profile_create_${insertError.message}`);
       } else {
         console.log('✅ Profile created:', newProfile);
       }
     }
     
-    // Check if profile is complete (has all required fields)
-    const isProfileComplete = profile && 
-      profile.country && 
-      profile.country.trim() !== '' &&
-      profile.destination_country && 
-      profile.destination_country.trim() !== '' &&
-      profile.visa_type && 
-      profile.visa_type.trim() !== '';
+    return NextResponse.redirect(`${origin}/kyc`);
     
-    console.log('✅ Profile complete?', isProfileComplete);
-    
-    // NEW USER or INCOMPLETE PROFILE → KYC
-    if (!isProfileComplete) {
-      console.log('🎯 REDIRECT → /kyc (incomplete profile)');
-      return NextResponse.redirect(`${origin}/kyc`);
-    }
-    
-    // Check subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('id, status, plan_type')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-    
-    console.log('💳 Subscription:', subscription);
-    
-    // COMPLETE PROFILE, NO SUBSCRIPTION → Chat with bonus
-    if (!subscription) {
-      console.log('🎯 REDIRECT → /chat?bonus=3');
-      return NextResponse.redirect(`${origin}/chat?bonus=3`);
-    }
-    
-    // COMPLETE PROFILE + SUBSCRIPTION → Dashboard
-    console.log('🎯 REDIRECT → /dashboard');
-    return NextResponse.redirect(`${origin}/dashboard`);
+  } catch (error: any) {
+    console.error('💥 UNEXPECTED ERROR:', error);
+    return NextResponse.redirect(`${origin}/?error=unexpected_${error.message}`);
   }
-  
-  console.log('⚠️ No code, redirecting to home');
-  return NextResponse.redirect(`${origin}/`);
 }
