@@ -7,7 +7,6 @@ import { Sparkles, Trash2, MessageSquare, BarChart3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
-import CheckoutButton from '@/components/checkout-button';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -37,6 +36,32 @@ interface InsightOutput {
   recommendations?: string[];
 }
 
+interface UserProgress {
+  overall_progress: number;
+  current_stage: string;
+  target_country: string;
+  visa_type: string;
+  profile_completed: boolean;
+  documents_uploaded: boolean;
+  documents_verified: boolean;
+  financial_ready: boolean;
+  interview_prep_done: boolean;
+  application_submitted: boolean;
+  decision_received: boolean;
+  total_chat_messages: number;
+}
+
+interface UserProfile {
+  country: string;
+  destination_country: string;
+  age: number;
+  visa_type: string;
+  profession: string;
+  user_type: string;
+  timeline_urgency: string;
+  preferred_name?: string;
+}
+
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
@@ -55,8 +80,10 @@ export default function UserChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null); // ✅ AUTO-SCROLL REF ADDED
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ========== SUBSCRIPTION CHECK ==========
   useEffect(() => {
@@ -86,27 +113,69 @@ export default function UserChat() {
     checkUserSubscription();
   }, [user, supabase]);
 
-  // ========== ENHANCED KYC INTEGRATION ==========
+  // ========== ✅ FIXED: LOAD USER DATA FROM SUPABASE ==========
   useEffect(() => {
-    const storedKyc = sessionStorage.getItem('kycData');
-    if (storedKyc && messages.length === 0) {
-      const kycData = JSON.parse(storedKyc);
-      console.log('🎯 KYC Data loaded, calling AI for personalized response:', kycData);
+    async function loadUserData() {
+      if (!user) return;
       
-      // Clear KYC data immediately so we don't repeat
-      sessionStorage.removeItem('kycData');
+      try {
+        console.log('🔄 Loading user data from Supabase...');
+        
+        // Load user profile (KYC data)
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('country, destination_country, age, visa_type, profession, user_type, timeline_urgency, preferred_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserProfile(profile);
+          setUserName(profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
+          console.log('✅ User profile loaded:', profile);
+        }
+
+        // Load user progress
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (progress) {
+          setUserProgress(progress);
+          console.log('✅ User progress loaded:', progress);
+        }
+
+      } catch (error) {
+        console.log('⚠ Error loading user data:', error);
+      }
+    }
+
+    if (user) {
+      loadUserData();
+    }
+  }, [user, supabase]);
+
+  // ========== ✅ FIXED: PERSONALIZED WELCOME WITH SUPABASE DATA ==========
+  useEffect(() => {
+    if (user && userProfile && messages.length === 0) {
+      console.log('🎯 Creating personalized welcome with Supabase data');
       
-      // Set a temporary "Analyzing your profile..." message
       setMessages([{ role: 'assistant', content: "🎯 Analyzing your profile for personalized visa advice..." }]);
       setIsTyping(true);
 
-      // Call the AI immediately with the KYC context for a robust response
+      // Enhanced context with both KYC and progress
+      const enhancedContext = {
+        kyc: userProfile,
+        progress: userProgress
+      };
+
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          question: `Provide comprehensive ${kycData.visaType} advice for ${kycData.destination} for a ${kycData.age}-year-old from ${kycData.country}${kycData.profession ? ` working as ${kycData.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
-          userContext: kycData,
+          question: `Provide comprehensive ${userProfile.visa_type} advice for ${userProfile.destination_country} for a ${userProfile.age}-year-old from ${userProfile.country}${userProfile.profession ? ` working as ${userProfile.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
+          userContext: enhancedContext,
           conversationHistory: []
         }),
       })
@@ -118,34 +187,29 @@ export default function UserChat() {
             setInsights(chatResult.insights);
           }
         } else {
-          // Fallback to robust welcome message
-          setMessages([{ role: 'assistant', content: `Welcome! Based on your profile:\n\n**📍 From:** ${kycData.country}\n**🎯 Destination:** ${kycData.destination}\n**📋 Visa Type:** ${kycData.visaType}\n**👤 Age:** ${kycData.age}${kycData.profession ? `\n**💼 Profession:** ${kycData.profession}` : ''}\n\nI'm ready to provide specific advice for your ${kycData.destination} ${kycData.visaType.toLowerCase()} journey. What would you like to know first?` }]);
+          // Fallback personalized welcome
+          const welcomeMessage = userProfile ? 
+            `Welcome! Based on your profile:\n\n**📍 From:** ${userProfile.country}\n**🎯 Destination:** ${userProfile.destination_country}\n**📋 Visa Type:** ${userProfile.visa_type}\n**👤 Age:** ${userProfile.age}${userProfile.profession ? `\n**💼 Profession:** ${userProfile.profession}` : ''}\n\nI'm ready to provide specific advice for your ${userProfile.destination_country} ${userProfile.visa_type.toLowerCase()} journey. What would you like to know first?` :
+            `Welcome, ${userName}! ✨ You have unlimited wishes.`;
+          
+          setMessages([{ role: 'assistant', content: welcomeMessage }]);
         }
       })
       .catch(err => {
-        // Enhanced fallback welcome message
-        setMessages([{ role: 'assistant', content: `Welcome! I see you're exploring ${kycData.visaType} opportunities in ${kycData.destination} from ${kycData.country}. As a ${kycData.age}-year-old${kycData.profession ? ` ${kycData.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` }]);
+        console.error('Chat API error:', err);
+        const fallbackMessage = userProfile ? 
+          `Welcome! I see you're exploring ${userProfile.visa_type} opportunities in ${userProfile.destination_country} from ${userProfile.country}. As a ${userProfile.age}-year-old${userProfile.profession ? ` ${userProfile.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` :
+          `Welcome, ${userName}! ✨ You have unlimited wishes.`;
+        
+        setMessages([{ role: 'assistant', content: fallbackMessage }]);
       })
       .finally(() => {
         setIsTyping(false);
       });
     }
-  }, [messages.length]);
-  // ========== END ENHANCED KYC INTEGRATION ==========
+  }, [user, userProfile, messages.length, userName]);
 
-  useEffect(() => {
-    async function fetchUserName() {
-      if (!user) return;
-      try {
-        const { data } = await supabase.from('user_profiles').select('preferred_name').eq('id', user.id).single();
-        setUserName(data?.preferred_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
-      } catch (error) {
-        setUserName(user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
-      }
-    }
-    fetchUserName();
-  }, [user, supabase]);
-
+  // ========== LOAD EXISTING MESSAGES ==========
   useEffect(() => {
     async function loadMessages() {
       if (!user) {
@@ -153,31 +217,44 @@ export default function UserChat() {
         setWishCount(0);
         return;
       }
+      
       setIsLoadingMessages(true);
       try {
-        const { data } = await supabase.from('messages').select('*').eq('user_id', user.id).is('deleted_at', null).order('created_at', { ascending: true });
+        const { data } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: true });
+          
         if (data && data.length > 0) {
-          setMessages(data.map(msg => ({ id: msg.id, role: msg.role as 'user' | 'assistant', content: msg.content })));
+          setMessages(data.map(msg => ({ 
+            id: msg.id, 
+            role: msg.role as 'user' | 'assistant', 
+            content: msg.content 
+          })));
           setWishCount(data.filter(m => m.role === 'user').length);
           setAiMessageCount(data.filter(m => m.role === 'assistant').length);
           setShowBanner(false);
-        } else {
-          setMessages([{ role: 'assistant', content: `Welcome, ${userName}! ✨ You have unlimited wishes.` }]);
         }
+        // If no messages, the personalized welcome above will handle it
       } catch (error) {
-        setMessages([{ role: 'assistant', content: `Welcome, ${userName}! You have unlimited wishes.` }]);
+        console.error('Error loading messages:', error);
       } finally {
         setIsLoadingMessages(false);
       }
     }
-    if (!authLoading && userName !== 'Pathfinder') loadMessages();
-  }, [user, authLoading, userName, supabase]);
 
-  // ✅ AUTO-SCROLL TO BOTTOM WHEN NEW MESSAGES ARRIVE
+    if (!authLoading && user) {
+      loadMessages();
+    }
+  }, [user, authLoading, supabase]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  // ========== ✅ ADDED: MISSING FUNCTIONS ==========
   const handleClearChat = async () => {
     if (!user) return;
     if (!window.confirm('Clear all chat history? This cannot be undone.')) return;
@@ -205,6 +282,71 @@ export default function UserChat() {
     }
   };
 
+  const updateChatProgress = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch current progress
+      const { data: currentProgress } = await supabase
+        .from('user_progress')
+        .select('total_chat_messages')
+        .eq('user_id', user.id)
+        .single();
+
+      const newCount = (currentProgress?.total_chat_messages || 0) + 1;
+
+      // Increment by 1 instead of recounting
+      const { error: progressError } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          total_chat_messages: newCount,
+          last_chat_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+      
+      if (progressError) {
+        console.log('⚠️ Chat progress update failed:', progressError);
+      } else {
+        console.log('✅ Chat progress updated:', newCount, 'messages');
+        // Refresh progress data
+        const { data: updatedProgress } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        setUserProgress(updatedProgress);
+      }
+    } catch (error) {
+      console.log('⚠️ Progress update failed (non-critical):', error);
+    }
+  };
+
+  const saveInsightsToDatabase = async (insightsData: InsightOutput) => {
+    if (!user || !insightsData) return;
+    
+    try {
+      const { error } = await supabase
+        .from('visa_insights')
+        .insert({
+          user_id: user.id,
+          insight_type: 'country_comparison',
+          insight_data: insightsData,
+          created_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.log('⚠️ Insights save failed:', error);
+      } else {
+        console.log('✅ Insights saved to database');
+      }
+    } catch (error) {
+      console.log('⚠️ Insights save failed (non-critical):', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = currentInput.trim();
@@ -212,7 +354,6 @@ export default function UserChat() {
 
     if (showBanner) setShowBanner(false);
 
-    // ✅ UPDATED: Check for both anonymous users AND logged-in users without subscriptions
     const isBonusUser = user && !hasSubscription;
     if ((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3)) {
       setMessages(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: "You've used all your wishes! Choose a plan for unlimited visa guidance." }]);
@@ -221,20 +362,22 @@ export default function UserChat() {
     }
 
     const newWishCount = wishCount + 1;
-    const newAiCount = aiMessageCount + 1;
     const userMessage: Message = { role: 'user', content: trimmed };
     
     if (user) {
       const savedMsg = await saveMessage('user', trimmed);
-      if (savedMsg) userMessage.id = savedMsg.id;
+      if (savedMsg) {
+        userMessage.id = savedMsg.id;
+        await updateChatProgress();
+      }
     }
     
-    setMessages(prev => newWishCount === 1 && prev.length === 1 ? [userMessage] : [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setCurrentInput('');
     setIsTyping(true);
 
     try {
-      const conversationHistory = !user ? messages.filter(m => !m.content.includes("Welcome, Pathfinder")).map(m => ({ role: m.role, content: m.content })) : [];
+      const conversationHistory = messages.map(m => ({ role: m.role, content: m.content }));
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
       if (user) {
@@ -242,10 +385,11 @@ export default function UserChat() {
         if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      // ========== KYC INTEGRATION IN CONVERSATION ==========
-      // Get any remaining KYC data for context-aware responses
-      const storedKyc = sessionStorage.getItem('kycData');
-      const kycData = storedKyc ? JSON.parse(storedKyc) : null;
+      // ✅ FIXED: Use Supabase data instead of sessionStorage
+      const enhancedContext = {
+        kyc: userProfile,
+        progress: userProgress
+      };
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -253,17 +397,16 @@ export default function UserChat() {
         body: JSON.stringify({ 
           question: trimmed, 
           conversationHistory, 
-          userContext: kycData || undefined,
+          userContext: enhancedContext,
           ...(user ? {} : { wishCount: newWishCount }) 
         }),
       });
-      // ========== END KYC INTEGRATION ==========
 
       const chatResult = await response.json();
       if (!response.ok) throw new Error(chatResult.error || 'Failed');
 
       let aiResponse = chatResult.answer;
-      const shouldMentionName = user && (newAiCount % NAME_MENTION_FREQUENCY === 0);
+      const shouldMentionName = user && (aiMessageCount % NAME_MENTION_FREQUENCY === 0);
       if (shouldMentionName && userName !== 'Pathfinder') {
         const greetings = [`Great question, ${userName}!`, `${userName}, here's what you need to know:`];
         aiResponse = `${greetings[Math.floor(Math.random() * greetings.length)]} ${aiResponse}`;
@@ -277,18 +420,20 @@ export default function UserChat() {
       
       setMessages(prev => [...prev, assistantMessage]);
       setWishCount(newWishCount);
-      setAiMessageCount(newAiCount);
+      setAiMessageCount(prev => prev + 1);
 
       if (chatResult.insights) {
         setInsights(chatResult.insights);
-        // Auto-switch to insights tab on mobile when new insights arrive
+        await saveInsightsToDatabase(chatResult.insights);
+        
         if (window.innerWidth < 768) {
           setActiveTab('insights');
         }
       }
 
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Wish ${newWishCount}: Temporary error. Trusted by ${SOCIAL_PROOF_COUNT}+ professionals — Sign up` }]);
+      console.error('Chat error:', err);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Wish ${newWishCount}: Temporary error. Please try again.` }]);
     } finally {
       setIsTyping(false);
     }
@@ -296,7 +441,6 @@ export default function UserChat() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  // ✅ UPDATED: Calculate wishes left based on user type
   const isBonusUser = user && !hasSubscription;
   const wishesLeft = hasSubscription ? Infinity : (isBonusUser ? Math.max(0, 3 - wishCount) : Math.max(0, MAX_WISHES - wishCount));
 
@@ -378,7 +522,7 @@ export default function UserChat() {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} /> {/* ✅ AUTO-SCROLL ANCHOR ADDED */}
+            <div ref={messagesEndRef} />
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-white border rounded-lg px-3 sm:px-4 py-2 shadow">
@@ -419,7 +563,6 @@ export default function UserChat() {
                 {isTyping ? '...' : 'Send'}
               </button>
             </form>
-            {/* ✅ UPDATED: Show pricing CTA for both anonymous AND bonus users */}
             {((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3)) ? (
               <div className="mt-3">
                 <Button 
@@ -471,7 +614,7 @@ export default function UserChat() {
                   <p className="text-sm sm:text-base text-blue-600">{country.visaType}</p>
                   <div className="text-xs text-gray-600">
                     <p>💰 ${country.estimatedCost.toLocaleString()}</p>
-                    <p>⏱️ ${country.processingTimeMonths} months</p>
+                    <p>⏱️ {country.processingTimeMonths} months</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-green-700">Pros:</p>

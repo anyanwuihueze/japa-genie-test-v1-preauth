@@ -2,6 +2,53 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Progress creation function - ADD THIS
+async function createUserProgress(userId: string) {
+  const supabase = await createClient();
+  
+  try {
+    console.log('🎯 Creating progress records for user:', userId);
+    
+    // Create initial progress records - SILENTLY IGNORE ERRORS
+    const { error: progressError } = await supabase
+      .from('user_progress')
+      .insert([
+        { 
+          user_id: userId, 
+          step_name: 'onboarding_complete', 
+          completed: false,
+          created_at: new Date().toISOString()
+        },
+        { 
+          user_id: userId, 
+          step_name: 'kyc_complete', 
+          completed: false,
+          created_at: new Date().toISOString()
+        },
+        { 
+          user_id: userId, 
+          step_name: 'first_chat', 
+          completed: false,
+          created_at: new Date().toISOString()
+        },
+        { 
+          user_id: userId, 
+          step_name: 'payment_complete', 
+          completed: false,
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+    if (progressError) {
+      console.log('⚠️ Progress creation failed (non-critical):', progressError.message);
+    } else {
+      console.log('✅ User progress records created successfully');
+    }
+  } catch (error) {
+    console.log('⚠️ Progress creation error (non-critical):', error);
+  }
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -62,14 +109,16 @@ export async function GET(request: NextRequest) {
     
     if (insertError) {
       console.error('❌ Profile creation error:', insertError);
-      // Continue anyway, KYC will handle it
     } else {
       profile = newProfile;
       console.log('✅ Profile created');
+      
+      // 🎯 SAFE PROGRESS CREATION - ADDED HERE
+      await createUserProgress(user.id);
     }
   }
   
-  // Check if profile is complete
+  // Check if profile is complete - FIXED LOGIC
   const isProfileComplete = profile && 
     profile.country && 
     profile.country.trim() !== '' &&
@@ -79,12 +128,6 @@ export async function GET(request: NextRequest) {
     profile.visa_type.trim() !== '';
   
   console.log('✅ Profile complete?', isProfileComplete);
-  
-  // NEW USER or INCOMPLETE PROFILE → KYC
-  if (!isProfileComplete) {
-    console.log('🎯 REDIRECT → /kyc');
-    return NextResponse.redirect(`${origin}/kyc`);
-  }
   
   // Check subscription
   const { data: subscription } = await supabase
@@ -96,13 +139,23 @@ export async function GET(request: NextRequest) {
   
   console.log('💳 Subscription:', subscription);
   
-  // COMPLETE PROFILE, NO SUBSCRIPTION → Chat with bonus
-  if (!subscription) {
-    console.log('🎯 REDIRECT → /chat?bonus=3');
+  // 🎯 FIXED FLOW LOGIC:
+  if (!isProfileComplete) {
+    console.log('🎯 REDIRECT → /kyc (incomplete profile)');
+    return NextResponse.redirect(`${origin}/kyc`);
+  }
+  
+  if (isProfileComplete && !subscription) {
+    console.log('🎯 REDIRECT → /chat?bonus=3 (complete profile, no subscription)');
     return NextResponse.redirect(`${origin}/chat?bonus=3`);
   }
   
-  // COMPLETE PROFILE + SUBSCRIPTION → Dashboard
-  console.log('🎯 REDIRECT → /dashboard');
-  return NextResponse.redirect(`${origin}/dashboard`);
+  if (isProfileComplete && subscription) {
+    console.log('🎯 REDIRECT → /dashboard (complete profile + subscription)');
+    return NextResponse.redirect(`${origin}/dashboard`);
+  }
+  
+  // Fallback
+  console.log('🎯 REDIRECT → /kyc (fallback)');
+  return NextResponse.redirect(`${origin}/kyc`);
 }

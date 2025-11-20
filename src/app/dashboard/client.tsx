@@ -40,6 +40,8 @@ interface ProgressData {
   interview_prep_done: boolean;
   application_submitted: boolean;
   decision_received: boolean;
+  total_chat_messages: number;
+  last_chat_date: string;
 }
 
 export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
@@ -66,24 +68,18 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
 
   async function loadDashboardData() {
     try {
-      // Fetch chat sessions
-      const { data: chats } = await supabase
-        .from('chat_sessions')
-        .select('id')
-        .eq('user_id', user.id);
-
-      // Fetch insights
-      const { data: insights } = await supabase
-        .from('visa_insights')
-        .select('id')
-        .eq('user_id', user.id);
-
-      // Fetch progress data
+      // ✅ FIXED: Fetch progress data (this now contains chat messages count)
       const { data: progress } = await supabase
         .from('user_progress')
         .select('*')
         .eq('user_id', user.id)
         .single();
+
+      // ✅ FIXED: Fetch insights count
+      const { data: insights } = await supabase
+        .from('visa_insights')
+        .select('id')
+        .eq('user_id', user.id);
 
       if (progress) {
         setProgressData(progress);
@@ -99,8 +95,9 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         const timeline = calculateTimeline(progress);
         setTimelineStats(timeline);
 
+        // ✅ FIXED: Use real data from progress table
         setStats({
-          totalChats: chats?.length || 0,
+          totalChats: progress.total_chat_messages || 0,
           totalInsights: insights?.length || 0,
           progress: calculatedProgress,
           currentStage: progress.current_stage || determineStage(milestonesData)
@@ -112,6 +109,20 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
 
     } catch (error) {
       console.error('Error loading dashboard:', error);
+      // Still try to show insights even if progress fails
+      try {
+        const { data: insights } = await supabase
+          .from('visa_insights')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        setStats(prev => ({
+          ...prev,
+          totalInsights: insights?.length || 0
+        }));
+      } catch (insightError) {
+        console.error('Error loading insights:', insightError);
+      }
     } finally {
       setLoading(false);
     }
@@ -230,7 +241,8 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         financial_ready: false,
         interview_prep_done: false,
         application_submitted: false,
-        decision_received: false
+        decision_received: false,
+        total_chat_messages: 0
       })
       .select()
       .single();
@@ -316,6 +328,37 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           </div>
         </CardContent>
       </Card>
+
+      {/* ✅ ADDED: ENGAGEMENT STATS CARD */}
+      {progressData && (progressData.total_chat_messages > 0 || progressData.last_chat_date) && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-lg">Your Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-blue-600 mb-1">
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="text-sm font-medium">Chat Messages</span>
+                </div>
+                <div className="text-2xl font-bold">{progressData.total_chat_messages}</div>
+              </div>
+              {progressData.last_chat_date && (
+                <div>
+                  <div className="flex items-center gap-2 text-purple-600 mb-1">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">Last Active</span>
+                  </div>
+                  <div className="text-sm font-semibold">
+                    {new Date(progressData.last_chat_date).toLocaleDateString()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* TIMELINE CARDS */}
       {(timelineStats.daysUntilDeadline > 0 || timelineStats.daysUntilTravel > 0) && (
@@ -422,7 +465,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           <CardContent className="pt-6 text-center">
             <MessageSquare className="w-8 h-8 mx-auto mb-2 text-blue-600" />
             <div className="text-2xl font-bold">{stats.totalChats}</div>
-            <div className="text-sm text-muted-foreground">Chat Sessions</div>
+            <div className="text-sm text-muted-foreground">Chat Messages</div>
           </CardContent>
         </Card>
 
@@ -459,7 +502,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
               <Link href="/chat">Continue Chat</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/kyc-profile">Update Profile</Link>
+              <Link href="/kyc">Update Profile</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/dashboard/proof-of-funds">Proof of Funds</Link>

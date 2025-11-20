@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx - FIXED VERSION (no subscription prop)
+// src/app/dashboard/page.tsx - FIXED VERSION
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DashboardClient from './client';
@@ -8,22 +8,10 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    redirect('/chat');
+    redirect('/');
   }
 
-  // ✅ CHECK IF USER HAS COMPLETED KYC
-  const { data: userProfile } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  // If no profile or incomplete profile, redirect to KYC
-  if (!userProfile || !userProfile.country || !userProfile.destination_country || !userProfile.visa_type) {
-    redirect('/kyc?returnTo=/dashboard');
-  }
-
-  // ✅ CHECK SUBSCRIPTION STATUS
+  // ✅ ONLY check subscription - NO KYC redirect
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('id, status, plan_type')
@@ -33,10 +21,9 @@ export default async function DashboardPage() {
 
   // If no active subscription, redirect to pricing
   if (!subscription) {
-    redirect('/pricing?reason=dashboard_access&returnTo=/dashboard');
+    redirect('/pricing?reason=dashboard_access');
   }
 
-  // ✅ User has everything: auth + KYC + subscription
-  // Pass only user and userProfile (DashboardClient doesn't need subscription)
-  return <DashboardClient user={user} userProfile={userProfile} />;
+  // ✅ User is authenticated and has subscription - show dashboard
+  return <DashboardClient user={user} />;
 }

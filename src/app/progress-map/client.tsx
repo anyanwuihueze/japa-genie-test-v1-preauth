@@ -57,48 +57,127 @@ interface UserProgress {
   aheadOfPercentage: number;
   documentsCompleted: number;
   totalDocuments: number;
+  successProbability: number;
+  estimatedTimeline: string;
+  currentStage: string;
 }
 
 export default function ProgressMapClient() {
   const { user } = useAuth();
   const [userProgress, setUserProgress] = useState<UserProgress>({
-    progressPercentage: 25,
-    nextMilestone: "Document Preparation",
-    daysToDeadline: 14,
-    moneySaved: 2400000, // ₦2.4M
-    aheadOfPercentage: 67,
-    documentsCompleted: 3,
-    totalDocuments: 12
+    progressPercentage: 0, // ✅ CHANGED: Start at 0% for new users
+    nextMilestone: "Complete Your Profile",
+    daysToDeadline: 30,
+    moneySaved: 0, // ✅ CHANGED: Start at 0
+    aheadOfPercentage: 0, // ✅ CHANGED: Start at 0
+    documentsCompleted: 0, // ✅ CHANGED: Start at 0
+    totalDocuments: 8,
+    successProbability: 65,
+    estimatedTimeline: "6-8 months",
+    currentStage: "Onboarding"
   });
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchUserProgress();
-      fetchUserProfile();
     }
   }, [user]);
 
   const fetchUserProgress = async () => {
-    // This would come from your Supabase progress tracking
-    // For now, using mock data that we'll replace with real calculations
+    if (!user) return;
+    
+    setLoading(true);
     const supabase = createClient();
     
-    // TODO: Implement real progress calculation based on:
-    // - Documents uploaded to storage
-    // - Profile completion status
-    // - Interview practice sessions
-    // - Application milestones
+    try {
+      // ✅ CHANGED: Fetch REAL user data instead of mock data
+      
+      // 1. Fetch user profile
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      setUserProfile(profile);
+
+      // 2. Count REAL chat messages
+      const { data: messages, count: messageCount } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // 3. Count REAL document checks
+      const { data: documents, count: docCount } = await supabase
+        .from('user_documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // 4. Calculate REAL progress based on actual user activity
+      const realProgress = calculateRealProgress(profile, messageCount || 0, docCount || 0);
+      
+      setUserProgress(realProgress);
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateRealProgress = (profile: any, messageCount: number, docCount: number): UserProgress => {
+    let progressPercentage = 0;
+    let nextMilestone = "Complete Your Profile";
+    let currentStage = "Onboarding";
+
+    // ✅ CHANGED: Calculate based on REAL user activity
     
-    setUserProgress({
-      progressPercentage: 45, // This would be calculated
-      nextMilestone: "Document Verification",
-      daysToDeadline: 7,
-      moneySaved: 2400000,
-      aheadOfPercentage: 73,
-      documentsCompleted: 5,
-      totalDocuments: 12
-    });
+    // Profile completion (KYC)
+    if (profile?.country && profile?.destination_country && profile?.visa_type) {
+      progressPercentage += 30;
+      nextMilestone = "Upload Documents";
+      currentStage = "Document Preparation";
+    }
+
+    // Chat engagement
+    if (messageCount > 0) {
+      progressPercentage += 20;
+      if (progressPercentage >= 30) nextMilestone = "Complete Document Upload";
+    }
+
+    // Document uploads
+    if (docCount > 0) {
+      progressPercentage += Math.min(docCount * 5, 30); // 5% per document, max 30%
+      if (progressPercentage >= 50) {
+        nextMilestone = "Schedule Interview Practice";
+        currentStage = "Interview Preparation";
+      }
+    }
+
+    // Cap at 100%
+    progressPercentage = Math.min(progressPercentage, 100);
+
+    // Calculate dynamic values based on real progress
+    const moneySaved = Math.round(progressPercentage * 24000);
+    const aheadOfPercentage = Math.floor(progressPercentage * 0.8);
+    const successProbability = Math.min(65 + Math.floor(progressPercentage / 2), 95);
+    const estimatedTimeline = progressPercentage > 50 ? "4-5 months" : "6-8 months";
+    const daysToDeadline = Math.max(30 - Math.floor(progressPercentage / 3), 7);
+
+    return {
+      progressPercentage,
+      nextMilestone,
+      daysToDeadline,
+      moneySaved,
+      aheadOfPercentage,
+      documentsCompleted: docCount,
+      totalDocuments: 8,
+      successProbability,
+      estimatedTimeline,
+      currentStage
+    };
   };
 
   const fetchUserProfile = async () => {
@@ -114,24 +193,16 @@ export default function ProgressMapClient() {
     setUserProfile(profile);
   };
 
-  const calculateProgress = () => {
-    // Real progress calculation based on:
-    // 1. Profile completeness (25%)
-    // 2. Documents uploaded (35%)
-    // 3. Interview practice (20%)
-    // 4. Application steps (20%)
-    if (!userProfile) return 25;
-
-    let progress = 0;
-    if (userProfile.country) progress += 10;
-    if (userProfile.destination_country) progress += 10;
-    if (userProfile.profession) progress += 5;
-    
-    // Add document progress (mock for now)
-    progress += (userProgress.documentsCompleted / userProgress.totalDocuments) * 35;
-    
-    return Math.min(progress, 100);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Loading your progress...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -158,12 +229,15 @@ export default function ProgressMapClient() {
               </Badge>
               <Badge variant="secondary" className="bg-orange-100 text-orange-800">
                 <TrendingUp className="w-3 h-3 mr-1" />
-                Ahead of {userProgress.aheadOfPercentage}%
+                {userProgress.currentStage}
               </Badge>
             </div>
           </div>
           <CardDescription>
-            You're making great progress! {userProgress.nextMilestone} is your next milestone.
+            {userProgress.progressPercentage === 0 
+              ? "Start your journey by completing your profile and chatting with our AI assistant."
+              : `You're making great progress! ${userProgress.nextMilestone} is your next milestone.`
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -184,7 +258,7 @@ export default function ProgressMapClient() {
               <div className="text-xs text-muted-foreground">Next Deadline</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">₦{(userProgress.moneySaved / 1000000).toFixed(1)}M</div>
+              <div className="text-2xl font-bold text-purple-600">₦{(userProgress.moneySaved / 1000).toFixed(0)}K</div>
               <div className="text-xs text-muted-foreground">Saved vs Agents</div>
             </div>
             <div className="text-center">
@@ -205,7 +279,7 @@ export default function ProgressMapClient() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600 mb-2">87%</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">{userProgress.successProbability}%</div>
             <p className="text-sm text-muted-foreground">
               Based on your profile strength and {userProfile?.destination_country || 'target country'} requirements
             </p>
@@ -220,9 +294,9 @@ export default function ProgressMapClient() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600 mb-2">4-5 months</div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">{userProgress.estimatedTimeline}</div>
             <p className="text-sm text-muted-foreground">
-              Typical processing: 6-8 months. You're moving faster! ⚡
+              {userProgress.progressPercentage > 50 ? "You're moving faster! ⚡" : "Typical processing timeline"}
             </p>
           </CardContent>
         </Card>

@@ -94,6 +94,32 @@ export default function KYCPage() {
           console.log('✅ KYC saved to database');
         }
 
+        // ========== ADDED: PROGRESS TRACKING FOR KYC COMPLETION ==========
+        try {
+          // Update progress when profile is completed
+          const { error: progressError } = await supabase
+            .from('user_progress')
+            .upsert({
+              user_id: user.id,
+              profile_completed: true,
+              target_country: formData.destination,
+              visa_type: formData.visaType,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id'
+            });
+          
+          if (progressError) {
+            console.log('⚠️ KYC progress update failed:', progressError);
+          } else {
+            console.log('✅ KYC progress updated - profile completed');
+          }
+        } catch (error) {
+          console.log('⚠️ Progress update failed (non-critical):', error);
+          // DON'T throw - KYC should continue working
+        }
+        // ========== END OF ADDED CODE ==========
+
         // Check if returning user
         if (userProfile?.kyc_completed_at) {
           console.log('🔀 Returning user → Dashboard');
