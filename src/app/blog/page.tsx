@@ -1,15 +1,47 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Target, CheckCircle, Users, Zap, X } from 'lucide-react';
+import { ArrowRight, Target, CheckCircle, Users, Zap, X, MessageCircle, Rocket } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 
 export default function JapaNewsPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [visitorCount, setVisitorCount] = useState(0);
+  const [hasKYC, setHasKYC] = useState(false);
+  const supabase = createClient();
+
+  // Check if user has completed KYC
+  useEffect(() => {
+    const checkKYCStatus = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('country, destination_country, visa_type, age, user_type, timeline_urgency')
+          .eq('id', user.id)
+          .single();
+        
+        const kycComplete = profile && 
+          profile.country && 
+          profile.destination_country && 
+          profile.visa_type &&
+          profile.age &&
+          profile.user_type &&
+          profile.timeline_urgency;
+          
+        setHasKYC(!!kycComplete);
+      }
+    };
+
+    if (user) {
+      checkKYCStatus();
+    }
+  }, [user, supabase]);
 
   useEffect(() => {
     setMounted(true);
@@ -25,6 +57,43 @@ export default function JapaNewsPage() {
     document.addEventListener('mouseleave', handleMouseLeave);
     return () => document.removeEventListener('mouseleave', handleMouseLeave);
   }, []);
+
+  // 🎯 SMART NAVIGATION: Different paths for different user states
+  const handleSmartNavigation = () => {
+    if (!user) {
+      // Non-users: KYC → Chat flow
+      router.push('/kyc');
+    } else if (user && !hasKYC) {
+      // Signed-in but no KYC: Complete profile
+      router.push('/kyc');
+    } else {
+      // Signed-in with KYC: Straight to Genie!
+      router.push('/chat');
+    }
+  };
+
+  // 🎯 GET SMART CTA TEXT & ICON
+  const getCTADetails = () => {
+    if (!user) {
+      return {
+        text: "Start Free Assessment",
+        icon: Rocket,
+        description: "Get your personalized visa roadmap"
+      };
+    } else if (user && !hasKYC) {
+      return {
+        text: "Complete Your Profile",
+        icon: Target,
+        description: "Finish KYC for personalized advice"
+      };
+    } else {
+      return {
+        text: "Continue with AI Genie",
+        icon: MessageCircle,
+        description: "Pick up where you left off"
+      };
+    }
+  };
 
   const stories = [
     {
@@ -59,8 +128,10 @@ export default function JapaNewsPage() {
     }
   ];
 
-  const ProgressiveCTA = () => {
+  const SmartProgressiveCTA = () => {
     const [step, setStep] = useState(1);
+    const ctaDetails = getCTADetails();
+    const CTAIcon = ctaDetails.icon;
 
     const steps = [
       {
@@ -72,7 +143,7 @@ export default function JapaNewsPage() {
       },
       {
         icon: CheckCircle,
-        title: "See Your Options",
+        title: "See Your Options", 
         subtitle: "Personalized pathways",
         cta: "View My Routes",
         description: "Get 3 tailored visa strategies with success rates"
@@ -80,9 +151,9 @@ export default function JapaNewsPage() {
       {
         icon: Zap,
         title: "Full AI Analysis",
-        subtitle: "Complete roadmap",
-        cta: "Start My Journey",
-        description: "Comprehensive plan with documents, timeline & tips"
+        subtitle: "Complete roadmap", 
+        cta: user && hasKYC ? "Continue Journey" : "Start My Journey",
+        description: user && hasKYC ? "Pick up with AI Genie" : "Comprehensive plan with documents, timeline & tips"
       }
     ];
 
@@ -124,11 +195,12 @@ export default function JapaNewsPage() {
             if (step < 3) {
               setStep(step + 1);
             } else {
-              router.push('/visa-readiness-check');
+              handleSmartNavigation();
             }
           }}
         >
-          {currentStep.cta} <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+          {step === 3 ? ctaDetails.text : currentStep.cta} 
+          <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
 
         {step < 3 && (
@@ -153,6 +225,9 @@ export default function JapaNewsPage() {
     );
   }
 
+  const ctaDetails = getCTADetails();
+  const CTAIcon = ctaDetails.icon;
+
   return (
     <>
       <section className="py-8 sm:py-12 md:py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 min-h-screen">
@@ -172,7 +247,7 @@ export default function JapaNewsPage() {
             </p>
           </div>
 
-          <ProgressiveCTA />
+          <SmartProgressiveCTA />
 
           <div className="grid gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-16">
             {stories.map((story) => (
@@ -216,7 +291,10 @@ export default function JapaNewsPage() {
               Your Success Story is Next
             </h2>
             <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto">
-              Join the AI-powered movement. Get your personalized visa roadmap in 3 minutes.
+              {user && hasKYC 
+                ? "Continue your journey with AI Genie - pick up where you left off!"
+                : "Join the AI-powered movement. Get your personalized visa roadmap in 3 minutes."
+              }
             </p>
             
             <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
@@ -234,9 +312,18 @@ export default function JapaNewsPage() {
               </div>
             </div>
 
-            <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4" asChild>
-              <a href="/your-next-steps">Get Your Japa Plan <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" /></a>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4" 
+              onClick={handleSmartNavigation}
+            >
+              <CTAIcon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+              {ctaDetails.text}
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
+            <p className="text-xs sm:text-sm text-gray-500 mt-3">
+              {ctaDetails.description}
+            </p>
           </div>
         </div>
       </section>
@@ -248,14 +335,18 @@ export default function JapaNewsPage() {
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
               <div className="flex-1 text-center sm:text-left">
                 <p className="text-white font-semibold text-xs sm:text-sm md:text-base">
-                  Ready to be our next success story?
+                  {user && hasKYC ? "Continue with AI Genie" : "Ready to be our next success story?"}
                 </p>
                 <p className="text-purple-100 text-xs">
-                  Join 2,847+ approved applicants
+                  {user && hasKYC ? "Pick up where you left off" : "Join 2,847+ approved applicants"}
                 </p>
               </div>
-              <Button className="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm" asChild>
-                <a href="/kyc">Start Now</a>
+              <Button 
+                className="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm" 
+                onClick={handleSmartNavigation}
+              >
+                <CTAIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                {ctaDetails.text}
               </Button>
             </div>
           </div>
@@ -269,13 +360,22 @@ export default function JapaNewsPage() {
             <button onClick={() => setShowExitIntent(false)} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-gray-800">
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Wait! Get your free visa score</h3>
+            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">
+              {user && hasKYC ? "Continue your visa journey" : "Wait! Get your free visa score"}
+            </h3>
             <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
-              Before you leave, discover which visa you're closest to getting. Takes just 60 seconds.
+              {user && hasKYC 
+                ? "Don't lose your progress! Continue with AI Genie to complete your visa plan."
+                : "Before you leave, discover which visa you're closest to getting. Takes just 60 seconds."
+              }
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex-1 text-sm sm:text-base" asChild>
-                <a href="/visa-readiness-check">Get My Score</a>
+              <Button 
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex-1 text-sm sm:text-base" 
+                onClick={handleSmartNavigation}
+              >
+                <CTAIcon className="w-4 h-4 mr-2" />
+                {ctaDetails.text}
               </Button>
               <Button variant="outline" onClick={() => setShowExitIntent(false)} className="text-sm sm:text-base">
                 Maybe Later

@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
   // Get or create profile
   let { data: profile, error: profileError } = await supabase
     .from('user_profiles')
-    .select('id, country, destination_country, visa_type')
+    .select('id, country, destination_country, visa_type, age, user_type, timeline_urgency')
     .eq('id', user.id)
     .maybeSingle();
   
@@ -102,7 +102,10 @@ export async function GET(request: NextRequest) {
         id: user.id,
         country: null,
         destination_country: null,
-        visa_type: null
+        visa_type: null,
+        age: null,
+        user_type: null,
+        timeline_urgency: null
       }])
       .select()
       .single();
@@ -118,16 +121,26 @@ export async function GET(request: NextRequest) {
     }
   }
   
-  // Check if profile is complete - FIXED LOGIC
+  // ✅ FIXED: Check if profile is complete - ALL KYC FIELDS
   const isProfileComplete = profile && 
     profile.country && 
     profile.country.trim() !== '' &&
     profile.destination_country && 
     profile.destination_country.trim() !== '' &&
     profile.visa_type && 
-    profile.visa_type.trim() !== '';
+    profile.visa_type.trim() !== '' &&
+    profile.age && // ✅ ADDED: Age is required
+    profile.user_type && // ✅ ADDED: User type is required  
+    profile.timeline_urgency; // ✅ ADDED: Timeline is required
   
-  console.log('✅ Profile complete?', isProfileComplete);
+  console.log('✅ Profile complete?', isProfileComplete, {
+    country: !!profile?.country,
+    destination: !!profile?.destination_country, 
+    visa_type: !!profile?.visa_type,
+    age: !!profile?.age,
+    user_type: !!profile?.user_type,
+    timeline: !!profile?.timeline_urgency
+  });
   
   // Check subscription
   const { data: subscription } = await supabase

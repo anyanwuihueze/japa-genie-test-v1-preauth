@@ -1,3 +1,4 @@
+// src/app/chat/client.tsx - FIXED VERSION
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -62,6 +63,16 @@ interface UserProfile {
   preferred_name?: string;
 }
 
+interface KYCSession {
+  country: string;
+  destination_country: string;
+  age: number;
+  visa_type: string;
+  profession: string;
+  user_type: string;
+  timeline_urgency: string;
+}
+
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
@@ -82,6 +93,7 @@ export default function UserChat() {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [kycSession, setKycSession] = useState<KYCSession | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -116,34 +128,51 @@ export default function UserChat() {
   // ========== ✅ FIXED: LOAD USER DATA FROM SUPABASE ==========
   useEffect(() => {
     async function loadUserData() {
-      if (!user) return;
-      
       try {
         console.log('🔄 Loading user data from Supabase...');
         
-        // Load user profile (KYC data)
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('country, destination_country, age, visa_type, profession, user_type, timeline_urgency, preferred_name')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setUserProfile(profile);
-          setUserName(profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
-          console.log('✅ User profile loaded:', profile);
-        }
+        if (user) {
+          // Load user profile (KYC data) for signed-in users
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('country, destination_country, age, visa_type, profession, user_type, timeline_urgency, preferred_name')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            setUserProfile(profile);
+            setUserName(profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
+            console.log('✅ User profile loaded:', profile);
+          }
 
-        // Load user progress
-        const { data: progress } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (progress) {
-          setUserProgress(progress);
-          console.log('✅ User progress loaded:', progress);
+          // Load user progress for signed-in users
+          const { data: progress } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (progress) {
+            setUserProgress(progress);
+            console.log('✅ User progress loaded:', progress);
+          }
+        } else {
+          // ✅ FIXED: Load KYC session for anonymous users
+          const sessionId = sessionStorage.getItem('kyc_session_id');
+          if (sessionId) {
+            const { data: kycData } = await supabase
+              .from('kyc_sessions')
+              .select('country, destination_country, age, visa_type, profession, user_type, timeline_urgency')
+              .eq('session_id', sessionId)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (kycData) {
+              setKycSession(kycData);
+              console.log('✅ KYC session loaded for anonymous user:', kycData);
+            }
+          }
         }
 
       } catch (error) {
@@ -151,69 +180,83 @@ export default function UserChat() {
       }
     }
 
-    if (user) {
+    if (!authLoading) {
       loadUserData();
     }
-  }, [user, supabase]);
+  }, [user, authLoading, supabase]);
 
   // ========== ✅ FIXED: PERSONALIZED WELCOME WITH SUPABASE DATA ==========
   useEffect(() => {
-    if (user && userProfile && messages.length === 0) {
-      console.log('🎯 Creating personalized welcome with Supabase data');
+    if (messages.length === 0 && !isLoadingMessages) {
+      console.log('🎯 Creating personalized welcome with available data');
       
-      setMessages([{ role: 'assistant', content: "🎯 Analyzing your profile for personalized visa advice..." }]);
-      setIsTyping(true);
+      // Use userProfile for signed-in users, kycSession for anonymous users
+      const userData = user ? userProfile : kycSession;
+      
+      if (userData) {
+        setMessages([{ role: 'assistant', content: "🎯 Analyzing your profile for personalized visa advice..." }]);
+        setIsTyping(true);
 
-      // Enhanced context with both KYC and progress
-      const enhancedContext = {
-        kyc: userProfile,
-        progress: userProgress
-      };
+        // Enhanced context with available data
+        const enhancedContext = {
+          kyc: userData,
+          progress: userProgress
+        };
 
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          question: `Provide comprehensive ${userProfile.visa_type} advice for ${userProfile.destination_country} for a ${userProfile.age}-year-old from ${userProfile.country}${userProfile.profession ? ` working as ${userProfile.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
-          userContext: enhancedContext,
-          conversationHistory: []
-        }),
-      })
-      .then(response => response.json())
-      .then(chatResult => {
-        if (chatResult.answer) {
-          setMessages([{ role: 'assistant', content: chatResult.answer }]);
-          if (chatResult.insights) {
-            setInsights(chatResult.insights);
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            question: `Provide comprehensive ${userData.visa_type} advice for ${userData.destination_country} for a ${userData.age}-year-old from ${userData.country}${userData.profession ? ` working as ${userData.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
+            userContext: enhancedContext,
+            conversationHistory: [],
+            isSignedIn: !!user
+          }),
+        })
+        .then(response => response.json())
+        .then(chatResult => {
+          if (chatResult.answer) {
+            setMessages([{ role: 'assistant', content: chatResult.answer }]);
+            if (chatResult.insights) {
+              setInsights(chatResult.insights);
+            }
+          } else {
+            // Fallback personalized welcome
+            const welcomeMessage = userData ? 
+              `Welcome! Based on your profile:\n\n**📍 From:** ${userData.country}\n**🎯 Destination:** ${userData.destination_country}\n**📋 Visa Type:** ${userData.visa_type}\n**👤 Age:** ${userData.age}${userData.profession ? `\n**💼 Profession:** ${userData.profession}` : ''}\n\nI'm ready to provide specific advice for your ${userData.destination_country} ${userData.visa_type.toLowerCase()} journey. What would you like to know first?` :
+              `Welcome, ${userName}! ✨ You have unlimited wishes.`;
+            
+            setMessages([{ role: 'assistant', content: welcomeMessage }]);
           }
-        } else {
-          // Fallback personalized welcome
-          const welcomeMessage = userProfile ? 
-            `Welcome! Based on your profile:\n\n**📍 From:** ${userProfile.country}\n**🎯 Destination:** ${userProfile.destination_country}\n**📋 Visa Type:** ${userProfile.visa_type}\n**👤 Age:** ${userProfile.age}${userProfile.profession ? `\n**💼 Profession:** ${userProfile.profession}` : ''}\n\nI'm ready to provide specific advice for your ${userProfile.destination_country} ${userProfile.visa_type.toLowerCase()} journey. What would you like to know first?` :
+        })
+        .catch(err => {
+          console.error('Chat API error:', err);
+          const fallbackMessage = userData ? 
+            `Welcome! I see you're exploring ${userData.visa_type} opportunities in ${userData.destination_country} from ${userData.country}. As a ${userData.age}-year-old${userData.profession ? ` ${userData.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` :
             `Welcome, ${userName}! ✨ You have unlimited wishes.`;
           
-          setMessages([{ role: 'assistant', content: welcomeMessage }]);
-        }
-      })
-      .catch(err => {
-        console.error('Chat API error:', err);
-        const fallbackMessage = userProfile ? 
-          `Welcome! I see you're exploring ${userProfile.visa_type} opportunities in ${userProfile.destination_country} from ${userProfile.country}. As a ${userProfile.age}-year-old${userProfile.profession ? ` ${userProfile.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` :
-          `Welcome, ${userName}! ✨ You have unlimited wishes.`;
-        
-        setMessages([{ role: 'assistant', content: fallbackMessage }]);
-      })
-      .finally(() => {
-        setIsTyping(false);
-      });
+          setMessages([{ role: 'assistant', content: fallbackMessage }]);
+        })
+        .finally(() => {
+          setIsTyping(false);
+        });
+      } else {
+        // No user data available - show generic welcome
+        setMessages([{ 
+          role: 'assistant', 
+          content: user ? 
+            `Welcome, ${userName}! ✨ You have unlimited wishes.` :
+            "Welcome, Pathfinder! I'm Japa Genie. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?"
+        }]);
+      }
     }
-  }, [user, userProfile, messages.length, userName]);
+  }, [user, userProfile, kycSession, messages.length, userName, isLoadingMessages]);
 
   // ========== LOAD EXISTING MESSAGES ==========
   useEffect(() => {
     async function loadMessages() {
       if (!user) {
-        setMessages([{ role: 'assistant', content: "Welcome, Pathfinder! I'm Japa Genie. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?" }]);
+        // Don't set messages here - let the personalized welcome handle it
         setWishCount(0);
         return;
       }
@@ -254,7 +297,7 @@ export default function UserChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // ========== ✅ ADDED: MISSING FUNCTIONS ==========
+  // ========== CHAT FUNCTIONS ==========
   const handleClearChat = async () => {
     if (!user) return;
     if (!window.confirm('Clear all chat history? This cannot be undone.')) return;
@@ -286,7 +329,6 @@ export default function UserChat() {
     if (!user) return;
     
     try {
-      // Fetch current progress
       const { data: currentProgress } = await supabase
         .from('user_progress')
         .select('total_chat_messages')
@@ -295,7 +337,6 @@ export default function UserChat() {
 
       const newCount = (currentProgress?.total_chat_messages || 0) + 1;
 
-      // Increment by 1 instead of recounting
       const { error: progressError } = await supabase
         .from('user_progress')
         .upsert({
@@ -311,7 +352,6 @@ export default function UserChat() {
         console.log('⚠️ Chat progress update failed:', progressError);
       } else {
         console.log('✅ Chat progress updated:', newCount, 'messages');
-        // Refresh progress data
         const { data: updatedProgress } = await supabase
           .from('user_progress')
           .select('*')
@@ -385,9 +425,10 @@ export default function UserChat() {
         if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      // ✅ FIXED: Use Supabase data instead of sessionStorage
+      // ✅ FIXED: Use available data (userProfile for signed-in, kycSession for anonymous)
+      const userData = user ? userProfile : kycSession;
       const enhancedContext = {
-        kyc: userProfile,
+        kyc: userData,
         progress: userProgress
       };
 
@@ -424,7 +465,9 @@ export default function UserChat() {
 
       if (chatResult.insights) {
         setInsights(chatResult.insights);
-        await saveInsightsToDatabase(chatResult.insights);
+        if (user) {
+          await saveInsightsToDatabase(chatResult.insights);
+        }
         
         if (window.innerWidth < 768) {
           setActiveTab('insights');

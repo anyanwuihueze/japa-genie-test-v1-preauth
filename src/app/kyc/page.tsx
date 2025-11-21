@@ -1,4 +1,4 @@
-// src/app/kyc/page.tsx - NO AUTH WALL VERSION
+// src/app/kyc/page.tsx - FIXED VERSION
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,6 +21,9 @@ interface KYCData {
   userType: string;
   timelineUrgency: string;
 }
+
+// Generate session ID for anonymous users
+const generateSessionId = () => `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function KYCPage() {
   const router = useRouter();
@@ -69,7 +72,34 @@ export default function KYCPage() {
       console.log('🔄 Submitting KYC for user:', user?.id || 'anonymous');
       console.log('📋 Form data:', formData);
 
-      // IF USER IS LOGGED IN: Save to database
+      // Generate session ID for anonymous users
+      const sessionId = user ? null : generateSessionId();
+      
+      // ✅ FIXED: Save KYC data to kyc_sessions table for ALL users
+      const { data: kycSession, error: kycError } = await supabase
+        .from('kyc_sessions')
+        .insert({
+          user_id: user?.id || null,
+          session_id: sessionId,
+          country: formData.country,
+          destination_country: formData.destination,
+          age: parseInt(formData.age),
+          visa_type: formData.visaType,
+          profession: formData.profession,
+          user_type: formData.userType,
+          timeline_urgency: formData.timelineUrgency
+        })
+        .select()
+        .single();
+
+      if (kycError) {
+        console.error('❌ Error saving KYC session:', kycError);
+        throw kycError;
+      }
+
+      console.log('✅ KYC session saved:', kycSession);
+
+      // IF USER IS LOGGED IN: Also save to user_profiles
       if (user?.id) {
         const { data: saveResult, error: saveError } = await supabase
           .from('user_profiles')
@@ -89,14 +119,13 @@ export default function KYCPage() {
           });
 
         if (saveError) {
-          console.error('❌ Error saving KYC:', saveError);
+          console.error('❌ Error saving user profile:', saveError);
         } else {
-          console.log('✅ KYC saved to database');
+          console.log('✅ User profile saved to database');
         }
 
-        // ========== ADDED: PROGRESS TRACKING FOR KYC COMPLETION ==========
+        // Update progress when profile is completed
         try {
-          // Update progress when profile is completed
           const { error: progressError } = await supabase
             .from('user_progress')
             .upsert({
@@ -116,9 +145,7 @@ export default function KYCPage() {
           }
         } catch (error) {
           console.log('⚠️ Progress update failed (non-critical):', error);
-          // DON'T throw - KYC should continue working
         }
-        // ========== END OF ADDED CODE ==========
 
         // Check if returning user
         if (userProfile?.kyc_completed_at) {
@@ -128,19 +155,13 @@ export default function KYCPage() {
         }
       }
 
-      // Build URL params for chat (works for logged in OR anonymous)
-      const params = new URLSearchParams({
-        country: formData.country,
-        destination: formData.destination,
-        age: formData.age,
-        visaType: formData.visaType,
-        userType: formData.userType,
-        timelineUrgency: formData.timelineUrgency,
-        ...(formData.profession && { profession: formData.profession })
-      });
+      // ✅ FIXED: Store session ID for anonymous users
+      if (!user) {
+        sessionStorage.setItem('kyc_session_id', sessionId!);
+      }
 
-      console.log('🔀 New user → Chat');
-      router.push(`/chat?${params.toString()}`);
+      console.log('🔀 Redirecting to chat with KYC data');
+      router.push('/chat');
 
     } catch (error) {
       console.error('❌ KYC submission error:', error);
@@ -155,7 +176,6 @@ export default function KYCPage() {
   };
 
   // NO AUTH WALL - Show form to everyone
-  // Only show loading spinner while checking auth status
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
