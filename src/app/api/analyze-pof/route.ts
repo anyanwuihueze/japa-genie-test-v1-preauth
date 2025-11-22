@@ -1,7 +1,9 @@
-// src/app/api/analyze-pof/route.ts
+// src/app/api/analyze-pof/route.ts - FIXED VERSION (same pattern as working PDF generator)
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeProofOfFunds } from '@/lib/ai/pof-analysis';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/lib/supabase/server';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,12 +35,30 @@ export async function POST(request: NextRequest) {
       family: familyMembers
     });
 
-    // Perform AI analysis (expensive - only for paying users)
-    const analysis = await analyzeProofOfFunds(
-      userProfile,
-      financialData,
-      familyMembers
-    );
+    // PERFORM AI ANALYSIS DIRECTLY (like working PDF generator)
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp" 
+    });
+
+    const prompt = `
+    Analyze Proof of Funds for visa application:
+
+    APPLICANT PROFILE:
+    - From: ${userProfile.nationality || 'Unknown'}
+    - Destination: ${userProfile.destination_country}
+    - Visa Type: ${userProfile.visa_type}
+    - Family Members: ${familyMembers}
+
+    FINANCIAL DATA:
+    ${JSON.stringify(financialData, null, 2)}
+
+    Provide comprehensive analysis including compliance score, risk assessment, and recommendations.
+    Return as valid JSON.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const analysis = JSON.parse(response.text().replace(/```json\n?|\n?```/g, ''));
 
     // Save analysis to database
     const { error: saveError } = await supabase
