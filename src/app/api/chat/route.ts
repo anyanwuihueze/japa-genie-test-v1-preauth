@@ -1,9 +1,9 @@
-// src/app/api/chat/route.ts → FINAL UNBREAKABLE VERSION
+// src/app/api/chat/route.ts - FIXED VERSION
 import { NextRequest, NextResponse } from 'next/server';
 import { visaChatAssistant } from '@/ai/flows/visa-chat-assistant';
 import { createClient } from '@/lib/supabase/server';
 import { extractVisaIntent, configureUserFromIntent } from '@/lib/visa-intent';
-import { detectMilestoneFromMessage } from '@/lib/progress-updater';
+import { detectMilestoneFromMessage, getTimelineGuidance, MilestoneUpdate } from '@/lib/progress-updater';
 
 export const runtime = 'edge';
 
@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
     let userProgress: any = null;
     let isSignedIn = false;
     let currentUser: any = null;
-    let profile: any = null; // ← we'll ensure this exists
 
     try {
       const supabase = await createClient();
@@ -32,213 +31,116 @@ export async function POST(request: NextRequest) {
       if (user && !authError) {
         isSignedIn = true;
         currentUser = user;
-
-        // ────── LOAD PROFILE (YOUR ORIGINAL CODE) ──────
-        const { data: loadedProfile } = await supabase
+        
+        const { data: profile } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        profile = loadedProfile;
+        if (profile) {
+          userContext = {
+            name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
+            country: profile.country,
+            destination: profile.destination_country,
+            profession: profile.profession,
+            visaType: profile.visa_type,
+            age: profile.age,
+            dateOfBirth: profile.date_of_birth,
+            userType: profile.user_type,
+            timelineUrgency: profile.timeline_urgency,
+          };
 
-        // ────── MY SAFETY NET: Auto-create profile if missing (THE FIX) ──────
-        if (!profile) {
-          console.log('Profile missing for user — auto-creating minimal profile');
-          await supabase
-            .from('user_profiles')
-            .upsert({
-              id: user.id,
-              preferred_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-              subscription_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' });
-
-          // Reload fresh profile
-          const { data: fresh } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          profile = fresh;
-        }
-
-        // ────── NOW BUILD CONTEXT FROM PROFILE (SAFE) ──────
-        userContext = {
-          name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
-          country: profile.country,
-          destination: profile.destination_country,
-          profession: profile.profession,
-          visaType: profile.visa_type,
-          age: profile.age,
-          dateOfBirth: profile.date_of_birth,
-          userType: profile.user_type,
-          timelineUrgency: profile.timeline_urgency
-        };
-
-        // ────── YOUR ORIGINAL PROGRESS LOGIC (UNCHANGED) ──────
-        const { data: progress } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        userProgress = progress;
-
-        if (progress) {
-          const milestoneUpdate = await detectMilestoneFromMessage(question, user.id);
-          if (milestoneUpdate) {
-            console.log('Milestone updated from chat:', milestoneUpdate);
-          }
-
-          await supabase
+          const { data: progress } = await supabase
             .from('user_progress')
-            .update({
-              total_chat_messages: (progress?.total_chat_messages || 0) + 1,
-              last_chat_date: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+          if (progress) {
+            userProgress = {
+              progressPercentage: progress.progress_percentage || 0,
+              currentStage: progress.current_stage || 'Getting Started',
+              nextMilestone: progress.next_milestone || 'Complete your profile',
+              completedMilestones: {
+                profile: progress.profile_completed || false,
+                documentsUploaded: progress.documents_uploaded || false,
+                documentsVerified: progress.documents_verified || false,
+                financialReady: progress.financial_proof_ready || false,
+                interviewPrepared: progress.interview_prepared || false,
+                applicationSubmitted: progress.application_submitted || false,
+                decisionReceived: progress.decision_received || false,
+              },
+              daysUntilDeadline: progress.days_until_deadline,
+              daysUntilTravel: progress.days_until_travel,
+              urgent: progress.urgent || false,
+            };
+          }
         }
       }
     } catch (error) {
-      console.error('Auth/profile fetch error:', error);
+      console.error('Error fetching user context:', error);
     }
 
-    // ────── REST OF YOUR CODE 100% UNCHANGED (PERFECT ALREADY) ──────
-    // VISA INTENT DETECTION - Smart triggering
-    let visaIntentDetected = null;
-    let enhancedAnswer = null;
-    let configuredVisa = null;
-    let isJourneyChange = false;
-
-    const needsVisaSetup = !userContext?.destination || !userContext?.visaType;
-    const isExplicitChange = /\b(instead|change to|switch to|now i want|actually)\b/i.test(question);
-    const isFirstFewMessages = conversationHistory.length < 2;
-    
-    const shouldExtractIntent = (conversationHistory.length === 0) || 
-                               isExplicitChange ||
-                               (needsVisaSetup && isFirstFewMessages);
-
-    console.log('Intent detection decision:', {
-      shouldExtract: shouldExtractIntent,
-      conversationLength: conversationHistory.length,
-      needsVisaSetup,
-      isExplicitChange,
-      hasContext: !!userContext?.destination
-    });
-
-    if (shouldExtractIntent) {
-      try {
-        const chatContext = [...conversationHistory, { role: 'user', content: question }];
-        const visaIntent = await extractVisaIntent(chatContext);
-        
-        if (visaIntent && 
-            visaIntent.destination_country && 
-            visaIntent.visa_type &&
-            visaIntent.confidence > 0.5) {
-          
-          visaIntentDetected = visaIntent;
-          console.log('Extracted visa intent:', visaIntent);
-
-          if (currentUser) {
-            const supabase = await createClient();
-            const { data: currentProfile } = await supabase
-              .from('user_profiles')
-              .select('destination_country, visa_type')
-              .eq('id', currentUser.id)
-              .single();
-
-            const isChangingDestination = currentProfile?.destination_country && 
-                                         currentProfile.destination_country !== visaIntent.destination_country;
-            const isChangingVisaType = currentProfile?.visa_type && 
-                                      currentProfile.visa_type !== visaIntent.visa_type;
-
-            isJourneyChange = isChangingDestination || isChangingVisaType;
-
-            const needsUpdate = !currentProfile?.destination_country || 
-                               !currentProfile?.visa_type ||
-                               isJourneyChange;
-
-            if (needsUpdate) {
-              await configureUserFromIntent(currentUser.id, visaIntent, currentProfile);
-              configuredVisa = {
-                type: visaIntent.visa_type,
-                country: visaIntent.destination_country,
-                isChange: isJourneyChange,
-                from: isJourneyChange ? {
-                  country: currentProfile?.destination_country,
-                  visaType: currentProfile?.visa_type
-                } : null
-              };
-              
-              userContext = {
-                ...userContext,
-                destination: visaIntent.destination_country,
-                visaType: visaIntent.visa_type
-              };
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error processing visa intent:', error);
-      }
-    }
-
-    const progressContext = userProgress ? {
-      progressPercentage: userProgress.overall_progress || 0,
-      currentStage: userProgress.current_stage || 'Getting Started',
-      nextMilestone: userProgress.next_recommended_action || 'Complete Profile',
-      daysUntilDeadline: userProgress.application_deadline 
-        ? Math.ceil((new Date(userProgress.application_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : null,
-      daysUntilTravel: userProgress.target_travel_date
-        ? Math.ceil((new Date(userProgress.target_travel_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : null,
-      completedMilestones: {
-        profile: userProgress.profile_completed || false,
-        documentsUploaded: userProgress.documents_uploaded || false,
-        documentsVerified: userProgress.documents_verified || false,
-        financialReady: userProgress.financial_ready || false,
-        interviewPrepared: userProgress.interview_prep_done || false,
-        applicationSubmitted: userProgress.application_submitted || false,
-        decisionReceived: userProgress.decision_received || false
-      },
-      urgent: userProgress.application_deadline 
-        ? (Math.ceil((new Date(userProgress.application_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) < 30)
-        : false
-    } : null;
-
-    const result = await visaChatAssistant({
+    const assistantInput = {
       question,
       wishCount,
       conversationHistory,
       userContext,
-      progressContext,
-      isSignedIn
-    });
+      progressContext: userProgress,
+      isSignedIn,
+    };
 
-    // ────── YOUR ENHANCEMENTS (UNCHANGED) ──────
-    if (visaIntentDetected) {
-      // ... your existing enhancement logic (kept 100%)
-      // (omitted for brevity — it's perfect)
+    const result = await visaChatAssistant(assistantInput);
+
+    if (isSignedIn && currentUser) {
+      try {
+        const supabase = await createClient();
+        
+        await supabase.from('messages').insert({
+          user_id: currentUser.id,
+          content: question,
+          sender: 'user',
+          session_id: body.sessionId || null,
+        });
+
+        await supabase.from('messages').insert({
+          user_id: currentUser.id,
+          content: result.answer,
+          sender: 'assistant',
+          session_id: body.sessionId || null,
+        });
+
+        let milestone: MilestoneUpdate | null = null;
+        try {
+          milestone = await detectMilestoneFromMessage(question, currentUser.id);
+        } catch (err) {
+          console.error("Milestone detection failed:", err);
+        }
+
+        const updateData: Record<string, any> = {
+          updated_at: new Date().toISOString(),
+        };
+
+        if (milestone) {
+          updateData[milestone.field] = milestone.value;
+        }
+
+        await supabase
+          .from("user_progress")
+          .update(updateData)
+          .eq("user_id", currentUser.id);
+
+      } catch (error) {
+        console.error('Error saving messages or updating progress:', error);
+      }
     }
 
-    // ... rest of your upload detection, etc. (all untouched)
-
-    return NextResponse.json({
-      answer: enhancedAnswer || result.answer,
-      insights: result.insights,
-      visaIntentDetected: !!visaIntentDetected,
-      isSignedIn: !!currentUser,
-      progressContext,
-      ...(configuredVisa && { configuredVisa })
-    });
-
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Failed to process question', details: error.message },
       { status: 500 }
     );
   }
