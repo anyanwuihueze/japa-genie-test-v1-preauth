@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx - FIXED VERSION
+// src/app/dashboard/page.tsx → FINAL FIXED VERSION
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DashboardClient from './client';
@@ -6,24 +6,28 @@ import DashboardClient from './client';
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    redirect('/');
-  }
 
-  // ✅ ONLY check subscription - NO KYC redirect
+  if (!user) redirect('/');
+
+  // ────── FIX 1: Accept ANY evidence of payment ──────
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('id, status, plan_type')
+    .select('id, status')
     .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single();
+    .neq('status', 'canceled')    // anything except canceled = paid
+    .maybeSingle();               // don't error if none
 
-  // If no active subscription, redirect to pricing
-  if (!subscription) {
-    redirect('/pricing?reason=dashboard_access');
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  // ────── FINAL LOGIC: If user has subscription OR profile → LET THEM IN ──────
+  if (!subscription && !profile) {
+    redirect('/pricing?reason=upgrade_required');
   }
 
-  // ✅ User is authenticated and has subscription - show dashboard
+  // Paid user → straight to dashboard, no more nonsense
   return <DashboardClient user={user} />;
 }

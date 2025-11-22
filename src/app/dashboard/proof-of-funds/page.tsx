@@ -10,10 +10,11 @@ export default async function ProofOfFundsPage() {
     redirect('/login');
   }
 
-  // Try user_profiles first, fallback to profiles
+  // Try user_profiles first (main table)
   let userProfile = null;
+  let needsKYC = false;
   
-  const { data: profile1 } = await supabase
+  const { data: profile1, error: error1 } = await supabase
     .from('user_profiles')
     .select('*')
     .eq('id', user.id)
@@ -21,23 +22,44 @@ export default async function ProofOfFundsPage() {
     
   if (profile1) {
     userProfile = profile1;
+    console.log('✅ Found profile in user_profiles');
   } else {
-    const { data: profile2 } = await supabase
+    console.log('⚠️ user_profiles lookup failed:', error1?.message);
+    
+    // Fallback: Try profiles table
+    const { data: profile2, error: error2 } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
-    userProfile = profile2;
+    
+    if (profile2) {
+      userProfile = profile2;
+      console.log('✅ Found profile in profiles table');
+    } else {
+      console.log('⚠️ No profile found in either table');
+      needsKYC = true;
+    }
   }
 
-  // Create basic profile if doesn't exist
+  // Create minimal profile if nothing found
   if (!userProfile) {
     userProfile = {
       id: user.id,
       email: user.email,
       full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      // These will be filled via modal if needed
+      destination_country: null,
+      visa_type: null,
+      country: null
     };
   }
 
-  return <ProofOfFundsClient user={user} userProfile={userProfile} />;
+  return (
+    <ProofOfFundsClient 
+      user={user} 
+      userProfile={userProfile} 
+      needsKYC={needsKYC}
+    />
+  );
 }

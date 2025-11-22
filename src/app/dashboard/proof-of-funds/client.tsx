@@ -5,29 +5,32 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Upload, Download, AlertTriangle, CheckCircle, User, X, Clock, TrendingUp, Shield, Sparkles, Banknote, Target } from 'lucide-react';
+import { FileText, Upload, Download, AlertTriangle, CheckCircle, X, Clock, TrendingUp, Shield, Sparkles, Banknote, Target, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 interface ProofOfFundsClientProps {
   user: any;
   userProfile: any;
+  needsKYC?: boolean;
 }
 
-export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsClientProps) {
+export default function ProofOfFundsClient({ user, userProfile, needsKYC = false }: ProofOfFundsClientProps) {
+  const router = useRouter();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [familyMembers, setFamilyMembers] = useState(1);
-
-  // Auto-fill from KYC data
-  useEffect(() => {
-    if (userProfile?.destination_country && userProfile?.visa_type) {
-      console.log('🎯 Auto-filled from KYC:', {
-        destination: userProfile.destination_country,
-        visa: userProfile.visa_type
-      });
-    }
-  }, [userProfile]);
+  const [showDataModal, setShowDataModal] = useState(false);
+  const [manualData, setManualData] = useState({
+    destination_country: userProfile?.destination_country || '',
+    visa_type: userProfile?.visa_type || '',
+    country: userProfile?.country || ''
+  });
 
   const handleDocumentUpload = (files: FileList) => {
     const fileArray = Array.from(files);
@@ -41,8 +44,21 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // REAL AI ANALYSIS WITH KYC DATA
   const analyzeDocuments = async () => {
+    // Check if we have required data
+    const hasProfileData = userProfile?.destination_country && userProfile?.visa_type;
+    const hasManualData = manualData.destination_country && manualData.visa_type;
+
+    if (!hasProfileData && !hasManualData) {
+      // Show modal to collect data
+      setShowDataModal(true);
+      return;
+    }
+
+    await performAnalysis();
+  };
+
+  const performAnalysis = async () => {
     setIsAnalyzing(true); 
     setError(null);
     
@@ -56,12 +72,23 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
       - Account Types: Savings, Current
       - Currency: Nigerian Naira (NGN)`;
       
+      // Use profile data OR manual data
+      const analysisProfile = {
+        destination_country: userProfile?.destination_country || manualData.destination_country,
+        visa_type: userProfile?.visa_type || manualData.visa_type,
+        country: userProfile?.country || manualData.country,
+        nationality: userProfile?.nationality || userProfile?.country || manualData.country
+      };
+
+      console.log('📊 Sending analysis request with profile:', analysisProfile);
+      
       const res = await fetch('/api/analyze-pof', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           financialData: userFinancialSummary,
-          familyMembers
+          familyMembers,
+          overrideProfile: manualData.destination_country ? manualData : null
         })
       });
       
@@ -91,8 +118,8 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
         body: JSON.stringify({
           analysisData: analysisResult,
           userProfile,
-          destinationCountry: userProfile.destination_country,
-          visaType: userProfile.visa_type,
+          destinationCountry: userProfile.destination_country || manualData.destination_country,
+          visaType: userProfile.visa_type || manualData.visa_type,
           familyMembers
         })
       });
@@ -103,7 +130,7 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `POF-Report-${userProfile.destination_country}-${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `POF-Report-${userProfile.destination_country || 'Analysis'}-${new Date().toISOString().split('T')[0]}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       
@@ -112,8 +139,32 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
     }
   };
 
+  const popularDestinations = ['Canada', 'USA', 'UK', 'Germany', 'Australia', 'France', 'Netherlands'];
+  const visaTypes = ['Study Visa', 'Work Visa', 'Tourist Visa', 'Business Visa', 'Family Visa', 'Permanent Residency'];
+  const africanCountries = ['Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'Ethiopia', 'Tanzania'];
+
   return (
     <div className="space-y-6">
+      {/* KYC Warning Banner */}
+      {needsKYC && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-orange-800">
+              <strong>Complete your profile</strong> for the most accurate analysis tailored to your visa journey.
+            </span>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => router.push('/kyc-profile')}
+              className="ml-4"
+            >
+              Update Profile
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Premium Header */}
       <Card className="bg-gradient-to-r from-green-500 to-blue-600 text-white">
         <CardContent className="pt-6">
@@ -124,7 +175,7 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
             <div>
               <h2 className="text-xl font-semibold">Premium Proof of Funds Analysis</h2>
               <p className="text-white/90">
-                AI-powered financial compliance for {userProfile?.destination_country || 'your destination'} {userProfile?.visa_type || 'visa'}
+                AI-powered financial compliance for {userProfile?.destination_country || manualData.destination_country || 'your destination'} {userProfile?.visa_type || manualData.visa_type || 'visa'}
               </p>
             </div>
           </div>
@@ -132,7 +183,7 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
       </Card>
 
       {/* KYC Context Card */}
-      {userProfile?.destination_country && (
+      {(userProfile?.destination_country || manualData.destination_country) && (
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -142,12 +193,12 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
                   Analysis Context
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {userProfile.destination_country} • {userProfile.visa_type} • {familyMembers} family member{familyMembers > 1 ? 's' : ''}
+                  {userProfile?.destination_country || manualData.destination_country} • {userProfile?.visa_type || manualData.visa_type} • {familyMembers} family member{familyMembers > 1 ? 's' : ''}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium">KYC Integrated</p>
-                <p className="text-xs text-gray-500">Personalized embassy analysis</p>
+                <p className="text-sm font-medium">{needsKYC ? 'Manual Entry' : 'KYC Integrated'}</p>
+                <p className="text-xs text-gray-500">{needsKYC ? 'Update profile for better results' : 'Personalized embassy analysis'}</p>
               </div>
             </div>
           </CardContent>
@@ -192,8 +243,8 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
             </CardContent>
           </Card>
 
-          {/* ✅ FIXED: Added safety checks for analysisResult */}
-          {analysisResult && analysisResult.summary && !isAnalyzing && (
+          {/* Analysis Results */}
+          {analysisResult?.summary && !isAnalyzing && (
             <div className="space-y-6">
               {/* Summary Card */}
               <Card className={`border-2 ${
@@ -281,7 +332,7 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
               )}
 
               {/* Recommendations */}
-              {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
+              {analysisResult.recommendations?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Action Plan</CardTitle>
@@ -437,7 +488,7 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
           <Card>
             <CardHeader>
               <CardTitle>
-                Embassy Requirements for {userProfile?.destination_country || 'Your Destination'}
+                Embassy Requirements for {userProfile?.destination_country || manualData.destination_country || 'Your Destination'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -471,6 +522,68 @@ export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsCl
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Data Collection Modal */}
+      <Dialog open={showDataModal} onOpenChange={setShowDataModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Quick Information Needed</DialogTitle>
+            <DialogDescription>
+              To provide accurate analysis, please tell us about your visa plans:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Destination Country</Label>
+              <Select value={manualData.destination_country} onValueChange={(v) => setManualData({...manualData, destination_country: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select destination" />
+                </SelectTrigger>
+                <SelectContent>
+                  {popularDestinations.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Visa Type</Label>
+              <Select value={manualData.visa_type} onValueChange={(v) => setManualData({...manualData, visa_type: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select visa type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {visaTypes.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Your Country (Optional)</Label>
+              <Select value={manualData.country} onValueChange={(v) => setManualData({...manualData, country: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {africanCountries.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowDataModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                setShowDataModal(false);
+                performAnalysis();
+              }}
+              disabled={!manualData.destination_country || !manualData.visa_type}
+              className="flex-1"
+            >
+              Continue Analysis
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

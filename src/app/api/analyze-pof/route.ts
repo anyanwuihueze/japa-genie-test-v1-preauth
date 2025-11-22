@@ -1,4 +1,4 @@
-// src/app/api/analyze-pof/route.ts - Using Flow Pattern
+// src/app/api/analyze-pof/route.ts - WITH OVERRIDE SUPPORT
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { analyzeProofOfFunds } from '@/ai/flows/analyze-proof-of-funds';
@@ -22,43 +22,71 @@ export async function POST(request: NextRequest) {
     console.log('✅ User authenticated:', user.id);
 
     // 2. Get request data
-    const { financialData, familyMembers } = await request.json();
+    const { financialData, familyMembers, overrideProfile } = await request.json();
     console.log('📦 Request data received');
 
     // 3. Fetch user profile (try both table names)
     let userProfile = null;
     
-    const { data: profile1 } = await supabase
+    const { data: profile1, error: error1 } = await supabase
       .from('user_profiles')
-      .select('destination_country, visa_type, nationality')
+      .select('*')
       .eq('id', user.id)
       .single();
 
     if (profile1) {
       userProfile = profile1;
+      console.log('✅ Found profile in user_profiles');
     } else {
-      const { data: profile2 } = await supabase
+      console.log('⚠️ user_profiles error:', error1?.message);
+      
+      const { data: profile2, error: error2 } = await supabase
         .from('profiles')
-        .select('destination_country, visa_type, nationality')
+        .select('*')
         .eq('id', user.id)
         .single();
       
-      userProfile = profile2;
+      if (profile2) {
+        userProfile = profile2;
+        console.log('✅ Found profile in profiles');
+      } else {
+        console.log('⚠️ profiles error:', error2?.message);
+      }
     }
 
-    if (!userProfile || !userProfile.destination_country || !userProfile.visa_type) {
-      console.log('⚠️ Incomplete profile');
+    // 4. Determine which profile data to use
+    let profileForAnalysis;
+    
+    if (userProfile?.destination_country && userProfile?.visa_type) {
+      // ✅ BEST: Use DB profile
+      profileForAnalysis = {
+        destination_country: userProfile.destination_country,
+        visa_type: userProfile.visa_type,
+        nationality: userProfile.nationality || userProfile.country
+      };
+      console.log('✅ Using database profile');
+    } else if (overrideProfile?.destination_country && overrideProfile?.visa_type) {
+      // ⚠️ OK: Use manual override
+      profileForAnalysis = {
+        destination_country: overrideProfile.destination_country,
+        visa_type: overrideProfile.visa_type,
+        nationality: overrideProfile.country || 'Unknown'
+      };
+      console.log('⚠️ Using manual override (profile incomplete)');
+    } else {
+      // ❌ FAIL: No data at all
+      console.log('❌ No profile data available');
       return NextResponse.json(
-        { error: 'Please complete your KYC profile first' },
+        { error: 'Please provide destination country and visa type' },
         { status: 400 }
       );
     }
 
-    console.log('✅ User profile loaded:', userProfile.destination_country);
+    console.log('📋 Analysis profile:', profileForAnalysis);
 
-    // 4. Call the flow for AI analysis
+    // 5. Call the flow for AI analysis
     const result = await analyzeProofOfFunds({
-      userProfile,
+      userProfile: profileForAnalysis,
       financialData,
       familyMembers: familyMembers || 1
     });
@@ -73,25 +101,23 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Analysis successful');
 
-    // 5. Save to database
-    const { error: insertError } = await supabase
-      .from('pof_analyses')
-      .insert({
-        user_id: user.id,
-        analysis_data: result.analysis,
-        destination_country: userProfile.destination_country,
-        visa_type: userProfile.visa_type,
-        family_members: familyMembers || 1
-      });
-
-    if (insertError) {
-      console.error('⚠️ Database save failed:', insertError.message);
-      // Don't fail the request, just log it
-    } else {
+    // 6. Save to database (optional - don't fail if this errors)
+    try {
+      await supabase
+        .from('pof_analyses')
+        .insert({
+          user_id: user.id,
+          analysis_data: result.analysis,
+          destination_country: profileForAnalysis.destination_country,
+          visa_type: profileForAnalysis.visa_type,
+          family_members: familyMembers || 1
+        });
       console.log('✅ Analysis saved to database');
+    } catch (dbError: any) {
+      console.error('⚠️ Database save failed (non-critical):', dbError.message);
     }
 
-    // 6. Return the analysis
+    // 7. Return the analysis
     return NextResponse.json(result.analysis);
 
   } catch (error: any) {
