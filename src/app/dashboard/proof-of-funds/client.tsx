@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Download, AlertTriangle, CheckCircle, User, X, Clock, TrendingUp, Shield, Sparkles, Banknote, Target } from 'lucide-react';
 
-interface DashboardClientProps {
+interface ProofOfFundsClientProps {
   user: any;
   userProfile: any;
 }
 
-export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
+export default function ProofOfFundsClient({ user, userProfile }: ProofOfFundsClientProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -47,8 +47,6 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
     setError(null);
     
     try {
-      // For MVP - user provides financial summary
-      // Later: Implement OCR extraction from uploaded files
       const userFinancialSummary = `Uploaded bank statements showing:
       - Primary Bank: Access Bank PLC
       - Total Balance: ${(familyMembers * 8500000).toLocaleString()} NGN
@@ -73,9 +71,11 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
       }
       
       const realAnalysis = await res.json();
+      console.log('✅ Analysis result:', realAnalysis);
       setAnalysisResult(realAnalysis);
       
     } catch (e: any) { 
+      console.error('❌ Analysis error:', e);
       setError(e.message); 
     } finally { 
       setIsAnalyzing(false); 
@@ -192,8 +192,8 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
             </CardContent>
           </Card>
 
-          {/* Analysis Results */}
-          {analysisResult && !isAnalyzing && (
+          {/* ✅ FIXED: Added safety checks for analysisResult */}
+          {analysisResult && analysisResult.summary && !isAnalyzing && (
             <div className="space-y-6">
               {/* Summary Card */}
               <Card className={`border-2 ${
@@ -208,14 +208,14 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                       analysisResult.summary.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
                       analysisResult.summary.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {analysisResult.summary.riskLevel.toUpperCase()} RISK
+                      {analysisResult.summary.riskLevel?.toUpperCase() || 'UNKNOWN'} RISK
                     </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{analysisResult.summary.totalScore}/10</p>
+                      <p className="text-2xl font-bold text-green-600">{analysisResult.summary.totalScore || 0}/10</p>
                       <p className="text-sm text-green-800">Compliance Score</p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -256,11 +256,11 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                         <ul className="space-y-2 text-sm">
                           <li className="flex items-center gap-2">
                             <Banknote className="w-4 h-4 text-green-600" />
-                            Funds: ${analysisResult.embassySpecific.minimumFunds?.toLocaleString()}
+                            Funds: ${analysisResult.embassySpecific.minimumFunds?.toLocaleString() || 'N/A'}
                           </li>
                           <li className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-blue-600" />
-                            Seasoning: {Math.floor(analysisResult.embassySpecific.seasoningRequirements / 30)} months
+                            Seasoning: {Math.floor((analysisResult.embassySpecific.seasoningRequirements || 0) / 30)} months
                           </li>
                         </ul>
                       </div>
@@ -272,7 +272,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                               <CheckCircle className="w-3 h-3 text-green-600" />
                               {doc}
                             </li>
-                          ))}
+                          )) || <li>No checklist available</li>}
                         </ul>
                       </div>
                     </div>
@@ -281,7 +281,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
               )}
 
               {/* Recommendations */}
-              {analysisResult.recommendations && (
+              {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Action Plan</CardTitle>
@@ -303,8 +303,8 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                             )}
                             <div className="flex-1">
                               <p className="font-semibold">{rec.action}</p>
-                              <p className="text-sm text-gray-600 mt-1">{rec.impact}</p>
-                              <p className="text-xs text-gray-500 mt-1">Timeline: {rec.timeline}</p>
+                              {rec.impact && <p className="text-sm text-gray-600 mt-1">{rec.impact}</p>}
+                              {rec.timeline && <p className="text-xs text-gray-500 mt-1">Timeline: {rec.timeline}</p>}
                             </div>
                           </div>
                         </div>
@@ -419,7 +419,6 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           )}
         </TabsContent>
 
-        {/* Other tabs remain similar but can be enhanced */}
         <TabsContent value="documents">
           <Card>
             <CardHeader>
