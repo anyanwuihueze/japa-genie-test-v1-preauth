@@ -10,11 +10,11 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('kyc_completed')
+    .select('country, destination_country')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.kyc_completed) {
+  if (!profile?.country || !profile?.destination_country) {
     redirect('/kyc-profile');
   }
 
