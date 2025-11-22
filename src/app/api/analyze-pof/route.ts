@@ -1,8 +1,9 @@
-// src/app/api/analyze-pof/route.ts - FIXED VERSION (same pattern as working PDF generator)
+// src/app/api/analyze-pof/route.ts - EXACT SAME AS WORKING CHAT
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/lib/supabase/server';
 
+// SAME SETUP AS WORKING TOOLS
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
@@ -10,14 +11,12 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
-    // 🎯 REQUIRE AUTHENTICATION - Only paying users get AI analysis
     if (!user) {
       return NextResponse.json({ error: 'Sign in for AI analysis' }, { status: 401 });
     }
 
     const { financialData, familyMembers } = await request.json();
 
-    // Get user profile with KYC data
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('*')
@@ -25,63 +24,58 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!userProfile) {
-      return NextResponse.json({ error: 'Complete KYC first to use AI analysis' }, { status: 400 });
+      return NextResponse.json({ error: 'Complete KYC first' }, { status: 400 });
     }
 
-    console.log('🧠 Starting POF analysis for paid user:', {
-      user: user.id,
-      destination: userProfile.destination_country,
-      visa: userProfile.visa_type,
-      family: familyMembers
+    console.log('🧠 POF analysis for user:', user.id);
+
+    // ✅ EXACT SAME PATTERN AS WORKING CHAT ROUTE
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",  // ← SAME MODEL
+      generationConfig: {          // ← ADD THIS
+        temperature: 0.7,
+        maxOutputTokens: 2000      // Higher for JSON analysis
+      }
     });
 
-    // PERFORM AI ANALYSIS DIRECTLY (like working PDF generator)
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp" 
-    });
+    const prompt = `Analyze proof of funds for ${userProfile.destination_country} ${userProfile.visa_type} visa.
 
-    const prompt = `
-    Analyze Proof of Funds for visa application:
+Financial Data: ${JSON.stringify(financialData, null, 2)}
+Family Members: ${familyMembers}
 
-    APPLICANT PROFILE:
-    - From: ${userProfile.nationality || 'Unknown'}
-    - Destination: ${userProfile.destination_country}
-    - Visa Type: ${userProfile.visa_type}
-    - Family Members: ${familyMembers}
-
-    FINANCIAL DATA:
-    ${JSON.stringify(financialData, null, 2)}
-
-    Provide comprehensive analysis including compliance score, risk assessment, and recommendations.
-    Return as valid JSON.
-    `;
+Return ONLY valid JSON with this structure:
+{
+  "isAdequate": true/false,
+  "requiredAmount": "amount in USD",
+  "currentAmount": "amount in USD",
+  "gap": "amount in USD",
+  "recommendations": ["item1", "item2"],
+  "strengths": ["item1", "item2"],
+  "weaknesses": ["item1", "item2"]
+}`;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const analysis = JSON.parse(response.text().replace(/```json\n?|\n?```/g, ''));
+    const responseText = result.response.text(); // ← SAME AS CHAT
 
-    // Save analysis to database
-    const { error: saveError } = await supabase
-      .from('pof_analyses')
-      .insert({
-        user_id: user.id,
-        analysis_data: analysis,
-        destination_country: userProfile.destination_country,
-        visa_type: userProfile.visa_type,
-        family_members: familyMembers
-      });
+    // Clean and parse JSON
+    const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    const analysis = JSON.parse(cleanedText);
 
-    if (saveError) {
-      console.log('⚠️ Analysis save failed:', saveError);
-    }
+    // Save to DB
+    await supabase.from('pof_analyses').insert({
+      user_id: user.id,
+      analysis_data: analysis,
+      destination_country: userProfile.destination_country,
+      visa_type: userProfile.visa_type,
+      family_members: familyMembers
+    });
 
     return NextResponse.json(analysis);
 
   } catch (error: any) {
-    console.error('POF Analysis API error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Analysis failed' },
-      { status: 500 }
-    );
+    console.error('POF Analysis error:', error);
+    return NextResponse.json({ 
+      error: 'Analysis failed: ' + error.message 
+    }, { status: 500 });
   }
 }

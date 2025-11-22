@@ -50,8 +50,13 @@ export async function analyzeProofOfFunds(
   familyMembers: number = 1
 ): Promise<POFAnalysis> {
   try {
+    // ✅ FIXED: Use same model as working tools + add generationConfig
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp" 
+      model: "gemini-2.0-flash",  // ← CHANGED FROM -exp
+      generationConfig: {          // ← ADDED
+        temperature: 0.7,
+        maxOutputTokens: 2000
+      }
     });
 
     const prompt = `
@@ -73,19 +78,50 @@ export async function analyzeProofOfFunds(
     4. Embassy requirement compliance
     5. Specific recommendations
 
-    Return as valid JSON matching the POFAnalysis interface.
+    Return ONLY valid JSON matching this exact structure:
+    {
+      "summary": {
+        "totalScore": 8,
+        "meetsRequirements": true,
+        "riskLevel": "low",
+        "confidence": 85
+      },
+      "financialAnalysis": {
+        "totalAssets": 25000,
+        "liquidAssets": 20000,
+        "seasoningDays": 90,
+        "currency": "USD",
+        "stabilityScore": 8
+      },
+      "complianceCheck": {
+        "passes": true,
+        "issues": [],
+        "specificAdvice": ["Maintain current balance"]
+      },
+      "accountBreakdown": [],
+      "recommendations": [],
+      "embassySpecific": {
+        "minimumFunds": 20000,
+        "seasoningRequirements": 60,
+        "documentChecklist": [],
+        "commonRejectionReasons": []
+      }
+    }
     `;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const responseText = result.response.text(); // ← CHANGED: removed await
+
+    console.log('✅ POF Analysis response received');
 
     // Parse the JSON response
-    const analysis = JSON.parse(text.replace(/```json\n?|\n?```/g, ''));
+    const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    const analysis = JSON.parse(cleanedText);
+    
     return analysis;
 
   } catch (error) {
-    console.error('POF Analysis error:', error);
+    console.error('❌ POF Analysis error:', error);
     throw new Error('Financial analysis failed: ' + (error as Error).message);
   }
 }
