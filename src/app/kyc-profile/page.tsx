@@ -40,16 +40,23 @@ export default function KYCProfilePage() {
     }
     setSaving(true);
     setError(null);
-    const { error } = await supabase.from('user_profiles').upsert({
-      id: user?.id,
-      country,
-      destination_country: destination,
-      kyc_completed: true,
-      kyc_last_updated: new Date().toISOString()
-    });
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .upsert(
+        {
+          id: user?.id,
+          country,
+          destination_country: destination,
+          kyc_completed: true,
+          kyc_last_updated: new Date().toISOString()
+        },
+        { onConflict: 'id' }  // ← THIS LINE FIXES EVERYTHING
+      );
+
     if (error) {
       console.error('Save failed:', error);
-      setError('Failed to save. Try again.');
+      setError('Save failed — please try again');
     } else {
       router.push('/dashboard');
     }
