@@ -45,18 +45,21 @@ export default function KYCProfilePage() {
       .from('user_profiles')
       .upsert(
         {
-          id: user?.id,
+          id: user.id,                    // ← MUST include primary key
           country,
           destination_country: destination,
           kyc_completed: true,
           kyc_last_updated: new Date().toISOString()
         },
-        { onConflict: 'id' }  // ← THIS LINE FIXES EVERYTHING
+        { 
+          onConflict: 'id',               // ← MUST have this
+          ignoreDuplicates: false
+        }
       );
 
     if (error) {
-      console.error('Save failed:', error);
-      setError('Save failed — please try again');
+      console.error('Supabase upsert error:', error);
+      setError('Save failed — check internet or try again');
     } else {
       router.push('/dashboard');
     }
