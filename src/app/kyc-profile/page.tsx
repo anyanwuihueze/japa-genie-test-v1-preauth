@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import NameModal from '@/components/modals/NameModal';
 import { createClient } from '@/lib/supabase/client';
 import { ALL_COUNTRIES } from '@/lib/countries';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label';
 export default function KYCProfilePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+import NameModal from '@/components/modals/NameModal';
   const supabase = createClient();
   const [formData, setFormData] = useState({ country: '', destination: '', age: '', visaType: '' });
   const [saving, setSaving] = useState(false);
@@ -86,3 +88,4 @@ export default function KYCProfilePage() {
     </div>
   );
 }
+  {user && <NameModal user={user} />}

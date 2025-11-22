@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import NameModal from '@/components/modals/NameModal';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ const generateSessionId = () => `anon_${Date.now()}_${Math.random().toString(36)
 export default function KYCPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+import NameModal from '@/components/modals/NameModal';
   const supabase = createClient();
   
   const [formData, setFormData] = useState<KYCData>({
@@ -118,6 +120,10 @@ export default function KYCPage() {
   const visaTypes = ['Study Visa', 'Work Visa', 'Tourist Visa', 'Business Visa', 'Family Visa', 'Permanent Residency', 'Not Sure'];
 
   return (
+        <div className="min-h-screen">
+          {user && <NameModal user={user} />}
+          <div className="container mx-auto">
+
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12">
       <div className="container mx-auto px-4 max-w-2xl">
         <Card className="shadow-lg border-0 overflow-hidden">
