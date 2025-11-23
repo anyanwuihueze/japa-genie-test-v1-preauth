@@ -118,6 +118,16 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
       return;
     }
     
+    const destination = userProfile?.destination_country || manualData.destination_country;
+    const visaType = userProfile?.visa_type || manualData.visa_type;
+    const riskLevel = analysisResult.summary.riskLevel || 'unknown';
+    const totalScore = analysisResult.summary.totalScore || 0;
+    const meetsReqs = analysisResult.summary.meetsRequirements ? 'YES' : 'NO';
+    const totalAssets = analysisResult.financialAnalysis?.totalAssets?.toLocaleString() || '0';
+    const liquidAssets = analysisResult.financialAnalysis?.liquidAssets?.toLocaleString() || '0';
+    const seasoningMonths = Math.floor((analysisResult.financialAnalysis?.seasoningDays || 0) / 30);
+    const stabilityScore = analysisResult.financialAnalysis?.stabilityScore || 0;
+    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -128,15 +138,17 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
           h1 { color: #2563eb; }
           .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 30px; margin: -40px -40px 30px; }
           .section { margin: 30px 0; page-break-inside: avoid; }
-          .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 15px; background: #f3f4f6; border-radius: 8px; }
+          .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 15px; background: #f3f4f6; border-radius: 8px; min-width: 150px; }
           .metric-value { font-size: 24px; font-weight: bold; color: #2563eb; }
-          .metric-label { font-size: 12px; color: #6b7280; }
+          .metric-label { font-size: 12px; color: #6b7280; margin-top: 5px; }
           table { width: 100%; border-collapse: collapse; margin: 20px 0; }
           th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
           th { background: #f3f4f6; font-weight: bold; }
           .risk-low { color: #10b981; }
           .risk-medium { color: #f59e0b; }
           .risk-high { color: #ef4444; }
+          ul { padding-left: 20px; }
+          li { margin: 10px 0; }
           @media print { .no-print { display: none; } }
         </style>
       </head>
@@ -149,23 +161,23 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
         
         <div class="section">
           <h2>Applicant Information</h2>
-          <p><strong>Destination:</strong> ${userProfile?.destination_country || manualData.destination_country}</p>
-          <p><strong>Visa Type:</strong> ${userProfile?.visa_type || manualData.visa_type}</p>
+          <p><strong>Destination:</strong> ${destination}</p>
+          <p><strong>Visa Type:</strong> ${visaType}</p>
           <p><strong>Family Members:</strong> ${familyMembers}</p>
         </div>
         
         <div class="section">
           <h2>Analysis Summary</h2>
           <div class="metric">
-            <div class="metric-value">${analysisResult.summary.totalScore}/10</div>
+            <div class="metric-value">${totalScore}/10</div>
             <div class="metric-label">Compliance Score</div>
           </div>
           <div class="metric">
-            <div class="metric-value risk-${analysisResult.summary.riskLevel}">${analysisResult.summary.riskLevel?.toUpperCase()}</div>
+            <div class="metric-value risk-${riskLevel}">${riskLevel.toUpperCase()}</div>
             <div class="metric-label">Risk Level</div>
           </div>
           <div class="metric">
-            <div class="metric-value">${analysisResult.summary.meetsRequirements ? 'YES' : 'NO'}</div>
+            <div class="metric-value">${meetsReqs}</div>
             <div class="metric-label">Meets Requirements</div>
           </div>
         </div>
@@ -174,10 +186,10 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
           <h2>Financial Analysis</h2>
           <table>
             <tr><th>Metric</th><th>Value</th></tr>
-            <tr><td>Total Assets</td><td>$${analysisResult.financialAnalysis?.totalAssets?.toLocaleString() || '0'}</td></tr>
-            <tr><td>Liquid Assets</td><td>$${analysisResult.financialAnalysis?.liquidAssets?.toLocaleString() || '0'}</td></tr>
-            <tr><td>Seasoning Period</td><td>${Math.floor((analysisResult.financialAnalysis?.seasoningDays || 0) / 30)} months</td></tr>
-            <tr><td>Stability Score</td><td>${analysisResult.financialAnalysis?.stabilityScore || 0}/10</td></tr>
+            <tr><td>Total Assets</td><td>$${totalAssets}</td></tr>
+            <tr><td>Liquid Assets</td><td>$${liquidAssets}</td></tr>
+            <tr><td>Seasoning Period</td><td>${seasoningMonths} months</td></tr>
+            <tr><td>Stability Score</td><td>${stabilityScore}/10</td></tr>
           </table>
         </div>
         
@@ -185,9 +197,9 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
         <div class="section">
           <h2>Recommendations</h2>
           <ul>
-            ${analysisResult.recommendations.map((rec: any) => `
-              <li><strong>${rec.action}</strong> - ${rec.timeline || ''}</li>
-            `).join('')}
+            ${analysisResult.recommendations.map((rec) => 
+              `<li><strong>${rec.action}</strong>${rec.timeline ? ' - ' + rec.timeline : ''}</li>`
+            ).join('')}
           </ul>
         </div>
         ` : ''}
@@ -200,7 +212,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
           ${analysisResult.embassySpecific.documentChecklist?.length > 0 ? `
             <h3>Required Documents:</h3>
             <ul>
-              ${analysisResult.embassySpecific.documentChecklist.map((doc: string) => `<li>${doc}</li>`).join('')}
+              ${analysisResult.embassySpecific.documentChecklist.map((doc) => `<li>${doc}</li>`).join('')}
             </ul>
           ` : ''}
         </div>
