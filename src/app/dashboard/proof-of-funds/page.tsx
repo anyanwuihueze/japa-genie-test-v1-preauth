@@ -14,5 +14,5 @@ export default async function ProofOfFundsPage() {
     .eq('id', user.id)
     .single();
 
-  return <ProofOfFundsClient userProfile={userProfile || {}} />;
+  return <ProofOfFundsClient user={user} userProfile={userProfile || {}} />;
 }
