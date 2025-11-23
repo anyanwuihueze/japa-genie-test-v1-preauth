@@ -1,237 +1,23 @@
+// src/app/api/analyze-pof/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-interface VisaData {
-  baseRequirement: number;
-  perFamilyMember: number;
-  seasoningMinimum: number;
-  rejectionRate: number;
-  criticalAge?: [number, number];
-  redFlags?: string[];
-  loves: string[];
-  officerQuotes: string[];
-}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const EMBASSY_INTELLIGENCE: Record<string, Record<string, VisaData>> = {
-  'Canada': {
-    'Study Visa': {
-      baseRequirement: 18400000,
-      perFamilyMember: 4200000,
-      seasoningMinimum: 6,
-      rejectionRate: 68,
-      criticalAge: [18, 26],
-      redFlags: ['sudden deposits >₦15M', 'single account only', 'no consistent income'],
-      loves: ['salary credits', 'fixed deposits', '6+ months seasoning', 'property ownership'],
-      officerQuotes: [
-        '68% rejection rate for Nigerian applicants under 30',
-        'They ALWAYS flag sudden large deposits in the last 3 months',
-        'They LOVE seeing rent receipts and consistent salary credits',
-        'Seasoning under 6 months = 90% automatic rejection',
-        'Multiple bank accounts = higher trust score'
-      ]
-    },
-    'Work Visa': {
-      baseRequirement: 12000000,
-      perFamilyMember: 3500000,
-      seasoningMinimum: 4,
-      rejectionRate: 45,
-      loves: ['job offer letter', 'professional certifications', 'work history'],
-      officerQuotes: [
-        'Job offer authenticity is checked with employer 80% of the time',
-        'They verify your claimed work experience through LinkedIn',
-        'Salary must match your profession level'
-      ]
-    }
-  },
-  'United Kingdom': {
-    'Study Visa': {
-      baseRequirement: 15800000,
-      perFamilyMember: 3800000,
-      seasoningMinimum: 3,
-      rejectionRate: 62,
-      loves: ['property ownership', 'business registration', '6+ months consistent balance'],
-      redFlags: ['cash deposits', 'loans taken in last 2 months'],
-      officerQuotes: [
-        '62% rejection for applicants showing recent large loans',
-        'They LOVE property ownership proof (land, house)',
-        'Business owners: show 2 years of tax returns',
-        'Cash deposits are RED FLAGS - they want bank transfers only'
-      ]
-    }
-  },
-  'United States': {
-    'Study Visa': {
-      baseRequirement: 22000000,
-      perFamilyMember: 5000000,
-      seasoningMinimum: 6,
-      rejectionRate: 71,
-      criticalAge: [18, 26],
-      loves: ['I-20 from top university', 'strong academic record', 'family ties to Nigeria'],
-      redFlags: ['weak home ties', 'gaps in education', 'low IELTS/TOEFL'],
-      officerQuotes: [
-        '71% rejection rate - highest among top destinations',
-        'They assume you want to stay - prove strong home ties',
-        'Show property, family business, job waiting after studies',
-        'Young single applicants = highest risk category'
-      ]
-    }
-  },
-  'Australia': {
-    'Study Visa': {
-      baseRequirement: 16500000,
-      perFamilyMember: 4100000,
-      seasoningMinimum: 3,
-      rejectionRate: 52,
-      loves: ['Genuine Temporary Entrant statement', 'career progression plan'],
-      officerQuotes: [
-        'GTE (Genuine Temporary Entrant) essay can make or break you',
-        'Explain WHY Australia and not cheaper UK/Canada',
-        'Show career progression plan after studies'
-      ]
-    }
-  },
-  'Germany': {
-    'Study Visa': {
-      baseRequirement: 14200000,
-      perFamilyMember: 3200000,
-      seasoningMinimum: 3,
-      rejectionRate: 38,
-      loves: ['blocked account', 'university admission letter'],
-      officerQuotes: [
-        'Blocked account (Sperrkonto) is MANDATORY',
-        'They rarely reject if you have proper blocked account',
-        'Show proof of German language proficiency'
-      ]
-    }
-  },
-  'France': {
-    'Study Visa': {
-      baseRequirement: 13800000,
-      perFamilyMember: 3100000,
-      seasoningMinimum: 3,
-      rejectionRate: 42,
-      loves: ['Campus France approval', 'French language skills'],
-      officerQuotes: [
-        'Campus France process is strict but fair',
-        'French language skills = major advantage',
-        'Show accommodation proof in France'
-      ]
-    }
-  }
-};
-
-function calculateSeasoningData(hasStatement: boolean, currentSavings: number) {
-  const baseAmount = currentSavings || 45200000;
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-  
-  return months.map((month, i) => ({
-    month,
-    balance: Math.round((baseAmount * (0.6 + (i * 0.06))) / 1000000)
-  }));
-}
-
-function generateAnalysis(data: any) {
-  const { destinationCountry, visaType, age, familyMembers, travelTimeline, currentSavings, hasStatement } = data;
-  
-  const countryData = EMBASSY_INTELLIGENCE[destinationCountry];
-  const visaData = countryData?.[visaType] || countryData?.['Study Visa'];
-  
-  if (!visaData) {
-    throw new Error('Country/Visa combination not found');
-  }
-
-  const baseReq = visaData.baseRequirement;
-  const totalRequired = baseReq + (visaData.perFamilyMember * (familyMembers - 1));
-  const recommended = totalRequired * 1.4;
-  const userTotal = currentSavings || 45200000;
-  
-  const isHighRiskAge = visaData.criticalAge 
-    ? (age >= visaData.criticalAge[0] && age <= visaData.criticalAge[1]) 
-    : false;
-  
-  let riskScore = 60;
-  if (userTotal >= recommended) riskScore += 20;
-  if (userTotal >= totalRequired * 2) riskScore += 10;
-  if (!isHighRiskAge) riskScore += 10;
-  if (hasStatement) riskScore += 5;
-  
-  const redFlags = [];
-  const strengths = [];
-  
-  if (isHighRiskAge && visaData.criticalAge) {
-    redFlags.push(`Age ${age} falls in high-risk category (${visaData.criticalAge[0]}-${visaData.criticalAge[1]}) for ${destinationCountry}`);
-  }
-  
-  if (userTotal < totalRequired) {
-    redFlags.push(`₦${((totalRequired - userTotal) / 1000000).toFixed(1)}M short of minimum requirement`);
-  }
-  
-  if (!hasStatement) {
-    redFlags.push('No bank statement uploaded - analysis based on declared amount only');
-  }
-  
-  if (travelTimeline.includes('Urgent')) {
-    redFlags.push('Urgent timeline may limit document preparation quality');
-  }
-  
-  if (userTotal >= recommended) {
-    strengths.push(`₦${((userTotal - recommended) / 1000000).toFixed(1)}M above recommended amount (top 8% of applicants)`);
-  }
-  
-  strengths.push(`${visaData.seasoningMinimum}+ months fund seasoning detected`);
-  strengths.push('Multiple income sources visible in transaction history');
-  
-  if (familyMembers === 1) {
-    strengths.push('Single applicant - lower financial burden');
-  }
-
-  if (redFlags.length === 0) {
-    redFlags.push('No critical red flags detected');
-  }
-
-  return {
-    embassy: `${destinationCountry} ${visaType} — Lagos VFS`,
-    officerPatterns: visaData.officerQuotes || [],
-    yourProfile: {
-      age,
-      nationality: 'Nigerian',
-      seasoningMonths: visaData.seasoningMinimum + 1.2,
-      averageMonthlyBalance: userTotal * 0.85,
-      largestDeposit: userTotal * 0.18,
-      redFlags,
-      strengths
-    },
-    requiredFunds: {
-      minimum: totalRequired,
-      recommended,
-      yourTotal: userTotal,
-      buffer: userTotal >= recommended 
-        ? `+₦${((userTotal - recommended) / 1000000).toFixed(1)}M (excellent)` 
-        : `-₦${((recommended - userTotal) / 1000000).toFixed(1)}M (needs improvement)`
-    },
-    approvalPrediction: `${riskScore}% approval chance at ${destinationCountry} embassy`,
-    seasoningData: calculateSeasoningData(hasStatement, userTotal),
-    riskScore,
-    actionPlan: {
-      immediate: [
-        'Get bank reference letter on official letterhead',
-        'Include proof of income source (salary slips, business registration)',
-        visaData.seasoningMinimum > 4 ? `Show ${visaData.seasoningMinimum}+ months bank statements` : 'Include 3-6 months statements',
-        isHighRiskAge ? 'Write strong statement of purpose addressing age concerns' : null
-      ].filter(Boolean),
-      premiumUpgrade: {
-        offer: 'Guaranteed Approval Package',
-        includes: [
-          `Verified ${destinationCountry} sponsor (340+ successes)`,
-          'Embassy-ready affidavit + cover letter',
-          'Interview prep with former visa officer',
-          'Document review by immigration lawyer'
-        ],
-        successRate: '41/41 approvals last year',
-        cta: 'CONNECT WITH SPONSORSHIP TEAM'
-      }
-    }
-  };
+interface AnalysisRequest {
+  destinationCountry: string;
+  visaType: string;
+  age: number;
+  familyMembers: number;
+  travelTimeline: string;
+  currentSavings: number;
+  hasStatement: boolean;
+  files?: Array<{
+    dataUri: string;
+    mimeType: string;
+    name: string;
+  }>;
 }
 
 export async function POST(request: NextRequest) {
@@ -243,10 +29,153 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body: AnalysisRequest = await request.json();
+    console.log('📊 POF Analysis request for:', body.destinationCountry, body.visaType);
 
-    const analysis = generateAnalysis(body);
+    // Initialize Gemini model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash-exp",
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 3000,
+      }
+    });
 
+    let prompt = `You are an expert visa financial analyst with deep knowledge of embassy requirements worldwide.
+
+APPLICANT PROFILE:
+- Destination Country: ${body.destinationCountry}
+- Visa Type: ${body.visaType}
+- Applicant Age: ${body.age}
+- Family Members: ${body.familyMembers}
+- Travel Timeline: ${body.travelTimeline}
+- Declared Savings: ₦${body.currentSavings.toLocaleString()}
+- Bank Statements: ${body.hasStatement ? 'Provided' : 'Not provided'}
+
+YOUR TASK:
+Based on your knowledge of ${body.destinationCountry} embassy requirements for ${body.visaType}, provide a comprehensive proof of funds analysis.
+
+`;
+
+    // If files are provided, add them to the analysis
+    const parts: any[] = [{ text: prompt }];
+    
+    if (body.files && body.files.length > 0) {
+      prompt += `\nBANK STATEMENTS PROVIDED:\nAnalyze the bank statements attached and extract:\n- Actual balances\n- Account types\n- Transaction history\n- Seasoning period (how long funds maintained)\n- Any red flags\n\n`;
+      
+      for (const file of body.files) {
+        parts.push({
+          inlineData: {
+            mimeType: file.mimeType,
+            data: file.dataUri.split(',')[1] // Remove data:image/png;base64, prefix
+          }
+        });
+      }
+    } else {
+      prompt += `\nNote: Analysis based on declared savings amount only. User has not uploaded bank statements.\n\n`;
+    }
+
+    prompt += `PROVIDE A DETAILED ANALYSIS IN THIS JSON FORMAT:
+
+{
+  "embassy": "${body.destinationCountry} ${body.visaType} — Embassy/VFS Analysis",
+  "officerPatterns": [
+    "<Real insight about what visa officers look for>",
+    "<Common rejection reasons for this embassy>",
+    "<Red flags officers watch for>",
+    "<What strengthens applications>"
+  ],
+  "yourProfile": {
+    "age": ${body.age},
+    "nationality": "Nigerian",
+    "seasoningMonths": <calculated from statements or estimated>,
+    "averageMonthlyBalance": <calculated from statements or declared amount>,
+    "largestDeposit": <extracted from statements or estimated>,
+    "redFlags": [
+      "<Any issues found in statements or profile>"
+    ],
+    "strengths": [
+      "<Positive aspects of financial profile>"
+    ]
+  },
+  "requiredFunds": {
+    "minimum": <actual embassy requirement in NGN>,
+    "recommended": <recommended amount in NGN (usually 1.4-1.5x minimum)>,
+    "yourTotal": ${body.currentSavings},
+    "buffer": "<comparison: how much over/under>"
+  },
+  "approvalPrediction": "<percentage>% approval chance at ${body.destinationCountry} embassy",
+  "seasoningData": [
+    {"month": "Jan", "balance": <amount in millions>},
+    {"month": "Feb", "balance": <amount>},
+    {"month": "Mar", "balance": <amount>},
+    {"month": "Apr", "balance": <amount>},
+    {"month": "May", "balance": <amount>},
+    {"month": "Jun", "balance": <amount>}
+  ],
+  "riskScore": <0-100 based on analysis>,
+  "actionPlan": {
+    "immediate": [
+      "<Specific action item>",
+      "<Another action item>",
+      "<Priority action>"
+    ],
+    "premiumUpgrade": {
+      "offer": "Guaranteed Approval Package",
+      "includes": [
+        "Verified ${body.destinationCountry} sponsor with proven track record",
+        "Embassy-ready affidavit + cover letter",
+        "Interview prep with former visa officer",
+        "Document review by immigration lawyer"
+      ],
+      "successRate": "High success rate for similar profiles",
+      "cta": "CONNECT WITH SPONSORSHIP TEAM"
+    }
+  }
+}
+
+CRITICAL REQUIREMENTS:
+1. Use REAL embassy requirements from your training data for ${body.destinationCountry} ${body.visaType}
+2. If bank statements are provided, extract ACTUAL numbers from them
+3. If no statements, base analysis on declared amount but flag this as a limitation
+4. Consider family size (${body.familyMembers}) in fund requirements
+5. Factor in applicant age (${body.age}) for risk assessment
+6. Provide actionable, specific advice
+7. NO placeholder values - calculate everything based on real data
+
+Return ONLY the JSON object, no markdown formatting, no code blocks.`;
+
+    // Update parts array with final prompt
+    parts[0] = { text: prompt };
+
+    console.log('🤖 Sending to Gemini AI...');
+    const result = await model.generateContent(parts);
+    const responseText = result.response.text();
+    
+    console.log('📥 Received response, length:', responseText.length);
+
+    // Clean and parse response
+    let cleanedText = responseText.trim();
+    cleanedText = cleanedText.replace(/```json\n?/g, '');
+    cleanedText = cleanedText.replace(/```\n?/g, '');
+    cleanedText = cleanedText.trim();
+
+    let analysis;
+    try {
+      analysis = JSON.parse(cleanedText);
+      console.log('✅ Analysis parsed successfully');
+    } catch (parseError) {
+      console.error('❌ JSON parse failed, attempting extraction...');
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+        console.log('✅ JSON extracted and parsed');
+      } else {
+        throw new Error('Could not parse AI response as JSON');
+      }
+    }
+
+    // Save to database
     try {
       await supabase.from('pof_analyses').insert({
         user_id: user.id,
@@ -255,17 +184,23 @@ export async function POST(request: NextRequest) {
         visa_type: body.visaType,
         family_members: body.familyMembers,
         user_age: body.age,
-        current_savings: body.currentSavings
+        current_savings: body.currentSavings,
+        has_documents: body.hasStatement
       });
+      console.log('💾 Analysis saved to database');
     } catch (dbError) {
       console.log('⚠️ DB save failed (non-critical):', dbError);
     }
 
     return NextResponse.json(analysis);
+
   } catch (error: any) {
     console.error('❌ POF API error:', error);
     return NextResponse.json(
-      { error: 'Analysis failed', details: error.message },
+      { 
+        error: 'Analysis failed', 
+        details: error.message 
+      },
       { status: 500 }
     );
   }

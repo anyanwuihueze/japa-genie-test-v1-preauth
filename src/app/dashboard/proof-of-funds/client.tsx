@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { ALL_COUNTRIES } from '@/lib/countries';
 
 interface ProofOfFundsClientProps {
@@ -32,7 +33,9 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
   const [manualData, setManualData] = useState({
     destination_country: userProfile?.destination_country || '',
     visa_type: userProfile?.visa_type || '',
-    country: userProfile?.country || ''
+    age: userProfile?.age || 25,
+    currentSavings: 45000000,
+    travelTimeline: '3-6 months'
   });
 
   const handleDocumentUpload = (files: FileList) => {
@@ -64,32 +67,45 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
     setError(null);
     
     try {
-      const userFinancialSummary = `Uploaded bank statements showing:
-      - Primary Bank: Access Bank PLC
-      - Total Balance: ${(familyMembers * 8500000).toLocaleString()} NGN
-      - Average 6-month Balance: ${(familyMembers * 8000000).toLocaleString()} NGN  
-      - Account Age: 18 months
-      - Recent Large Deposit: ${(familyMembers * 3000000).toLocaleString()} NGN on 2024-05-22
-      - Account Types: Savings, Current
-      - Currency: Nigerian Naira (NGN)`;
-      
-      const analysisProfile = {
-        destination_country: userProfile?.destination_country || manualData.destination_country,
-        visa_type: userProfile?.visa_type || manualData.visa_type,
-        country: userProfile?.country || manualData.country,
-        nationality: userProfile?.nationality || userProfile?.country || manualData.country
+      // Convert uploaded files to base64 data URIs
+      const filesData = await Promise.all(
+        uploadedFiles.map(async (file) => {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          
+          return {
+            dataUri: base64,
+            mimeType: file.type,
+            name: file.name
+          };
+        })
+      );
+
+      // Format data to match what the API expects
+      const apiPayload = {
+        destinationCountry: userProfile?.destination_country || manualData.destination_country,
+        visaType: userProfile?.visa_type || manualData.visa_type,
+        age: userProfile?.age || manualData.age,
+        familyMembers: familyMembers,
+        travelTimeline: manualData.travelTimeline,
+        currentSavings: manualData.currentSavings,
+        hasStatement: uploadedFiles.length > 0,
+        files: filesData.length > 0 ? filesData : undefined
       };
 
-      console.log('📊 Sending analysis request with profile:', analysisProfile);
+      console.log('📊 Sending analysis request:', {
+        ...apiPayload,
+        files: filesData.length > 0 ? `${filesData.length} files` : 'none'
+      });
       
       const res = await fetch('/api/analyze-pof', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          financialData: userFinancialSummary,
-          familyMembers,
-          overrideProfile: manualData.destination_country ? manualData : null
-        })
+        body: JSON.stringify(apiPayload)
       });
       
       if (!res.ok) {
@@ -97,9 +113,9 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
         throw new Error(errorData.error || 'Analysis failed');
       }
       
-      const realAnalysis = await res.json();
-      console.log('✅ Analysis result:', realAnalysis);
-      setAnalysisResult(realAnalysis);
+      const analysis = await res.json();
+      console.log('✅ Analysis result:', analysis);
+      setAnalysisResult(analysis);
       
     } catch (e: any) { 
       console.error('❌ Analysis error:', e);
@@ -110,7 +126,10 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
   };
 
   const generatePDFReport = () => {
-    if (!analysisResult) return;
+    if (!analysisResult) {
+      setError('No analysis results available to generate report');
+      return;
+    }
     
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -118,106 +137,138 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
       return;
     }
     
+    // Pre-format all values to avoid template literal issues
+    const destCountry = userProfile?.destination_country || manualData.destination_country;
+    const visaType = userProfile?.visa_type || manualData.visa_type;
+    const embassy = analysisResult.embassy || `${destCountry} ${visaType}`;
+    const approvalChance = analysisResult.approvalPrediction || 'N/A';
+    const minimumFunds = (analysisResult.requiredFunds?.minimum / 1000000).toFixed(1);
+    const recommendedFunds = (analysisResult.requiredFunds?.recommended / 1000000).toFixed(1);
+    const yourTotal = (analysisResult.requiredFunds?.yourTotal / 1000000).toFixed(1);
+    const buffer = analysisResult.requiredFunds?.buffer || 'N/A';
+    
+    const officerPatterns = analysisResult.officerPatterns || [];
+    const redFlags = analysisResult.yourProfile?.redFlags || [];
+    const strengths = analysisResult.yourProfile?.strengths || [];
+    const actionPlan = analysisResult.actionPlan?.immediate || [];
+    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>POF Analysis Report</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 40px; }
+          body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
           h1 { color: #2563eb; }
-          .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 30px; margin: -40px -40px 30px; }
+          .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 30px; margin: -40px -40px 30px; border-radius: 0 0 20px 20px; }
           .section { margin: 30px 0; page-break-inside: avoid; }
-          .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 15px; background: #f3f4f6; border-radius: 8px; }
+          .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 15px; background: #f3f4f6; border-radius: 8px; min-width: 150px; }
           .metric-value { font-size: 24px; font-weight: bold; color: #2563eb; }
-          .metric-label { font-size: 12px; color: #6b7280; }
+          .metric-label { font-size: 12px; color: #6b7280; margin-top: 5px; }
           table { width: 100%; border-collapse: collapse; margin: 20px 0; }
           th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
           th { background: #f3f4f6; font-weight: bold; }
-          .risk-low { color: #10b981; }
-          .risk-medium { color: #f59e0b; }
-          .risk-high { color: #ef4444; }
+          .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; margin: 4px; }
+          .badge-red { background: #fee2e2; color: #991b1b; }
+          .badge-green { background: #d1fae5; color: #065f46; }
+          .badge-blue { background: #dbeafe; color: #1e40af; }
+          ul { list-style: none; padding: 0; }
+          ul li { padding: 8px 0; padding-left: 24px; position: relative; }
+          ul li:before { content: "•"; position: absolute; left: 0; color: #2563eb; font-weight: bold; font-size: 20px; }
+          .officer-quote { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 10px 0; font-style: italic; }
           @media print { .no-print { display: none; } }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1>JAPA GENIE</h1>
-          <p>Proof of Funds Analysis Report</p>
-          <p>Generated: ${new Date().toLocaleDateString()}</p>
+          <h1>🛂 JAPA GENIE</h1>
+          <p style="font-size: 18px; margin: 10px 0;">Proof of Funds Analysis Report</p>
+          <p style="opacity: 0.9;">Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
         </div>
         
         <div class="section">
-          <h2>Applicant Information</h2>
-          <p><strong>Destination:</strong> ${userProfile?.destination_country || manualData.destination_country}</p>
-          <p><strong>Visa Type:</strong> ${userProfile?.visa_type || manualData.visa_type}</p>
-          <p><strong>Family Members:</strong> ${familyMembers}</p>
-        </div>
-        
-        <div class="section">
-          <h2>Analysis Summary</h2>
-          <div class="metric">
-            <div class="metric-value">${analysisResult.summary.totalScore}/10</div>
-            <div class="metric-label">Compliance Score</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value risk-${analysisResult.summary.riskLevel}">${analysisResult.summary.riskLevel?.toUpperCase()}</div>
-            <div class="metric-label">Risk Level</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value">${analysisResult.summary.meetsRequirements ? 'YES' : 'NO'}</div>
-            <div class="metric-label">Meets Requirements</div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <h2>Financial Analysis</h2>
+          <h2>📋 Application Overview</h2>
           <table>
-            <tr><th>Metric</th><th>Value</th></tr>
-            <tr><td>Total Assets</td><td>$${analysisResult.financialAnalysis?.totalAssets?.toLocaleString() || '0'}</td></tr>
-            <tr><td>Liquid Assets</td><td>$${analysisResult.financialAnalysis?.liquidAssets?.toLocaleString() || '0'}</td></tr>
-            <tr><td>Seasoning Period</td><td>${Math.floor((analysisResult.financialAnalysis?.seasoningDays || 0) / 30)} months</td></tr>
-            <tr><td>Stability Score</td><td>${analysisResult.financialAnalysis?.stabilityScore || 0}/10</td></tr>
+            <tr><th>Field</th><th>Details</th></tr>
+            <tr><td><strong>Embassy/VFS</strong></td><td>${embassy}</td></tr>
+            <tr><td><strong>Applicant Age</strong></td><td>${analysisResult.yourProfile?.age || 'N/A'} years</td></tr>
+            <tr><td><strong>Family Members</strong></td><td>${familyMembers}</td></tr>
+            <tr><td><strong>Approval Prediction</strong></td><td><span class="badge badge-blue">${approvalChance}</span></td></tr>
           </table>
         </div>
         
-        ${analysisResult.recommendations?.length > 0 ? `
         <div class="section">
-          <h2>Recommendations</h2>
+          <h2>💰 Financial Requirements</h2>
+          <div class="metric">
+            <div class="metric-value">₦${minimumFunds}M</div>
+            <div class="metric-label">Minimum Required</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">₦${recommendedFunds}M</div>
+            <div class="metric-label">Recommended</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">₦${yourTotal}M</div>
+            <div class="metric-label">Your Total</div>
+          </div>
+          <p style="margin-top: 20px;"><strong>Buffer:</strong> ${buffer}</p>
+        </div>
+        
+        ${officerPatterns.length > 0 ? `
+        <div class="section">
+          <h2>🎯 Visa Officer Intelligence</h2>
+          ${officerPatterns.map((quote: string) => `
+            <div class="officer-quote">"${quote}"</div>
+          `).join('')}
+        </div>
+        ` : ''}
+        
+        <div class="section">
+          <h2>⚠️ Red Flags Detected</h2>
+          ${redFlags.length > 0 ? redFlags.map((flag: string) => `
+            <span class="badge badge-red">${flag}</span>
+          `).join('') : '<p style="color: #059669;">✓ No critical red flags detected</p>'}
+        </div>
+        
+        <div class="section">
+          <h2>✅ Your Strengths</h2>
+          ${strengths.length > 0 ? strengths.map((strength: string) => `
+            <span class="badge badge-green">${strength}</span>
+          `).join('') : '<p>Building your profile...</p>'}
+        </div>
+        
+        ${actionPlan.length > 0 ? `
+        <div class="section">
+          <h2>📝 Action Plan</h2>
           <ul>
-            ${analysisResult.recommendations.map((rec: any) => `
-              <li><strong>${rec.action}</strong> - ${rec.timeline || ''}</li>
-            `).join('')}
+            ${actionPlan.map((action: string) => `<li>${action}</li>`).join('')}
           </ul>
         </div>
         ` : ''}
         
-        ${analysisResult.embassySpecific ? `
-        <div class="section">
-          <h2>Embassy Requirements</h2>
-          <p><strong>Minimum Funds:</strong> $${analysisResult.embassySpecific.minimumFunds?.toLocaleString() || 'N/A'}</p>
-          <p><strong>Seasoning Period:</strong> ${Math.floor((analysisResult.embassySpecific.seasoningRequirements || 0) / 30)} months</p>
-          ${analysisResult.embassySpecific.documentChecklist?.length > 0 ? `
-            <h3>Required Documents:</h3>
-            <ul>
-              ${analysisResult.embassySpecific.documentChecklist.map((doc: string) => `<li>${doc}</li>`).join('')}
-            </ul>
-          ` : ''}
+        ${analysisResult.actionPlan?.premiumUpgrade ? `
+        <div class="section" style="background: #f0f9ff; border: 2px solid #0ea5e9; padding: 20px; border-radius: 12px;">
+          <h2>🚀 ${analysisResult.actionPlan.premiumUpgrade.offer}</h2>
+          <p><strong>Success Rate:</strong> ${analysisResult.actionPlan.premiumUpgrade.successRate}</p>
+          <ul>
+            ${analysisResult.actionPlan.premiumUpgrade.includes.map((item: string) => `<li>${item}</li>`).join('')}
+          </ul>
         </div>
         ` : ''}
         
         <div class="section no-print" style="margin-top: 40px; text-align: center;">
-          <button onclick="window.print()" style="background: #2563eb; color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-            Print / Save as PDF
+          <button onclick="window.print()" style="background: #2563eb; color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 5px;">
+            🖨️ Print / Save as PDF
           </button>
-          <button onclick="window.close()" style="background: #6b7280; color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="background: #6b7280; color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 5px;">
             Close
           </button>
         </div>
         
         <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">
-          <p>Generated by Japa Genie | Confidential Report</p>
-          <p>This is strategic guidance, not legal counsel. Consult immigration professionals for legal advice.</p>
+          <p><strong>Generated by Japa Genie</strong> | Confidential Report</p>
+          <p>This is strategic guidance based on embassy patterns, not legal counsel.</p>
+          <p>Consult licensed immigration professionals for legal advice.</p>
         </div>
       </body>
       </html>
@@ -257,7 +308,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
             <div>
               <h2 className="text-xl font-semibold">Premium Proof of Funds Analysis</h2>
               <p className="text-white/90">
-                AI-powered financial compliance for ${userProfile?.destination_country || manualData.destination_country || 'your destination'} ${userProfile?.visa_type || manualData.visa_type || 'visa'}
+                AI-powered financial compliance for {userProfile?.destination_country || manualData.destination_country || 'your destination'} {userProfile?.visa_type || manualData.visa_type || 'visa'}
               </p>
             </div>
           </div>
@@ -274,7 +325,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                   Analysis Context
                 </h3>
                 <p className="text-sm text-gray-600">
-                  ${userProfile?.destination_country || manualData.destination_country} • ${userProfile?.visa_type || manualData.visa_type} • ${familyMembers} family member{familyMembers > 1 ? 's' : ''}
+                  {userProfile?.destination_country || manualData.destination_country} • {userProfile?.visa_type || manualData.visa_type} • {familyMembers} family member{familyMembers > 1 ? 's' : ''}
                 </p>
               </div>
               <div className="text-right">
@@ -296,8 +347,8 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
         <TabsContent value="analysis" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Family Information</CardTitle>
-              <CardDescription>Include all family members in your visa application</CardDescription>
+              <CardTitle>Financial Information</CardTitle>
+              <CardDescription>Your current financial situation</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
@@ -313,127 +364,121 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                     ))}
                   </select>
                 </div>
-                <div className="flex items-center justify-center">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Banknote className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Funds requirements adjust based on family size</p>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Current Savings (₦)</label>
+                  <Input 
+                    type="number"
+                    value={manualData.currentSavings}
+                    onChange={(e) => setManualData({...manualData, currentSavings: Number(e.target.value)})}
+                    placeholder="45000000"
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {analysisResult?.summary && !isAnalyzing && (
+          {analysisResult && !isAnalyzing && (
             <div className="space-y-6">
-              <Card className={`border-2 ${
-                analysisResult.summary.riskLevel === 'low' ? 'border-green-200' :
-                analysisResult.summary.riskLevel === 'medium' ? 'border-yellow-200' : 'border-red-200'
-              }`}>
+              <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-6 h-6 text-green-600" />
-                    Analysis Summary
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      analysisResult.summary.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
-                      analysisResult.summary.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      ${analysisResult.summary.riskLevel?.toUpperCase() || 'UNKNOWN'} RISK
-                    </span>
+                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                    {analysisResult.approvalPrediction}
                   </CardTitle>
+                  <CardDescription>{analysisResult.embassy}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">${analysisResult.summary.totalScore || 0}/10</p>
-                      <p className="text-sm text-green-800">Compliance Score</p>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                      <p className="text-2xl font-bold text-blue-600">₦{(analysisResult.requiredFunds?.minimum / 1000000).toFixed(1)}M</p>
+                      <p className="text-sm text-gray-600">Minimum</p>
                     </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">
-                        $${analysisResult.financialAnalysis?.totalAssets?.toLocaleString() || '0'}
-                      </p>
-                      <p className="text-sm text-blue-800">Total Assets</p>
+                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                      <p className="text-2xl font-bold text-purple-600">₦{(analysisResult.requiredFunds?.recommended / 1000000).toFixed(1)}M</p>
+                      <p className="text-sm text-gray-600">Recommended</p>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">
-                        ${Math.floor((analysisResult.financialAnalysis?.seasoningDays || 0) / 30)} mos
-                      </p>
-                      <p className="text-sm text-purple-800">Avg Seasoning</p>
+                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                      <p className="text-2xl font-bold text-green-600">₦{(analysisResult.requiredFunds?.yourTotal / 1000000).toFixed(1)}M</p>
+                      <p className="text-sm text-gray-600">Your Total</p>
                     </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <p className="text-2xl font-bold text-orange-600">
-                        ${analysisResult.summary.meetsRequirements ? 'YES' : 'NO'}
-                      </p>
-                      <p className="text-sm text-orange-800">Meets Requirements</p>
-                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-white rounded-lg">
+                    <p className="text-sm"><strong>Buffer:</strong> {analysisResult.requiredFunds?.buffer}</p>
                   </div>
                 </CardContent>
               </Card>
 
-              {analysisResult.embassySpecific && (
+              {analysisResult.officerPatterns?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-blue-600" />
-                      Embassy Requirements
+                      <Shield className="w-5 h-5 text-amber-600" />
+                      Visa Officer Intelligence
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-semibold mb-2">Minimum Requirements</h4>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center gap-2">
-                            <Banknote className="w-4 h-4 text-green-600" />
-                            Funds: $${analysisResult.embassySpecific.minimumFunds?.toLocaleString() || 'N/A'}
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            Seasoning: ${Math.floor((analysisResult.embassySpecific.seasoningRequirements || 0) / 30)} months
-                          </li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">Required Documents</h4>
-                        <ul className="space-y-1 text-sm">
-                          ${analysisResult.embassySpecific.documentChecklist?.map((doc: string, index: number) => (
-                            <li key={index} className="flex items-center gap-2">
-                              <CheckCircle className="w-3 h-3 text-green-600" />
-                              ${doc}
-                            </li>
-                          )) || <li>No checklist available</li>}
-                        </ul>
-                      </div>
+                    <div className="space-y-3">
+                      {analysisResult.officerPatterns.map((quote: string, index: number) => (
+                        <div key={index} className="p-3 bg-amber-50 border-l-4 border-amber-400 rounded">
+                          <p className="text-sm italic">"{quote}"</p>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              {analysisResult.recommendations?.length > 0 && (
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-red-600 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Red Flags
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {analysisResult.yourProfile?.redFlags?.map((flag: string, index: number) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <X className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{flag}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-green-600 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Your Strengths
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {analysisResult.yourProfile?.strengths?.map((strength: string, index: number) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{strength}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {analysisResult.actionPlan?.immediate?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Action Plan</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      ${analysisResult.recommendations.map((rec: any, index: number) => (
-                        <div key={index} className={`p-4 rounded-lg border-l-4 ${
-                          rec.priority === 'high' ? 'border-l-red-500 bg-red-50' :
-                          rec.priority === 'medium' ? 'border-l-yellow-500 bg-yellow-50' : 'border-l-blue-500 bg-blue-50'
-                        }`}>
-                          <div className="flex items-start gap-3">
-                            ${rec.priority === 'high' ? (
-                              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
-                            ) : rec.priority === 'medium' ? (
-                              <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
-                            ) : (
-                              <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-semibold">${rec.action}</p>
-                              ${rec.impact && <p className="text-sm text-gray-600 mt-1">${rec.impact}</p>}
-                              ${rec.timeline && <p className="text-xs text-gray-500 mt-1">Timeline: ${rec.timeline}</p>}
-                            </div>
-                          </div>
+                    <div className="space-y-2">
+                      {analysisResult.actionPlan.immediate.map((action: string, index: number) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                          <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <p className="text-sm">{action}</p>
                         </div>
                       ))}
                     </div>
@@ -453,7 +498,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                   <Button 
                     onClick={generatePDFReport} 
                     size="lg" 
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Print / Download Report
@@ -470,7 +515,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                 Upload Financial Documents
               </CardTitle>
               <CardDescription>
-                Upload bank statements, investment accounts, or financial documents
+                Upload bank statements, investment accounts, or financial documents (optional)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -492,39 +537,40 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
 
               {uploadedFiles.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-semibold">Uploaded Files (${uploadedFiles.length})</h4>
-                  ${uploadedFiles.map((file, index) => (
+                  <h4 className="font-semibold">Uploaded Files ({uploadedFiles.length})</h4>
+                  {uploadedFiles.map((file, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium">${file.name}</span>
-                        <span className="text-xs text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
+                        <span className="text-sm font-medium">{file.name}</span>
+                        <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
                       </div>
                       <button onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
-                  <Button 
-                    onClick={analyzeDocuments} 
-                    disabled={isAnalyzing} 
-                    className="w-full mt-4" 
-                    size="lg"
-                  >
-                    ${isAnalyzing ? (
-                      <>⏳ AI Analyzing Documents...</>
-                    ) : (
-                      <>🤖 Analyze with AI</>
-                    )}
-                  </Button>
                 </div>
               )}
 
+              <Button 
+                onClick={analyzeDocuments} 
+                disabled={isAnalyzing} 
+                className="w-full" 
+                size="lg"
+              >
+                {isAnalyzing ? (
+                  <>⏳ AI Analyzing...</>
+                ) : (
+                  <>🤖 Analyze with AI</>
+                )}
+              </Button>
+
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  <span className="text-red-800">${error}</span>
-                </div>
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
             </CardContent>
           </Card>
@@ -534,9 +580,9 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center justify-center gap-4 py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  <p className="text-lg font-medium">AI is analyzing your documents...</p>
+                  <p className="text-lg font-medium">AI is analyzing your profile...</p>
                   <p className="text-sm text-gray-500">
-                    Checking embassy compliance, financial stability, and risk factors
+                    Checking embassy requirements, financial stability, and risk factors
                   </p>
                 </div>
               </CardContent>
@@ -562,7 +608,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
           <Card>
             <CardHeader>
               <CardTitle>
-                Embassy Requirements for ${userProfile?.destination_country || manualData.destination_country || 'Your Destination'}
+                Embassy Requirements for {userProfile?.destination_country || manualData.destination_country || 'Your Destination'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -613,7 +659,7 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                   <SelectValue placeholder="Select destination" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
-                  ${ALL_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {ALL_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -624,9 +670,27 @@ export default function ProofOfFundsClient({ user, userProfile, needsKYC = false
                   <SelectValue placeholder="Select visa type" />
                 </SelectTrigger>
                 <SelectContent>
-                  ${VISA_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                  {VISA_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Your Age</Label>
+              <Input 
+                type="number"
+                value={manualData.age}
+                onChange={(e) => setManualData({...manualData, age: Number(e.target.value)})}
+                placeholder="25"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Current Savings (₦)</Label>
+              <Input 
+                type="number"
+                value={manualData.currentSavings}
+                onChange={(e) => setManualData({...manualData, currentSavings: Number(e.target.value)})}
+                placeholder="45000000"
+              />
             </div>
           </div>
           <div className="flex gap-3">
