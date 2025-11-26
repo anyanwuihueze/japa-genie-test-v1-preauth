@@ -20,6 +20,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   id?: string;
+  timestamp?: number;
 }
 
 interface InsightOutput {
@@ -72,6 +73,55 @@ interface KYCSession {
   user_type: string;
   timeline_urgency: string;
 }
+
+// ============================================================================
+// ADD THIS FUNCTION TO YOUR client.tsx (around line 80-90)
+// ============================================================================
+
+/**
+ * Determines if the user's question warrants generating insights.
+ * Insights should only generate for key visa/country/timeline questions.
+ */
+const shouldGenerateInsights = (message: string): boolean => {
+  const lowercaseMsg = message.toLowerCase();
+  
+  // Keywords that indicate the user wants visa analysis
+  const insightKeywords = [
+    // Country/destination questions
+    'country', 'countries', 'destination', 'where should', 'which country',
+    'canada', 'uk', 'usa', 'germany', 'australia', 'portugal', 'france',
+    
+    // Visa type questions
+    'visa', 'permit', 'immigration', 'migrate', 'japa', 'relocate', 'move to',
+    'study visa', 'work visa', 'tourist visa', 'student visa',
+    
+    // Timeline/process questions
+    'how long', 'timeline', 'processing time', 'when can', 'how fast',
+    'steps', 'process', 'requirements', 'documents needed',
+    
+    // Cost/budget questions
+    'cost', 'price', 'budget', 'expensive', 'afford', 'how much',
+    
+    // Comparison questions
+    'compare', 'better', 'vs', 'versus', 'difference between', 'alternative',
+    
+    // Qualification questions
+    'eligible', 'qualify', 'chances', 'approval rate', 'requirements',
+  ];
+  
+  // Check if message contains any insight-worthy keywords
+  const hasKeyword = insightKeywords.some(keyword => 
+    lowercaseMsg.includes(keyword)
+  );
+  
+  // Don't generate insights for greetings or short responses
+  const isGreeting = /^(hi|hello|hey|good morning|good afternoon|thanks|thank you|ok|okay|yes|no)$/i.test(message.trim());
+  
+  // Must be at least 10 characters and contain a keyword
+  const isSubstantial = message.trim().length >= 10;
+  
+  return hasKeyword && !isGreeting && isSubstantial;
+};
 
 export default function UserChat() {
   const { user, loading: authLoading } = useAuth();
@@ -387,99 +437,73 @@ export default function UserChat() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = currentInput.trim();
-    if (!trimmed || isTyping) return;
+  const handleSendMessage = async () => {
+    const newMessage = currentInput.trim();
+    if (!newMessage) return;
 
-    if (showBanner) setShowBanner(false);
-
-    const isBonusUser = user && !hasSubscription;
-    if ((!user && wishCount >= MAX_WISHES) || (isBonusUser && wishCount >= 3)) {
-      setMessages(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: "You've used all your wishes! Choose a plan for unlimited visa guidance." }]);
-      setCurrentInput('');
-      return;
-    }
-
-    const newWishCount = wishCount + 1;
-    const userMessage: Message = { role: 'user', content: trimmed };
-    
-    if (user) {
-      const savedMsg = await saveMessage('user', trimmed);
-      if (savedMsg) {
-        userMessage.id = savedMsg.id;
-        await updateChatProgress();
-      }
-    }
-    
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message to chat
+    const userMsg: Message = { role: 'user', content: newMessage, timestamp: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
     setCurrentInput('');
     setIsTyping(true);
 
     try {
-      const conversationHistory = messages.map(m => ({ role: m.role, content: m.content }));
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-
-      if (user) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-
-      // ✅ FIXED: Use available data (userProfile for signed-in, kycSession for anonymous)
-      const userData = user ? userProfile : kycSession;
-      const enhancedContext = {
-        kyc: userData,
-        progress: userProgress
-      };
-
-      const response = await fetch('/api/chat', {
+      // 1. Get AI response from chat API
+      const chatResponse = await fetch('/api/chat', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ 
-          question: trimmed, 
-          conversationHistory, 
-          userContext: enhancedContext,
-          ...(user ? {} : { wishCount: newWishCount }) 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMsg],
+          userId: user?.id,
         }),
       });
 
-      const chatResult = await response.json();
-      if (!response.ok) throw new Error(chatResult.error || 'Failed');
-
-      let aiResponse = chatResult.answer;
-      const shouldMentionName = user && (aiMessageCount % NAME_MENTION_FREQUENCY === 0);
-      if (shouldMentionName && userName !== 'Pathfinder') {
-        const greetings = [`Great question, ${userName}!`, `${userName}, here's what you need to know:`];
-        aiResponse = `${greetings[Math.floor(Math.random() * greetings.length)]} ${aiResponse}`;
-      }
-
-      const assistantMessage: Message = { role: 'assistant', content: aiResponse };
-      if (user) {
-        const savedMsg = await saveMessage('assistant', aiResponse);
-        if (savedMsg) assistantMessage.id = savedMsg.id;
-      }
+      const chatResult = await chatResponse.json();
       
-      setMessages(prev => [...prev, assistantMessage]);
-      setWishCount(newWishCount);
-      setAiMessageCount(prev => prev + 1);
+      // Add AI response to chat
+      const aiMsg: Message = { 
+        role: 'assistant', 
+        content: chatResult.response, 
+        timestamp: Date.now() 
+      };
+      setMessages((prev) => [...prev, aiMsg]);
 
-      if (chatResult.insights) {
-        setInsights(chatResult.insights);
-        if (user) {
-          await saveInsightsToDatabase(chatResult.insights);
-        }
+      // 2. Check if we should generate insights
+      const shouldGetInsights = shouldGenerateInsights(newMessage);
+
+      if (shouldGetInsights) {
+        console.log('🔄 Generating premium insights...');
         
-        if (window.innerWidth < 768) {
-          setActiveTab('insights');
+        const insightsResponse = await fetch('/api/insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: newMessage,
+            userId: user?.id,
+          }),
+        });
+
+        if (insightsResponse.ok) {
+          const insightsData = await insightsResponse.json();
+          
+          if (insightsData?.insights?.length > 0) {
+            setInsights(insightsData);
+            setTimeout(() => setActiveTab('insights'), 1500);
+          }
         }
       }
 
-    } catch (err) {
-      console.error('Chat error:', err);
-      setMessages(prev => [...prev, { role: 'assistant', content: `Wish ${newWishCount}: Temporary error. Please try again.` }]);
+    } catch (error) {
+      console.error('Error in chat:', error);
+      // Handle error gracefully
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSendMessage();
   };
 
   useEffect(() => { inputRef.current?.focus(); }, []);

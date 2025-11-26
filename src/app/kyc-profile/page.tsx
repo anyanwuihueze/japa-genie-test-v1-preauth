@@ -54,34 +54,38 @@ export default function KYCProfilePage() {
   }, [user, supabase]);
 
   const handleSave = async () => {
+    console.log('🚨🚨🚨 handleSave CALLED 🚨🚨🚨');
+    
     if (!country || !destination) {
+      console.log('❌ Validation failed');
       setError('Both fields are required');
       return;
     }
     
     if (!user) {
-      setError('User not authenticated. Please refresh the page.');
+      console.log('❌ No user found');
+      setError('User not authenticated');
       return;
     }
-    
+
+    console.log('✅ Starting save for user:', user.id);
     setSaving(true);
     setError(null);
     setSuccess(false);
-    
+
     try {
-      console.log('Starting profile save for user:', user.id);
-      console.log('Data to save:', { country, destination });
-      
-      // Check if profile exists
+      // STEP 1: Check existing profile
+      console.log('🔍 Checking existing profile...');
       const { data: existingProfile, error: checkError } = await supabase
         .from('user_profiles')
-        .select('id')
+        .select('id, country, destination_country')
         .eq('id', user.id)
         .single();
-      
-      console.log('Existing profile check:', { existingProfile, checkError });
-      
-      // Prepare the data object
+
+      console.log('📊 Existing profile:', existingProfile);
+      console.log('❌ Check error:', checkError);
+
+      // STEP 2: Save data
       const profileData = {
         id: user.id,
         country,
@@ -90,54 +94,69 @@ export default function KYCProfilePage() {
         kyc_last_updated: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
-      let upsertError;
+
+      console.log('💾 Saving profile data:', profileData);
+
+      let result;
       if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
+        console.log('🔄 UPDATING existing profile');
+        result = await supabase
           .from('user_profiles')
           .update(profileData)
           .eq('id', user.id);
-        upsertError = error;
       } else {
-        // Insert new profile
-        const { error } = await supabase
+        console.log('🆕 INSERTING new profile');
+        result = await supabase
           .from('user_profiles')
           .insert(profileData);
-        upsertError = error;
       }
-      
-      if (upsertError) {
-        console.error('Supabase error details:', upsertError);
-        setError(`Save failed: ${upsertError.message}. Please try again.`);
+
+      console.log('💾 Save result:', result);
+
+      if (result.error) {
+        console.log('❌ SAVE FAILED:', result.error);
+        setError(`Save failed: ${result.error.message}`);
         return;
       }
+
+      // STEP 3: VERIFY THE SAVE
+      console.log('🔍 Verifying save...');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
       
-      console.log('Profile saved successfully!');
-      
-      // IMPORTANT: Verify the save actually went through
-      const { data: verifyProfile } = await supabase
+      const { data: verifyData, error: verifyError } = await supabase
         .from('user_profiles')
-        .select('country, destination_country')
+        .select('country, destination_country, updated_at')
         .eq('id', user.id)
         .single();
-      
-      if (!verifyProfile?.country || !verifyProfile?.destination_country) {
-        setError('Save verification failed. Please try again.');
+
+      console.log('✅ Verification result:', verifyData);
+      console.log('❌ Verification error:', verifyError);
+
+      if (verifyError || !verifyData) {
+        console.log('❌ VERIFICATION FAILED');
+        setError('Save verification failed');
         return;
       }
-      
+
+      if (!verifyData.country || !verifyData.destination_country) {
+        console.log('❌ DATA MISSING after save');
+        setError('Data not saved properly');
+        return;
+      }
+
+      console.log('🎉 SUCCESS! Profile saved and verified');
       setSuccess(true);
-      
-      // Show success message then redirect
+
+      // STEP 4: REDIRECT
+      console.log('🔄 Redirecting to dashboard in 2 seconds...');
       setTimeout(() => {
-        router.push('/dashboard');
-        router.refresh();
-      }, 1500);
-      
+        console.log('🚀 EXECUTING REDIRECT TO /dashboard');
+        window.location.href = '/dashboard'; // FORCE REDIRECT
+      }, 2000);
+
     } catch (err) {
-      console.error('Unexpected error during save:', err);
-      setError('An unexpected error occurred. Please try again.');
+      console.log('💥 UNEXPECTED ERROR:', err);
+      setError('Unexpected error occurred');
     } finally {
       setSaving(false);
     }
