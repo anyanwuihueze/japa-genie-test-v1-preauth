@@ -1,3 +1,4 @@
+// src/app/kyc/page.tsx - COMPLETE FIXED VERSION
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -54,7 +55,7 @@ export default function KYCProfilePage() {
   }, [user, supabase]);
 
   const handleSave = async () => {
-    console.log('🚨🚨🚨 handleSave CALLED 🚨🚨🚨');
+    console.log('🚨 handleSave CALLED');
     
     if (!country || !destination) {
       console.log('❌ Validation failed');
@@ -74,107 +75,45 @@ export default function KYCProfilePage() {
     setSuccess(false);
 
     try {
-      // STEP 1: Check existing profile
-      console.log('🔍 Checking existing profile...');
-      const { data: existingProfile, error: checkError } = await supabase
+      // Use upsert instead of insert/update logic
+      const { data, error: saveError } = await supabase
         .from('user_profiles')
-        .select('id, country, destination_country')
-        .eq('id', user.id)
+        .upsert({
+          id: user.id,
+          country,
+          destination_country: destination,
+          kyc_completed: true,
+          kyc_last_updated: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        })
+        .select()
         .single();
 
-      console.log('📊 Existing profile:', existingProfile);
-      console.log('❌ Check error:', checkError);
-
-      // STEP 2: Save data
-      const profileData = {
-        id: user.id,
-        country,
-        destination_country: destination,
-        kyc_completed: true,
-        kyc_last_updated: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('💾 Saving profile data:', profileData);
-
-      let result;
-      if (existingProfile) {
-        console.log('🔄 UPDATING existing profile');
-        result = await supabase
-          .from('user_profiles')
-          .update(profileData)
-          .eq('id', user.id);
-      } else {
-        console.log('🆕 INSERTING new profile');
-        result = await supabase
-          .from('user_profiles')
-          .insert(profileData);
-      }
-
-      console.log('💾 Save result:', result);
-
-      if (result.error) {
-        console.log('❌ SAVE FAILED:', result.error);
-        setError(`Save failed: ${result.error.message}`);
+      if (saveError) {
+        console.log('❌ SAVE FAILED:', saveError);
+        setError(`Save failed: ${saveError.message}`);
         return;
       }
 
-      // STEP 3: VERIFY THE SAVE
-      console.log('🔍 Verifying save...');
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      console.log('🎉 SUCCESS! Profile saved:', data);
       
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('user_profiles')
-        .select('country, destination_country, updated_at')
-        .eq('id', user.id)
-        .single();
+      // 🚀 SAVE KYC DATA TO SESSION STORAGE FOR CHAT
+      sessionStorage.setItem('kycData', JSON.stringify({
+        country,
+        destination,
+        age: data?.age || '',
+        visaType: data?.visa_type || '',
+        profession: data?.profession || ''
+      }));
 
-      console.log('✅ Verification result:', verifyData);
-      console.log('❌ Verification error:', verifyError);
-
-      if (verifyError || !verifyData) {
-        console.log('❌ VERIFICATION FAILED');
-        setError('Save verification failed');
-        return;
-      }
-
-      if (!verifyData.country || !verifyData.destination_country) {
-        console.log('❌ DATA MISSING after save');
-        setError('Data not saved properly');
-        return;
-      }
-
-      console.log('🎉 SUCCESS! Profile saved and verified');
       setSuccess(true);
 
-      // 🚀🚀🚀 NUCLEAR REDIRECT FIX 🚀🚀🚀
-      console.log('🔄 NUCLEAR OPTION: Redirecting to dashboard...');
-      
-      // METHOD 1: Force redirect with multiple fallbacks
-      const redirectToDashboard = () => {
-        console.log('🚀 Attempting nuclear redirect to /dashboard');
-        
-        // Try multiple methods to ensure it works
-        try {
-          // Method A: Replace current history
-          window.location.replace('/dashboard');
-        } catch (err) {
-          console.log('❌ Method A failed, trying Method B');
-          // Method B: Standard redirect
-          window.location.href = '/dashboard';
-        }
-      };
-
-      // Execute nuclear redirect
-      setTimeout(redirectToDashboard, 1500);
-
-      // Backup redirect after 3 seconds
+      // 🚀 SIMPLE REDIRECT - NO BULLSHIT
       setTimeout(() => {
-        if (window.location.pathname !== '/dashboard') {
-          console.log('🔴 BACKUP REDIRECT: Still not on dashboard, forcing...');
-          window.location.href = '/dashboard?force=' + Date.now();
-        }
-      }, 3000);
+        window.location.href = '/dashboard';
+      }, 1000);
 
     } catch (err) {
       console.log('💥 UNEXPECTED ERROR:', err);

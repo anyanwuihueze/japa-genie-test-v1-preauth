@@ -1,10 +1,7 @@
 'use server';
-
 /**
  * @fileOverview Premium Japa Genie Insights Generator
- * 
- * Generates personalized, professional insights with subtle Genie touches.
- * Includes KYC-based personalization and hidden opportunities.
+ * BACKWARD COMPATIBLE - Returns BOTH old and new formats
  */
 import { ai, geminiFlash } from '@/ai/genkit';
 import {
@@ -14,15 +11,14 @@ import {
   InsightOutputSchema,
 } from '@/ai/schemas/insight-schemas';
 
-// Define the premium AI prompt
 const prompt = ai.definePrompt({
   name: 'premiumInsightsGeneratorPrompt',
   model: geminiFlash,
   input: { schema: InsightInputSchema },
   output: { schema: InsightOutputSchema },
   config: {
-    temperature: 0.7, // Balanced creativity
-    maxOutputTokens: 8192, // Allow comprehensive insights
+    temperature: 0.7,
+    maxOutputTokens: 8192,
   },
   prompt: `
 You are the Japa Genie 🧞‍♂️ - a professional immigration advisor with deep knowledge of visa patterns, consulate behaviors, and hidden opportunities worldwide.
@@ -132,7 +128,6 @@ Now generate comprehensive insights for this user's question!
 `,
 });
 
-// Main export function with error handling
 export async function generateInsights(input: InsightInput): Promise<InsightOutput> {
   try {
     const { output } = await prompt(input);
@@ -152,18 +147,42 @@ export async function generateInsights(input: InsightInput): Promise<InsightOutp
       }];
     }
 
-    console.log('✅ Premium insights generated successfully');
-    return output;
+    // ============================================================================
+    // BACKWARD COMPATIBILITY MAPPER
+    // Map new structure to old structure so existing UI works
+    // ============================================================================
+    const backwardCompatibleOutput: any = {
+      ...output,
+      
+      // Map visaAlternatives to old suggestedCountries format
+      suggestedCountries: output.visaAlternatives?.map((alt, idx) => ({
+        name: alt.visaName.split(' ')[0] || `Option ${idx + 1}`, // Extract country from visa name
+        visaType: alt.visaName,
+        estimatedCost: output.costEstimates?.[idx]?.cost || 10000,
+        processingTimeMonths: 3, // Default estimate
+        pros: [alt.description, ...(alt.betterThan || [])],
+        cons: ['Processing times may vary'],
+      })) || [],
+
+      // Keep timeline in old format
+      timeline: output.timeline || [],
+      
+      // Keep alternative strategies
+      alternativeStrategies: output.alternativeStrategies || [],
+    };
+
+    console.log('✅ Premium insights generated with backward compatibility');
+    return backwardCompatibleOutput;
 
   } catch (error: any) {
     console.error('❌ Error generating premium insights:', error);
     
-    // Fallback response to prevent complete failure
+    // Fallback response
     return {
       insights: [
         {
           headline: 'Temporary Service Issue',
-          detail: 'The Genie is experiencing technical difficulties. Please try rephrasing your question or try again in a moment.',
+          detail: 'The Genie is experiencing technical difficulties. Please try again in a moment.',
           url: undefined,
         }
       ],
@@ -176,6 +195,9 @@ export async function generateInsights(input: InsightInput): Promise<InsightOutp
       chartData: undefined,
       timeline: undefined,
       alternativeStrategies: undefined,
-    };
+      
+      // OLD FORMAT FALLBACK
+      suggestedCountries: [],
+    } as any;
   }
 }

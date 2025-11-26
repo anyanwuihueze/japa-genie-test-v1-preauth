@@ -1,5 +1,7 @@
+// Your existing EnhancedProfileCard file - REPLACE ENTIRE CONTENT WITH THIS
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,15 @@ interface EnhancedProfileCardProps {
 }
 
 export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
+  // 🚨 FORCE REFRESH WHEN MOUNTED
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // Don't render until mounted
+
   // Calculate EXACTLY what's missing
   const requiredFields = [
     { key: 'country', label: 'Country', icon: MapPin },
