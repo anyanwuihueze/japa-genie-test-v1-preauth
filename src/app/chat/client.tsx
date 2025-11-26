@@ -462,37 +462,23 @@ export default function UserChat() {
       // ========================================================================
       console.log('🔄 Sending message to chat API...');
       
-      const chatResponse = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMsg],
-          userId: user?.id,
-        }),
-      });
+    const chatResponse = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: newMessage,
+        userId: user?.id,
+      }),
+    });
 
-      if (!chatResponse.ok) {
-        throw new Error(`Chat API error: ${chatResponse.status}`);
-      }
+    if (!chatResponse.ok) {
+      throw new Error(`Chat API error: ${chatResponse.status}`);
+    }
 
-      const chatResult = await chatResponse.json();
-      console.log('📦 Raw chat result:', chatResult);
-      
-      // ========================================================================
-      // ✅ FIX: Extract 'answer' field (not 'response')
-      // ========================================================================
-      const aiResponseText = chatResult.answer || chatResult.response || chatResult.content || 'No response available';
-      console.log('✅ AI response text:', aiResponseText.substring(0, 100) + '...');
-      
-      // Add AI response to chat
-      const aiMsg: Message = { 
-        role: 'assistant', 
-        content: aiResponseText, 
-        timestamp: Date.now() 
-      };
-      
-      setMessages((prev) => [...prev, aiMsg]);
-      setIsTyping(false);
+    const chatResult = await chatResponse.json();
+    const aiText = chatResult.answer;
+    const aiMsg: Message = { role: 'assistant', content: aiText, timestamp: Date.now() };
+    setMessages((prev) => [...prev, aiMsg]);
 
       // ========================================================================
       // 2. CHECK IF WE SHOULD GENERATE INSIGHTS
