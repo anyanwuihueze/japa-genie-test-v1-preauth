@@ -147,12 +147,34 @@ export default function KYCProfilePage() {
       console.log('🎉 SUCCESS! Profile saved and verified');
       setSuccess(true);
 
-      // STEP 4: REDIRECT
-      console.log('🔄 Redirecting to dashboard in 2 seconds...');
+      // 🚀🚀🚀 NUCLEAR REDIRECT FIX 🚀🚀🚀
+      console.log('🔄 NUCLEAR OPTION: Redirecting to dashboard...');
+      
+      // METHOD 1: Force redirect with multiple fallbacks
+      const redirectToDashboard = () => {
+        console.log('🚀 Attempting nuclear redirect to /dashboard');
+        
+        // Try multiple methods to ensure it works
+        try {
+          // Method A: Replace current history
+          window.location.replace('/dashboard');
+        } catch (err) {
+          console.log('❌ Method A failed, trying Method B');
+          // Method B: Standard redirect
+          window.location.href = '/dashboard';
+        }
+      };
+
+      // Execute nuclear redirect
+      setTimeout(redirectToDashboard, 1500);
+
+      // Backup redirect after 3 seconds
       setTimeout(() => {
-        console.log('🚀 EXECUTING REDIRECT TO /dashboard');
-        window.location.href = '/dashboard'; // FORCE REDIRECT
-      }, 2000);
+        if (window.location.pathname !== '/dashboard') {
+          console.log('🔴 BACKUP REDIRECT: Still not on dashboard, forcing...');
+          window.location.href = '/dashboard?force=' + Date.now();
+        }
+      }, 3000);
 
     } catch (err) {
       console.log('💥 UNEXPECTED ERROR:', err);
