@@ -1,6 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ============================================= */
+/* PWA OPTIMIZATIONS - NO ZOOM, NO TAP DELAY */
+/* ============================================= */
+
+html {
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+
+input, textarea, [contenteditable] {
+  user-select: text;
+}
+
+/* Tailwind directives - suppress warnings */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 @layer base {
   :root {
@@ -61,10 +94,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
@@ -86,18 +120,6 @@
   .text-sm { 
     font-size: 16px !important;  /* was 14px - STILL SMALL! */
     line-height: 1.5 !important;
-  }
-  
-  /* PRESERVE all larger text sizes - NO changes */
-  .text-base, 
-  .text-lg, 
-  .text-xl, 
-  .text-2xl, 
-  .text-3xl, 
-  .text-4xl,
-  .text-5xl,
-  .text-6xl {
-    /* No changes - keep your beautiful large text */
   }
   
   /* Prevent auto-zoom on inputs without breaking layout */

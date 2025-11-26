@@ -73,7 +73,7 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
     return 'Your immigration journey begins here!';
   };
 
-  // Empty state
+  // Empty state - goes to full KYC form
   if (completion < 50) {
     return (
       <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 to-purple-50 relative overflow-hidden">
@@ -105,13 +105,12 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
     );
   }
 
+  // Complete profile state - goes to quick update
   return (
-    <Card className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 border-blue-200 relative overflow-hidden group hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] transition-transform">
+    <Card className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 border-blue-200 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
       {/* Passport stamp background */}
       <div className="absolute inset-0 bg-[url('/passport-stamps-collage.jpg')] bg-cover bg-center opacity-15 group-hover:opacity-20 transition-opacity duration-300" />
-      {/* Subtle glow */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
+      
       <CardHeader className="relative z-10 pb-3">
         <div className="flex justify-between items-start">
           <div>
