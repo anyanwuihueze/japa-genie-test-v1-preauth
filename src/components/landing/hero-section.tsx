@@ -69,7 +69,7 @@ export function HeroSection() {
                   <>
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-yellow-400 to-blue-600 text-white hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/kyc" className="flex items-center justify-center gap-2">
