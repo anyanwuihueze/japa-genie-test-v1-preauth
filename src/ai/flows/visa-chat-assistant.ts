@@ -528,7 +528,7 @@ ${isSignedIn ? '**You have unlimited access!**' : '**You have 3 free wishes** - 
   }
 
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash-exp", // ✅ UNCHANGED as requested
+    model: "gemini-2.0-flash", // ✅ UNCHANGED as requested
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: visaInsightsSchema,

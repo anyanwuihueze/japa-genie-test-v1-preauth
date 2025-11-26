@@ -1,5 +1,5 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI, gemini20Flash } from '@genkit-ai/googleai';
 
 const aiInstance = genkit({
   plugins: [
@@ -9,9 +9,9 @@ const aiInstance = genkit({
   ],
 });
 
-// Named exports for ALL your components (they're already using this!)
+// Named exports - FIXED MODEL REFERENCE
 export const ai = aiInstance;
-export const geminiFlash = 'gemini-2.0-flash-exp';
+export const geminiFlash = gemini20Flash; // ✅ Use the imported constant
 
 // Keep default export for any potential future use
 export default aiInstance;

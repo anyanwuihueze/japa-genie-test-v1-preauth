@@ -3,6 +3,7 @@ import { generateInsights } from '@/ai/insights-generator';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  // YOUR EXISTING WORKING CODE THAT WAS GENERATING CHARTS AND GRAPHS
   let userQuestion: string | undefined;
   let userId: string | undefined;
   
@@ -22,9 +23,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Generating premium insights for question:', userQuestion.substring(0, 100));
 
-    // ============================================================================
-    // FETCH USER'S KYC PROFILE FOR PERSONALIZATION
-    // ============================================================================
+    // YOUR EXISTING KYC PROFILE LOGIC
     let userProfile = undefined;
     
     if (userId) {
@@ -48,18 +47,13 @@ export async function POST(request: NextRequest) {
             country: userProfile.country,
             destination: userProfile.destinationCountry,
           });
-        } else {
-          console.log('⚠️ No profile found or error loading profile:', profileError?.message);
         }
       } catch (profileFetchError) {
         console.error('❌ Error fetching user profile:', profileFetchError);
-        // Continue without profile - insights will be less personalized
       }
     }
 
-    // ============================================================================
-    // GENERATE INSIGHTS WITH RETRY LOGIC (for reliability)
-    // ============================================================================
+    // YOUR EXISTING RETRY LOGIC
     let insights;
     let attempts = 0;
     const maxAttempts = 3;
@@ -75,7 +69,6 @@ export async function POST(request: NextRequest) {
           userProfile: userProfile,
         });
 
-        // Validate we got meaningful insights
         if (insights && insights.insights && insights.insights.length > 0) {
           console.log('✅ Premium insights generated successfully on attempt', attempts);
           break;
@@ -87,7 +80,6 @@ export async function POST(request: NextRequest) {
         lastError = attemptError;
         console.error(`❌ Attempt ${attempts} failed:`, attemptError.message);
         
-        // Wait before retry (exponential backoff)
         if (attempts < maxAttempts) {
           const delay = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
           console.log(`⏳ Waiting ${delay}ms before retry...`);
@@ -96,14 +88,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If all attempts failed, throw the last error
     if (!insights || !insights.insights || insights.insights.length === 0) {
       throw lastError || new Error('Failed to generate insights after all retries');
     }
 
-    // ============================================================================
-    // SAVE INSIGHTS TO DATABASE (optional, non-blocking)
-    // ============================================================================
+    // YOUR EXISTING DATABASE SAVE LOGIC
     if (userId) {
       try {
         const supabase = await createClient();
@@ -117,21 +106,15 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
           });
 
-        if (saveError) {
-          console.error('⚠️ Failed to save insights to database:', saveError.message);
-          // Don't fail the request if saving fails
-        } else {
+        if (!saveError) {
           console.log('✅ Insights saved to database for user:', userId);
         }
       } catch (dbError) {
         console.error('❌ Database save error:', dbError);
-        // Continue - saving to DB shouldn't block the response
       }
     }
 
-    // ============================================================================
-    // RETURN SUCCESS
-    // ============================================================================
+    // RETURN YOUR WORKING INSIGHTS WITH CHARTS AND GRAPHS
     return NextResponse.json(insights, { 
       status: 200,
       headers: {
@@ -142,9 +125,6 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('❌ Critical error in insights API:', error);
 
-    // ============================================================================
-    // ULTIMATE FALLBACK - Always return something useful
-    // ============================================================================
     return NextResponse.json({
       insights: [
         {
@@ -170,7 +150,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Add OPTIONS handler for CORS (if needed for frontend)
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
