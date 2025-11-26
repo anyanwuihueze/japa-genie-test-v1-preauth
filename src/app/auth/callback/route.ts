@@ -2,14 +2,13 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Progress creation function - ADD THIS
+// Progress creation function
 async function createUserProgress(userId: string) {
   const supabase = await createClient();
   
   try {
     console.log('🎯 Creating progress records for user:', userId);
     
-    // Create initial progress records - SILENTLY IGNORE ERRORS
     const { error: progressError } = await supabase
       .from('user_progress')
       .insert([
@@ -116,12 +115,11 @@ export async function GET(request: NextRequest) {
       profile = newProfile;
       console.log('✅ Profile created');
       
-      // 🎯 SAFE PROGRESS CREATION - ADDED HERE
       await createUserProgress(user.id);
     }
   }
   
-  // ✅ FIXED: Check if profile is complete - ALL KYC FIELDS
+  // ✅ Check if profile is complete - ALL KYC FIELDS
   const isProfileComplete = profile && 
     profile.country && 
     profile.country.trim() !== '' &&
@@ -129,9 +127,9 @@ export async function GET(request: NextRequest) {
     profile.destination_country.trim() !== '' &&
     profile.visa_type && 
     profile.visa_type.trim() !== '' &&
-    profile.age && // ✅ ADDED: Age is required
-    profile.user_type && // ✅ ADDED: User type is required  
-    profile.timeline_urgency; // ✅ ADDED: Timeline is required
+    profile.age && 
+    profile.user_type &&  
+    profile.timeline_urgency;
   
   console.log('✅ Profile complete?', isProfileComplete, {
     country: !!profile?.country,
@@ -142,7 +140,7 @@ export async function GET(request: NextRequest) {
     timeline: !!profile?.timeline_urgency
   });
   
-  // Check subscription
+  // Check subscription (for logging only)
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('id, status, plan_type')
@@ -152,23 +150,13 @@ export async function GET(request: NextRequest) {
   
   console.log('💳 Subscription:', subscription);
   
-  // 🎯 FIXED FLOW LOGIC:
+  // ✅ FIXED FLOW LOGIC - SIMPLER!
   if (!isProfileComplete) {
     console.log('🎯 REDIRECT → /kyc (incomplete profile)');
     return NextResponse.redirect(`${origin}/kyc`);
   }
   
-  if (isProfileComplete && !subscription) {
-    console.log('🎯 REDIRECT → /chat?bonus=3 (complete profile, no subscription)');
-    return NextResponse.redirect(`${origin}/chat?bonus=3`);
-  }
-  
-  if (isProfileComplete && subscription) {
-    console.log('🎯 REDIRECT → /dashboard (complete profile + subscription)');
-    return NextResponse.redirect(`${origin}/dashboard`);
-  }
-  
-  // Fallback
-  console.log('🎯 REDIRECT → /kyc (fallback)');
-  return NextResponse.redirect(`${origin}/kyc`);
+  // ✅ Profile complete? ALWAYS go to dashboard!
+  console.log('🎯 REDIRECT → /dashboard (profile complete)');
+  return NextResponse.redirect(`${origin}/dashboard`);
 }
