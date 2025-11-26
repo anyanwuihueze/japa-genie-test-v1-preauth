@@ -8,12 +8,30 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/');
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('country, destination_country')
-    .eq('id', user.id)
-    .single();
+  // Add retry logic to handle propagation delay
+  let profile = null;
+  let attempts = 0;
+  const maxAttempts = 3;
 
+  while (attempts < maxAttempts) {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('country, destination_country')
+      .eq('id', user.id)
+      .single();
+    
+    if (data?.country && data?.destination_country) {
+      profile = data;
+      break;
+    }
+    
+    attempts++;
+    if (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  // Only redirect if genuinely incomplete after retries
   if (!profile?.country || !profile?.destination_country) {
     redirect('/kyc-profile');
   }

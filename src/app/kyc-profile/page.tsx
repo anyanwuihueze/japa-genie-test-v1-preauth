@@ -38,7 +38,6 @@ export default function KYCProfilePage() {
 
         if (error) {
           console.error('Error loading profile:', error);
-          // User might not have a profile yet - that's ok
         } else if (data) {
           console.log('Loaded profile data:', data);
           setCountry(data.country || '');
@@ -64,24 +63,24 @@ export default function KYCProfilePage() {
       setError('User not authenticated. Please refresh the page.');
       return;
     }
-
+    
     setSaving(true);
     setError(null);
     setSuccess(false);
-
+    
     try {
       console.log('Starting profile save for user:', user.id);
       console.log('Data to save:', { country, destination });
       
-      // First, let's check if the user exists in user_profiles
+      // Check if profile exists
       const { data: existingProfile, error: checkError } = await supabase
         .from('user_profiles')
         .select('id')
         .eq('id', user.id)
         .single();
-
+      
       console.log('Existing profile check:', { existingProfile, checkError });
-
+      
       // Prepare the data object
       const profileData = {
         id: user.id,
@@ -91,9 +90,8 @@ export default function KYCProfilePage() {
         kyc_last_updated: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-
+      
       let upsertError;
-
       if (existingProfile) {
         // Update existing profile
         const { error } = await supabase
@@ -108,23 +106,35 @@ export default function KYCProfilePage() {
           .insert(profileData);
         upsertError = error;
       }
-
+      
       if (upsertError) {
         console.error('Supabase error details:', upsertError);
         setError(`Save failed: ${upsertError.message}. Please try again.`);
         return;
       }
-
+      
       console.log('Profile saved successfully!');
+      
+      // IMPORTANT: Verify the save actually went through
+      const { data: verifyProfile } = await supabase
+        .from('user_profiles')
+        .select('country, destination_country')
+        .eq('id', user.id)
+        .single();
+      
+      if (!verifyProfile?.country || !verifyProfile?.destination_country) {
+        setError('Save verification failed. Please try again.');
+        return;
+      }
+      
       setSuccess(true);
       
-      // Show success message for 1.5 seconds then redirect
+      // Show success message then redirect
       setTimeout(() => {
-        // Use both methods to ensure redirect works
         router.push('/dashboard');
         router.refresh();
       }, 1500);
-
+      
     } catch (err) {
       console.error('Unexpected error during save:', err);
       setError('An unexpected error occurred. Please try again.');
