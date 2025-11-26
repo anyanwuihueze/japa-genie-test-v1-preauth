@@ -1,4 +1,4 @@
-// Your existing EnhancedProfileCard file - REPLACE ENTIRE CONTENT WITH THIS
+// src/components/dashboard/enhanced-profile-card.tsx - COMPLETE FIXED VERSION
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,12 +29,15 @@ interface EnhancedProfileCardProps {
 export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
   // 🚨 FORCE REFRESH WHEN MOUNTED
   const [mounted, setMounted] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Force re-render after mount to ensure fresh data
+    setTimeout(() => setRefreshKey(prev => prev + 1), 100);
+  }, [userProfile]);
 
-  if (!mounted) return null; // Don't render until mounted
+  if (!mounted) return null;
 
   // Calculate EXACTLY what's missing
   const requiredFields = [
@@ -56,7 +59,7 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
     !userProfile?.[field.key] || userProfile[field.key].toString().trim() === ''
   );
 
-  // Helper functions (keep your existing ones)
+  // Helper functions
   const getUserTypeDisplay = (type: string) => {
     const types: Record<string, { icon: string; label: string }> = {
       student: { icon: '🎓', label: 'Student' },
@@ -78,6 +81,79 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
     };
     return timelines[timeline] || timeline;
   };
+
+  // 🎯 COMPLETE USER STATUS DISPLAY
+  const renderCompleteStatus = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <MapPin className="w-4 h-4 text-blue-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">From</div>
+            <div className="font-medium">{userProfile?.country || 'N/A'}</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <MapPin className="w-4 h-4 text-green-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">Destination</div>
+            <div className="font-medium">{userProfile?.destination_country || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <Calendar className="w-4 h-4 text-purple-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">Age</div>
+            <div className="font-medium">{userProfile?.age ? `${userProfile.age} years` : 'N/A'}</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <Briefcase className="w-4 h-4 text-purple-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">Profession</div>
+            <div className="font-medium">{userProfile?.profession || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <GraduationCap className="w-4 h-4 text-purple-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">Visa Type</div>
+            <div className="font-medium">{userProfile?.visa_type || 'N/A'}</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+          <Clock className="w-4 h-4 text-orange-600" />
+          <div>
+            <div className="text-xs text-muted-foreground">Timeline</div>
+            <div className="font-medium">{getTimelineDisplay(userProfile?.timeline_urgency) || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 🎯 ALTERNATIVE COUNTRIES DISPLAY */}
+      {userProfile?.alternative_countries && userProfile.alternative_countries.length > 0 && (
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-semibold">Alternative Destinations</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {userProfile.alternative_countries.map((country: string, index: number) => (
+              <Badge key={country} variant="secondary" className="text-sm">
+                {country}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   // Empty state - Profile very incomplete
   if (completion < 50) {
@@ -149,27 +225,8 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
             </p>
           </div>
 
-          {/* Current profile data */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {userProfile?.country && (
-              <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                <div>
-                  <div className="text-xs text-muted-foreground">From</div>
-                  <div className="font-medium">{userProfile.country}</div>
-                </div>
-              </div>
-            )}
-            {userProfile?.destination_country && (
-              <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-                <MapPin className="w-4 h-4 text-green-600" />
-                <div>
-                  <div className="text-xs text-muted-foreground">Destination</div>
-                  <div className="font-medium">{userProfile.destination_country}</div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Complete status display */}
+          {renderCompleteStatus()}
 
           <Button asChild className="w-full" variant="outline">
             <Link href="/kyc">
@@ -210,66 +267,9 @@ export function EnhancedProfileCard({ userProfile }: EnhancedProfileCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        {/* Current data display */}
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-            <MapPin className="w-4 h-4 text-blue-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">From</div>
-              <div className="font-medium">{userProfile?.country}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-            <MapPin className="w-4 h-4 text-green-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Destination</div>
-              <div className="font-medium">{userProfile?.destination_country}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {userProfile?.age && (
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-              <Calendar className="w-4 h-4 text-purple-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Age</div>
-                <div className="font-medium">{userProfile.age} years</div>
-              </div>
-            </div>
-          )}
-          {userProfile?.visa_type && (
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-              <GraduationCap className="w-4 h-4 text-purple-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Visa Type</div>
-                <div className="font-medium">{userProfile.visa_type}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {userProfile?.user_type && (
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-              <span className="text-base">{userTypeInfo.icon}</span>
-              <div>
-                <div className="text-xs text-muted-foreground">Profile</div>
-                <div className="font-medium">{userTypeInfo.label}</div>
-              </div>
-            </div>
-          )}
-          {userProfile?.timeline_urgency && (
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-2">
-              <Clock className="w-4 h-4 text-orange-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Timeline</div>
-                <div className="font-medium">{timelineDisplay}</div>
-              </div>
-            </div>
-          )}
-        </div>
+      <CardContent className="space-y-4">
+        {/* Complete status display */}
+        {renderCompleteStatus()}
       </CardContent>
     </Card>
   );

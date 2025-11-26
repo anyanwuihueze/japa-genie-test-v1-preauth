@@ -1,4 +1,4 @@
-// src/app/kyc/page.tsx - COMPLETE FIXED VERSION
+// src/app/kyc-profile/page.tsx - COMPLETE FIXED VERSION WITH ALTERNATIVE COUNTRIES
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ALL_COUNTRIES } from '@/lib/countries';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Plus, X } from 'lucide-react';
 import NameModal from '@/components/modals/NameModal';
 
 export default function KYCProfilePage() {
@@ -17,6 +17,7 @@ export default function KYCProfilePage() {
   const supabase = createClient();
   const [country, setCountry] = useState('');
   const [destination, setDestination] = useState('');
+  const [alternativeCountries, setAlternativeCountries] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -33,7 +34,7 @@ export default function KYCProfilePage() {
         console.log('Loading profile for user:', user.id);
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('country, destination_country')
+          .select('country, destination_country, alternative_countries')
           .eq('id', user.id)
           .single();
 
@@ -43,6 +44,7 @@ export default function KYCProfilePage() {
           console.log('Loaded profile data:', data);
           setCountry(data.country || '');
           setDestination(data.destination_country || '');
+          setAlternativeCountries(data.alternative_countries || []);
         }
       } catch (err) {
         console.error('Unexpected error loading profile:', err);
@@ -75,13 +77,14 @@ export default function KYCProfilePage() {
     setSuccess(false);
 
     try {
-      // Use upsert instead of insert/update logic
+      // 🚀 SAVE WITH ALTERNATIVE COUNTRIES
       const { data, error: saveError } = await supabase
         .from('user_profiles')
         .upsert({
           id: user.id,
           country,
           destination_country: destination,
+          alternative_countries: alternativeCountries,
           kyc_completed: true,
           kyc_last_updated: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -103,6 +106,7 @@ export default function KYCProfilePage() {
       sessionStorage.setItem('kycData', JSON.stringify({
         country,
         destination,
+        alternativeCountries,
         age: data?.age || '',
         visaType: data?.visa_type || '',
         profession: data?.profession || ''
@@ -110,7 +114,7 @@ export default function KYCProfilePage() {
 
       setSuccess(true);
 
-      // 🚀 SIMPLE REDIRECT - NO BULLSHIT
+      // 🚀 FORCE REFRESH DASHBOARD BY RELOADING
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 1000);
@@ -121,6 +125,16 @@ export default function KYCProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const addAlternativeCountry = (country: string) => {
+    if (country && !alternativeCountries.includes(country) && country !== destination) {
+      setAlternativeCountries([...alternativeCountries, country]);
+    }
+  };
+
+  const removeAlternativeCountry = (country: string) => {
+    setAlternativeCountries(alternativeCountries.filter(c => c !== country));
   };
 
   if (authLoading || initialLoad) {
@@ -181,6 +195,37 @@ export default function KYCProfilePage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* ALTERNATIVE COUNTRIES SECTION */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Alternative Countries (Optional)</label>
+              <div className="space-y-2">
+                {alternativeCountries.map((altCountry) => (
+                  <div key={altCountry} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <span className="flex-1">{altCountry}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeAlternativeCountry(altCountry)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Select onValueChange={addAlternativeCountry}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add alternative country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ALL_COUNTRIES.filter(c => c !== destination && !alternativeCountries.includes(c)).map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <Button 
               onClick={handleSave} 
               className="w-full h-12 text-lg" 
