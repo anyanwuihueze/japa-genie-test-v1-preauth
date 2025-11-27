@@ -64,13 +64,15 @@ export async function detectMilestoneFromMessage(
     }
   }
 
+  // ✅ TRY to update, but DON'T FAIL if it doesn't work
   if (update) {
     try {
       await updateUserProgress(userId, { [update.field]: update.value });
       return update;
     } catch (error) {
-      console.error('❌ Failed to update milestone:', error);
-      return null;
+      console.error('⚠️ Milestone update failed (non-critical):', error);
+      // Return the detection anyway - don't break chat
+      return update;
     }
   }
 
@@ -102,7 +104,6 @@ export async function updateUserProgress(userId: string, updates: any) {
         });
       
       if (insertError) throw insertError;
-      console.log('✅ Created initial progress for user:', userId);
       return;
     }
 
@@ -122,10 +123,8 @@ export async function updateUserProgress(userId: string, updates: any) {
 
     if (updateError) throw updateError;
 
-    console.log('✅ Progress updated:', { userId, updates, overallProgress, currentStage });
-
   } catch (error) {
-    console.error('❌ Error updating user progress:', error);
+    console.error('❌ Progress update error:', error);
     throw error;
   }
 }
@@ -224,21 +223,21 @@ function containsSubmissionKeywords(message: string): boolean {
 }
 
 export function getTimelineGuidance(progressContext: any): string | null {
-  if (!progressContext.daysUntilDeadline || progressContext.daysUntilDeadline > 30) {
+  if (!progressContext?.daysUntilDeadline || progressContext.daysUntilDeadline > 30) {
     return null;
   }
 
   const { daysUntilDeadline, completedMilestones } = progressContext;
 
-  if (daysUntilDeadline < 7 && !completedMilestones.applicationSubmitted) {
+  if (daysUntilDeadline < 7 && !completedMilestones?.applicationSubmitted) {
     return `🚨 TIMELINE CRITICAL: User has ONLY ${daysUntilDeadline} DAYS until deadline! Application not submitted - this requires immediate action.`;
   }
 
-  if (daysUntilDeadline < 14 && !completedMilestones.financialReady) {
+  if (daysUntilDeadline < 14 && !completedMilestones?.financialReady) {
     return `⚠️ TIMELINE URGENT: ${daysUntilDeadline} DAYS until deadline! Financial proof not ready - prioritize immediately.`;
   }
 
-  if (daysUntilDeadline < 21 && !completedMilestones.documentsUploaded) {
+  if (daysUntilDeadline < 21 && !completedMilestones?.documentsUploaded) {
     return `📅 TIMELINE PRIORITY: ${daysUntilDeadline} DAYS until deadline! Upload all documents this week.`;
   }
 

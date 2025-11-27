@@ -143,31 +143,33 @@ export default function UserChat() {
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 🚨 READ KYC DATA FROM STORAGE - FIXED
+  // 🚨 ADD THIS: READ KYC DATA FROM STORAGE
   useEffect(() => {
-    const kycData = sessionStorage.getItem("kycData") || localStorage.getItem("userKYC");
-    
+    const kycData = sessionStorage.getItem('kycData') || localStorage.getItem('userKYC');
+      
+      // 🚀 FEED KYC DATA TO GENIE CONTEXT
+      if (parsed.country && parsed.destination) {
+        const userContext = {
+          country: parsed.country,
+          destination: parsed.destination,
+          age: parsed.age,
+          visaType: parsed.visa_type,
+          profession: parsed.profession,
+          userType: parsed.user_type,
+          timelineUrgency: parsed.timeline_urgency,
+          budget: parsed.budget
+        };
+        console.log("🚀 KYC data fed to genie:", userContext);
+      }
     if (kycData) {
-      try {
-        const parsed = JSON.parse(kycData);
-        setKycSession(parsed);
-        console.log("🎯 KYC data loaded from storage:", parsed);
-        
-        if (parsed.country && parsed.destination) {
-          const userContext = {
-            country: parsed.country,
-            destination: parsed.destination,
-            age: parsed.age,
-            visaType: parsed.visa_type,
-            profession: parsed.profession,
-            userType: parsed.user_type,
-            timelineUrgency: parsed.timeline_urgency,
-            budget: parsed.budget
-          };
-          console.log("🚀 KYC data fed to genie:", userContext);
-        }
-      } catch (error) {
-        console.error("❌ Failed to parse KYC data:", error);
+      const parsed = JSON.parse(kycData);
+      setKycSession(parsed);
+      console.log('🎯 KYC data loaded from storage:', parsed);
+      
+      // 🚀 FEED TO CHAT CONTEXT
+      if (parsed.country && parsed.destination) {
+        const welcomeContext = `User from ${parsed.country} wants to go to ${parsed.destination}`;
+        console.log('🎯 Chat context updated:', welcomeContext);
       }
     }
   }, []);
