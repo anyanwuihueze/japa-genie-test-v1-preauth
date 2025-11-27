@@ -1,4 +1,3 @@
-// src/lib/progress-updater.ts
 import { createClient } from '@/lib/supabase/server';
 
 export interface MilestoneUpdate {
@@ -20,7 +19,7 @@ export async function detectMilestoneFromMessage(
     const confidence = calculateDocumentConfidence(lowerMessage);
     if (confidence > 0.7) {
       update = {
-        field: 'documents_uploaded',
+        field: 'documents_uploaded', // ✅ CORRECT FIELD NAME
         value: true,
         message: 'Detected document upload from chat message',
         confidence
@@ -32,7 +31,7 @@ export async function detectMilestoneFromMessage(
     const confidence = calculateFinancialConfidence(lowerMessage);
     if (confidence > 0.7) {
       update = {
-        field: 'financial_ready', 
+        field: 'financial_proof_ready', // ✅ CORRECT FIELD NAME
         value: true,
         message: 'Detected financial proof completion',
         confidence
@@ -44,8 +43,8 @@ export async function detectMilestoneFromMessage(
     const confidence = calculateInterviewConfidence(lowerMessage);
     if (confidence > 0.75) {
       update = {
-        field: 'interview_prep_done',
-        value: true, 
+        field: 'interview_prepared', // ✅ CORRECT FIELD NAME
+        value: true,
         message: 'Detected interview preparation',
         confidence
       };
@@ -99,7 +98,7 @@ export async function updateUserProgress(userId: string, updates: any) {
         .insert({
           user_id: userId,
           ...updates,
-          overall_progress: calculateProgress({ ...updates }),
+          progress_percentage: calculateProgress({ ...updates }),
           current_stage: determineCurrentStage({ ...updates })
         });
       
@@ -108,14 +107,14 @@ export async function updateUserProgress(userId: string, updates: any) {
     }
 
     const newProgress = { ...currentProgress, ...updates };
-    const overallProgress = calculateProgress(newProgress);
+    const progressPercentage = calculateProgress(newProgress);
     const currentStage = determineCurrentStage(newProgress);
 
     const { error: updateError } = await supabase
       .from('user_progress')
       .update({
         ...updates,
-        overall_progress: overallProgress,
+        progress_percentage: progressPercentage,
         current_stage: currentStage,
         updated_at: new Date().toISOString()
       })
@@ -134,8 +133,8 @@ function calculateProgress(progress: any): number {
     progress.profile_completed,
     progress.documents_uploaded, 
     progress.documents_verified,
-    progress.financial_ready,
-    progress.interview_prep_done,
+    progress.financial_proof_ready, // ✅ MATCHES FIELD NAME
+    progress.interview_prepared,    // ✅ MATCHES FIELD NAME
     progress.application_submitted,
     progress.decision_received
   ];
@@ -149,8 +148,8 @@ function determineCurrentStage(progress: any): string {
     progress.profile_completed,
     progress.documents_uploaded,
     progress.documents_verified, 
-    progress.financial_ready,
-    progress.interview_prep_done,
+    progress.financial_proof_ready, // ✅ MATCHES FIELD NAME
+    progress.interview_prepared,    // ✅ MATCHES FIELD NAME
     progress.application_submitted,
     progress.decision_received
   ].filter(Boolean).length;

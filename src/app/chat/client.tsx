@@ -72,6 +72,7 @@ interface KYCSession {
   profession: string;
   user_type: string;
   timeline_urgency: string;
+  destination?: string;
 }
 
 /**
@@ -468,90 +469,80 @@ export default function UserChat() {
     setMessages((prev) => [...prev, userMsg]);
     setCurrentInput('');
     setIsTyping(true);
+    setWishCount(prev => prev + 1);
 
     try {
-      // ========================================================================
-      // 1. GET CHAT RESPONSE
-      // ========================================================================
-      console.log('🔄 Sending message to chat API...');
-      
-      const chatResponse = await fetch('/api/chat', {
+      // ✅ Get user context from available data
+      const userData = user ? userProfile : kycSession;
+      const userContext = userData ? {
+        country: userData.country,
+        destination: userData.destination_country,
+        age: userData.age,
+        visaType: userData.visa_type,
+        profession: userData.profession,
+        userType: userData.user_type,
+        timelineUrgency: userData.timeline_urgency,
+        progress: userProgress
+      } : {};
+
+      // ✅ Call the chat API
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: newMessage,
-          userId: user?.id,
-          userContext: kycSession,
+          userContext,
+          conversationHistory: messages,
+          isSignedIn: !!user
         }),
       });
 
-      if (!chatResponse.ok) {
-        throw new Error(`Chat API error: ${chatResponse.status}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      const chatResult = await chatResponse.json();
-      const aiText = chatResult.answer;
-      const aiMsg: Message = { role: 'assistant', content: aiText, timestamp: Date.now() };
-      setMessages((prev) => [...prev, aiMsg]);
+      const result = await response.json();
+      
+      // ✅ Save user message to database (if signed in)
+      if (user) {
+        await saveMessage('user', newMessage);
+        await updateChatProgress();
+      }
 
-      // ========================================================================
-      // 2. CHECK IF WE SHOULD GENERATE INSIGHTS
-      // ========================================================================
-      const shouldGetInsights = shouldGenerateInsights(newMessage);
+      // ✅ Add AI response to chat
+      const aiMessage: Message = { 
+        role: 'assistant', 
+        content: result.answer || result.response || 'No response available',
+        timestamp: Date.now()
+      };
+      setMessages((prev) => [...prev, aiMessage]);
 
-      if (shouldGetInsights) {
-        console.log('🔄 Generating premium insights...');
-        
-        try {
-          const insightsResponse = await fetch('/api/insights', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              question: newMessage,
-              userId: user?.id,
-            }),
-          });
+      // ✅ Save AI message to database (if signed in)
+      if (user) {
+        await saveMessage('assistant', aiMessage.content);
+      }
 
-          if (insightsResponse.ok) {
-            const insightsData = await insightsResponse.json();
-            console.log('📦 Raw insights data:', insightsData);
-            
-            // Check if we have meaningful insights
-            if (insightsData?.insights?.length > 0 || insightsData?.suggestedCountries?.length > 0) {
-              console.log('✅ Setting insights:', {
-                insightsCount: insightsData.insights?.length,
-                countriesCount: insightsData.suggestedCountries?.length,
-              });
-              
-              setInsights(insightsData);
-              
-              // Auto-switch to insights tab after brief delay
-              setTimeout(() => setActiveTab('insights'), 1500);
-            } else {
-              console.warn('⚠️ Insights response was empty');
-            }
-          } else {
-            console.error('❌ Insights API error:', insightsResponse.status);
-          }
-        } catch (insightsError) {
-          console.error('❌ Failed to fetch insights:', insightsError);
-          // Don't block chat if insights fail
+      // ✅ Update insights if available
+      if (result.insights) {
+        setInsights(result.insights);
+        if (user) {
+          await saveInsightsToDatabase(result.insights);
         }
-      } else {
-        console.log('ℹ️ Question does not require insights');
       }
+
+      // ✅ Update AI message count
+      setAiMessageCount(prev => prev + 1);
 
     } catch (error) {
-      console.error('❌ Error in chat:', error);
-      setIsTyping(false);
-      
-      // Add error message to chat
+      console.error('Chat error:', error);
       const errorMsg: Message = {
         role: 'assistant',
         content: 'Sorry, I encountered an error. Please try again.',
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
     }
   };
 

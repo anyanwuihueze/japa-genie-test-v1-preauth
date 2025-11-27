@@ -38,14 +38,12 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (profile) {
+          // ✅ FIXED: Include ALL profile data using spread operator
           userContext = {
+            ...profile, // 🎯 KEY FIX - Preserves all database fields
             name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
-            country: profile.country,
             destination: profile.destination_country,
-            profession: profile.profession,
             visaType: profile.visa_type,
-            age: profile.age,
-            dateOfBirth: profile.date_of_birth,
             userType: profile.user_type,
             timelineUrgency: profile.timeline_urgency,
           };
@@ -80,6 +78,10 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error fetching user context:', error);
     }
+
+    // 🎯 DEBUG: See what the Genie receives
+    console.log("🎯 GENIE RECEIVES - User Context:", JSON.stringify(userContext, null, 2));
+    console.log("🎯 GENIE RECEIVES - Progress:", JSON.stringify(userProgress, null, 2));
 
     const assistantInput = {
       question,
