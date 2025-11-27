@@ -32,9 +32,6 @@ export default async function DashboardPage() {
   }
 
   // Only redirect if genuinely incomplete after retries
-  if (!profile?.country) {
-    redirect('/kyc-profile');
-  }
 
   return <DashboardClient user={user} />;
 }

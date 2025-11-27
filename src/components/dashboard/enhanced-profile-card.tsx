@@ -67,6 +67,26 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
   }, [userProfile]);
 
   if (!mounted) return null;
+console.log("🔍 PROFILE CARD - Mounted with profile:", userProfile);
+console.log("🔍 PROFILE CARD - User ID:", userId);
+console.log("🔍 PROFILE CARD - Profile exists:", !!userProfile);
+if (userProfile) {
+  console.log("🔍 PROFILE CARD - Profile keys:", Object.keys(userProfile));
+  requiredFields.forEach(field => {
+    const value = userProfile[field.key];
+    console.log(`🔍 FIELD: ${field.key} =`, value, "Type:", typeof value, "Filled:", value && value.toString().trim() !== "");
+  });
+}
+console.log("🔍 PROFILE CARD - Mounted with profile:", userProfile);
+console.log("🔍 PROFILE CARD - User ID:", userId);
+console.log("🔍 PROFILE CARD - Profile exists:", !!userProfile);
+if (userProfile) {
+  console.log("🔍 PROFILE CARD - Profile keys:", Object.keys(userProfile));
+  requiredFields.forEach(field => {
+    const value = userProfile[field.key];
+    console.log(`🔍 FIELD: ${field.key} =`, value, "Type:", typeof value, "Filled:", value && value.toString().trim() !== "");
+  });
+}
 
   console.log("🚨 URGENT DEBUG - userProfile OBJECT:", JSON.stringify(userProfile, null, 2));
   console.log("🚨 URGENT DEBUG - userProfile KEYS:", userProfile ? Object.keys(userProfile) : "NO USERPROFILE");
@@ -80,9 +100,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
     { key: 'timeline_urgency', label: 'Timeline', icon: Clock },
   ];
 
-  const filledFields = requiredFields.filter(field => 
-    userProfile?.[field.key] && userProfile[field.key].toString().trim() !== ''
-  ).length;
+const filledFields = requiredFields.filter(field => {
+  const value = userProfile?.[field.key];
+  return value !== null && value !== undefined && value !== "" && value.toString().trim() !== "";
+}).length;
 
   const totalFields = requiredFields.length;
   const completion = Math.round((filledFields / totalFields) * 100);
