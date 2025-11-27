@@ -229,9 +229,14 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
       {/* 🎯 ENHANCED PROFILE CARD WITH ALTERNATIVE COUNTRIES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-      // User profile data logged
+          <EnhancedProfileCard 
+            userProfile={userProfile} 
+            userId={user.id} 
+            onProfileUpdate={() => window.location.reload()} 
+          />
+        </div>
         
-      // EnhancedProfileCard rendered
+        <div className="space-y-4">
           {/* ALTERNATIVE COUNTRIES SECTION */}
           {userProfile?.alternative_countries && userProfile.alternative_countries.length > 0 && (
             <Card className="border-blue-200 bg-blue-50">

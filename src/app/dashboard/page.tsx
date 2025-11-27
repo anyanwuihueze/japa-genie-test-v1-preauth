@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   while (attempts < maxAttempts) {
     const { data } = await supabase
       .from('user_profiles')
-      .select('country, destination_country')
+      .select('*')
       .eq('id', user.id)
       .single();
     
