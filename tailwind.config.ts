@@ -45,14 +45,14 @@ const config = {
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
         ticker: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" }
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" }
         }
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
-        ticker: "ticker 30s linear infinite"
+        ticker: "ticker 40s linear infinite"
       }
     }
   },

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createClient } from '../../../../lib/supabase/client';
+import { createAdminClient } from "../../../../lib/supabase/admin";
 
 export const runtime = 'edge';
 
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from('visa_pulse').insert(
     todayRows.map(r => ({ ...r, created_at: new Date().toISOString().slice(0,10) }))
   );
