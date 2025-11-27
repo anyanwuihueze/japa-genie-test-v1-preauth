@@ -1,8 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/visa-pulse", 
-      "schedule": "0 */6 * * *"
-    }
-  ]
+  "crons": []
 }
