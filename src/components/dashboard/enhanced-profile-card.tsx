@@ -70,11 +70,11 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   const requiredFields = [
     { key: 'country', label: 'Country', icon: MapPin },
-    { key: 'destination_country', label: 'Destination', icon: Target },
+    { key: 'destination', label: 'Destination', icon: Target },
     { key: 'age', label: 'Age', icon: Calendar },
-    { key: 'visa_type', label: 'Visa Type', icon: GraduationCap },
-    { key: 'user_type', label: 'Profile Type', icon: User },
-    { key: 'timeline_urgency', label: 'Timeline', icon: Clock },
+    { key: 'visaType', label: 'Visa Type', icon: GraduationCap },
+    { key: 'userType', label: 'Profile Type', icon: User },
+    { key: 'timelineUrgency', label: 'Timeline', icon: Clock },
   ];
 
   const filledFields = requiredFields.filter(field => 

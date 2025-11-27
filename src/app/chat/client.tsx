@@ -1,4 +1,3 @@
-// src/app/chat/client.tsx - COMPLETE WORKING CODE
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -153,20 +152,6 @@ export default function UserChat() {
         const parsed = JSON.parse(kycData);
         setKycSession(parsed);
         console.log("🎯 KYC data loaded from storage:", parsed);
-        
-        if (parsed.country && parsed.destination) {
-          const userContext = {
-            country: parsed.country,
-            destination: parsed.destination,
-            age: parsed.age,
-            visaType: parsed.visa_type,
-            profession: parsed.profession,
-            userType: parsed.user_type,
-            timelineUrgency: parsed.timeline_urgency,
-            budget: parsed.budget
-          };
-          console.log("🚀 KYC data fed to genie:", userContext);
-        }
       } catch (error) {
         console.error("❌ Failed to parse KYC data:", error);
       }
@@ -472,18 +457,22 @@ export default function UserChat() {
     setWishCount(prev => prev + 1);
 
     try {
-      // ✅ Get user context from available data
+      // ✅ FIXED: Get user context with CORRECT KEY MAPPING
       const userData = user ? userProfile : kycSession;
+      
+      // 🎯 KEY FIX: Map database field names to expected API field names
       const userContext = userData ? {
         country: userData.country,
-        destination: userData.destination_country,
+        destination: userData.destination_country || (userData as any).destination, // Handle both structures
         age: userData.age,
-        visaType: userData.visa_type,
+        visaType: userData.visa_type || (userData as any).visaType, // Handle both structures
         profession: userData.profession,
-        userType: userData.user_type,
-        timelineUrgency: userData.timeline_urgency,
+        userType: userData.user_type || (userData as any).userType, // Handle both structures
+        timelineUrgency: userData.timeline_urgency || (userData as any).timelineUrgency, // Handle both structures
         progress: userProgress
       } : {};
+
+      console.log('🚀 Sending user context to API:', userContext);
 
       // ✅ Call the chat API
       const response = await fetch('/api/chat', {
