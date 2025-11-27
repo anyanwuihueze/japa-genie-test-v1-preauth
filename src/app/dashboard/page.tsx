@@ -20,7 +20,7 @@ export default async function DashboardPage() {
       .eq('id', user.id)
       .single();
     
-    if (data?.country && data?.destination_country) {
+    if (data) {
       profile = data;
       break;
     }
@@ -31,7 +31,8 @@ export default async function DashboardPage() {
     }
   }
 
-  // Only redirect if genuinely incomplete after retries
+  console.log('🎯 DASHBOARD PAGE - Profile data:', profile);
 
-  return <DashboardClient user={user} />;
+  // 🚀 CRITICAL FIX: PASS PROFILE DATA TO CLIENT
+  return <DashboardClient user={user} userProfile={profile} />;
 }

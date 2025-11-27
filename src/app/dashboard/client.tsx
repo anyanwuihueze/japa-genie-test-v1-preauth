@@ -1,15 +1,10 @@
-// src/app/dashboard/client.tsx - COMPLETE FIXED VERSION WITH REAL-TIME PROFILE DATA
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/client';
 import { 
-  TrendingUp, Users, Target, Clock, MessageSquare, Loader2, 
-  CheckCircle2, Circle, Calendar, AlertCircle, Zap, Upload, MapPin 
+  MessageSquare, Circle, MapPin 
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
@@ -20,195 +15,10 @@ interface DashboardClientProps {
   userProfile?: any;
 }
 
-interface Milestone {
-  id: string;
-  label: string;
-  completed: boolean;
-  icon: any;
-}
-
-interface ProgressData {
-  overall_progress: number;
-  current_stage: string;
-  target_country: string;
-  visa_type: string;
-  target_travel_date: string;
-  application_deadline: string;
-  profile_completed: boolean;
-  documents_uploaded: boolean;
-  documents_verified: boolean;
-  financial_ready: boolean;
-  interview_prep_done: boolean;
-  application_submitted: boolean;
-  decision_received: boolean;
-  total_chat_messages: number;
-  last_chat_date: string;
-  alternative_countries?: string[];
-}
-
 export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalChats: 0,
-    totalInsights: 0,
-    progress: 0,
-    currentStage: 'Getting Started'
-  });
-  const [progressData, setProgressData] = useState<ProgressData | null>(null);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [timelineStats, setTimelineStats] = useState({
-    daysUntilDeadline: 0,
-    daysUntilTravel: 0,
-    isUrgent: false
-  });
-
-  const supabase = createClient();
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [userProfile]); // 🚀 RELOAD WHEN PROFILE CHANGES
-
-  async function loadDashboardData() {
-    try {
-      // ✅ USE PASSED PROFILE DATA (REAL-TIME)
-      if (userProfile) {
-        setProgressData({
-          ...userProfile,
-          target_country: userProfile.destination_country,
-          visa_type: userProfile.visa_type || 'Not Set',
-          overall_progress: 0,
-          current_stage: 'Active',
-          profile_completed: true,
-          documents_uploaded: false,
-          documents_verified: false,
-          financial_ready: false,
-          interview_prep_done: false,
-          application_submitted: false,
-          decision_received: false,
-          total_chat_messages: 0,
-          last_chat_date: ''
-        });
-
-        // Calculate timeline
-        const timeline = calculateTimeline(userProfile);
-        setTimelineStats(timeline);
-
-        // Build milestones
-        const milestonesData = buildMilestones(userProfile);
-        setMilestones(milestonesData);
-
-        // Set stats
-        setStats({
-          totalChats: 0,
-          totalInsights: 0,
-          progress: 75, // Basic completion for now
-          currentStage: determineStage(milestonesData)
-        });
-      }
-
-      // Get insights count
-      const { data: insights } = await supabase
-        .from('visa_insights')
-        .select('id')
-        .eq('user_id', user.id);
-
-      setStats(prev => ({
-        ...prev,
-        totalInsights: insights?.length || 0
-      }));
-
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function calculateTimeline(data: any) {
-    const now = new Date();
-    
-    let daysUntilDeadline = 0;
-    let daysUntilTravel = 0;
-    
-    if (data.timeline_urgency === 'asap') {
-      daysUntilDeadline = 30;
-    } else if (data.timeline_urgency === '3-6_months') {
-      daysUntilDeadline = 120;
-    } else if (data.timeline_urgency === '6-12_months') {
-      daysUntilDeadline = 270;
-    }
-    
-    return {
-      daysUntilDeadline,
-      daysUntilTravel,
-      isUrgent: daysUntilDeadline > 0 && daysUntilDeadline < 60
-    };
-  }
-
-  function buildMilestones(data: any): Milestone[] {
-    return [
-      {
-        id: 'profile',
-        label: 'Complete Profile',
-        completed: true, // Since we have profile data
-        icon: Users
-      },
-      {
-        id: 'documents',
-        label: 'Upload Documents',
-        completed: false,
-        icon: Upload
-      },
-      {
-        id: 'verified',
-        label: 'Documents Verified',
-        completed: false,
-        icon: CheckCircle2
-      },
-      {
-        id: 'financial',
-        label: 'Financial Proof Ready',
-        completed: false,
-        icon: Target
-      },
-      {
-        id: 'interview',
-        label: 'Interview Preparation',
-        completed: false,
-        icon: MessageSquare
-      },
-      {
-        id: 'submit',
-        label: 'Submit Application',
-        completed: false,
-        icon: Zap
-      },
-      {
-        id: 'decision',
-        label: 'Decision Received',
-        completed: false,
-        icon: CheckCircle2
-      }
-    ];
-  }
-
-  function determineStage(milestones: Milestone[]): string {
-    const completed = milestones.filter(m => m.completed).length;
-    if (completed === 0) return 'Getting Started';
-    if (completed <= 2) return 'Building Profile';
-    if (completed <= 4) return 'Preparing Documents';
-    if (completed <= 5) return 'Ready to Apply';
-    if (completed === 6) return 'Application Submitted';
-    return 'Completed';
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
+  console.log("🚀 DASHBOARD CLIENT - User:", user?.id);
+  console.log("🚀 DASHBOARD CLIENT - UserProfile received:", userProfile);
+  console.log("🚀 DASHBOARD CLIENT - Profile exists:", !!userProfile);
 
   return (
     <div className="container mx-auto p-6 space-y-8">
@@ -226,7 +36,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
 
       <VisaPulseTicker />
 
-      {/* 🎯 ENHANCED PROFILE CARD WITH ALTERNATIVE COUNTRIES */}
+      {/* 🎯 ENHANCED PROFILE CARD - NOW RECEIVES ACTUAL DATA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <EnhancedProfileCard 
@@ -265,7 +75,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           <Card>
             <CardContent className="pt-6 text-center">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-              <div className="text-2xl font-bold">{stats.totalInsights}</div>
+              <div className="text-2xl font-bold">0</div>
               <div className="text-sm text-muted-foreground">Insights Generated</div>
             </CardContent>
           </Card>
@@ -344,7 +154,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                   <span className="font-medium text-gray-700">{label}</span>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  Pending
+                  {index === 0 && userProfile ? 'Completed' : 'Pending'}
                 </Badge>
               </div>
             ))}
