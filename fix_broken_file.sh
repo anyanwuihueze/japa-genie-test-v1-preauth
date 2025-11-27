@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Create the properly ordered EnhancedProfileCard
+cat > src/components/dashboard/enhanced-profile-card.tsx << 'FIX_EOF'
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -67,9 +71,9 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   if (!mounted) return null;
 
-  console.log("PROFILE CARD - Mounted with profile:", userProfile);
-  console.log("PROFILE CARD - User ID:", userId);
-  console.log("PROFILE CARD - Profile exists:", !!userProfile);
+  console.log("🔍 PROFILE CARD - Mounted with profile:", userProfile);
+  console.log("🔍 PROFILE CARD - User ID:", userId);
+  console.log("🔍 PROFILE CARD - Profile exists:", !!userProfile);
 
   const requiredFields = [
     { key: 'country', label: 'Country', icon: MapPin },
@@ -82,10 +86,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   // Debug each field
   if (userProfile) {
-    console.log("PROFILE CARD - Profile keys:", Object.keys(userProfile));
+    console.log("🔍 PROFILE CARD - Profile keys:", Object.keys(userProfile));
     requiredFields.forEach(field => {
       const value = userProfile[field.key];
-      console.log("FIELD: " + field.key + " = ", value, "Type:", typeof value, "Filled:", value && value.toString().trim() !== "");
+      console.log(\`🔍 FIELD: \${field.key} = \`, value, "Type:", typeof value, "Filled:", value && value.toString().trim() !== "");
     });
   }
 
@@ -96,7 +100,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   const totalFields = requiredFields.length;
   const completion = Math.round((filledFields / totalFields) * 100);
-  console.log("COMPLETION DEBUG - Filled:", filledFields, "Total:", totalFields, "Completion:", completion, "%");
+  console.log("🎯 COMPLETION DEBUG - Filled:", filledFields, "Total:", totalFields, "Completion:", completion, "%");
   
   const missingFields = requiredFields.filter(field => 
     !userProfile?.[field.key] || userProfile[field.key].toString().trim() === ''
@@ -159,10 +163,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   const getTimelineDisplay = (timeline: string) => {
     const timelines: Record<string, string> = {
-      asap: 'ASAP (0-3 months)',
-      '3-6_months': '3-6 months',
-      '6-12_months': '6-12 months',
-      exploring: 'Exploring options',
+      asap: '🚀 ASAP (0-3 months)',
+      '3-6_months': '📅 3-6 months',
+      '6-12_months': '🗓️ 6-12 months',
+      exploring: '🔍 Exploring options',
     };
     return timelines[timeline] || timeline;
   };
@@ -191,7 +195,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
           <Calendar className="w-4 h-4 text-purple-600" />
           <div>
             <div className="text-xs text-muted-foreground">Age</div>
-            <div className="font-medium">{userProfile?.age ? userProfile.age + ' years' : 'N/A'}</div>
+            <div className="font-medium">{userProfile?.age ? \`\${userProfile.age} years\` : 'N/A'}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
@@ -271,10 +275,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
                 required
               >
                 <option value="">Select country</option>
-                <option value="Nigeria">Nigeria</option>
-                <option value="Ghana">Ghana</option>
-                <option value="Kenya">Kenya</option>
-                <option value="South Africa">South Africa</option>
+                <option value="Nigeria">🇳🇬 Nigeria</option>
+                <option value="Ghana">🇬🇭 Ghana</option>
+                <option value="Kenya">🇰🇪 Kenya</option>
+                <option value="South Africa">🇿🇦 South Africa</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -288,11 +292,11 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
                 required
               >
                 <option value="">Select destination</option>
-                <option value="Canada">Canada</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-                <option value="Germany">Germany</option>
-                <option value="Australia">Australia</option>
+                <option value="Canada">🇨🇦 Canada</option>
+                <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                <option value="United States">🇺🇸 United States</option>
+                <option value="Germany">🇩🇪 Germany</option>
+                <option value="Australia">🇦🇺 Australia</option>
               </select>
             </div>
 
@@ -318,11 +322,11 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
                 required
               >
                 <option value="">Select visa type</option>
-                <option value="Study">Study</option>
-                <option value="Work">Work</option>
-                <option value="Visit">Visit/Tourist</option>
-                <option value="Business">Business</option>
-                <option value="Family">Family Reunion</option>
+                <option value="Study">🎓 Study</option>
+                <option value="Work">💼 Work</option>
+                <option value="Visit">✈️ Visit/Tourist</option>
+                <option value="Business">🏢 Business</option>
+                <option value="Family">👨‍👩‍👧 Family Reunion</option>
               </select>
             </div>
 
@@ -346,10 +350,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
                 required
               >
                 <option value="">Select type</option>
-                <option value="student">Student</option>
-                <option value="professional">Professional</option>
-                <option value="business_owner">Business Owner</option>
-                <option value="tourist">Tourist</option>
+                <option value="student">🎓 Student</option>
+                <option value="professional">💼 Professional</option>
+                <option value="business_owner">🏢 Business Owner</option>
+                <option value="tourist">✈️ Tourist</option>
               </select>
             </div>
 
@@ -362,10 +366,10 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
                 required
               >
                 <option value="">Select timeline</option>
-                <option value="asap">ASAP (0-3 months)</option>
-                <option value="3-6_months">3-6 months</option>
-                <option value="6-12_months">6-12 months</option>
-                <option value="exploring">Just exploring</option>
+                <option value="asap">🚀 ASAP (0-3 months)</option>
+                <option value="3-6_months">📅 3-6 months</option>
+                <option value="6-12_months">🗓️ 6-12 months</option>
+                <option value="exploring">🔍 Just exploring</option>
               </select>
             </div>
 
@@ -418,7 +422,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
               Complete Your Profile
             </CardTitle>
             <CardDescription className="text-lg">
-              {filledFields === 0 ? 'Get started with your visa journey' : filledFields + '/' + totalFields + ' fields completed'}
+              {filledFields === 0 ? 'Get started with your visa journey' : \`\${filledFields}/\${totalFields} fields completed\`}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -508,7 +512,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
               </CardTitle>
               <CardDescription className="flex items-center gap-2 mt-1">
                 <Badge className="bg-green-100 text-green-800 border-green-300">
-                  All fields complete
+                  ✅ All fields complete
                 </Badge>
               </CardDescription>
             </div>
@@ -533,3 +537,6 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
     </>
   );
 }
+FIX_EOF
+
+echo "✅ FIXED: TypeScript errors resolved - proper variable declaration order"
