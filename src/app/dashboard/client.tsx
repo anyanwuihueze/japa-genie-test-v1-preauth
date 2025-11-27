@@ -229,7 +229,7 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
       {/* 🎯 ENHANCED PROFILE CARD WITH ALTERNATIVE COUNTRIES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <EnhancedProfileCard userProfile={userProfile} />
+          <EnhancedProfileCard userProfile={userProfile} userId={user.id} onProfileUpdate={() => window.location.reload()} />
         </div>
         
         <div className="space-y-4">

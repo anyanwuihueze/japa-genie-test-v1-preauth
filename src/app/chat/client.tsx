@@ -1,4 +1,4 @@
-// src/app/chat/client.tsx - COMPLETE FIXED VERSION
+// src/app/chat/client.tsx - COMPLETE WORKING CODE
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -475,23 +475,24 @@ export default function UserChat() {
       // ========================================================================
       console.log('🔄 Sending message to chat API...');
       
-    const chatResponse = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        question: newMessage,
-        userId: user?.id,
-      }),
-    });
+      const chatResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: newMessage,
+          userId: user?.id,
+          userContext: kycSession,
+        }),
+      });
 
-    if (!chatResponse.ok) {
-      throw new Error(`Chat API error: ${chatResponse.status}`);
-    }
+      if (!chatResponse.ok) {
+        throw new Error(`Chat API error: ${chatResponse.status}`);
+      }
 
-    const chatResult = await chatResponse.json();
-    const aiText = chatResult.answer;
-    const aiMsg: Message = { role: 'assistant', content: aiText, timestamp: Date.now() };
-    setMessages((prev) => [...prev, aiMsg]);
+      const chatResult = await chatResponse.json();
+      const aiText = chatResult.answer;
+      const aiMsg: Message = { role: 'assistant', content: aiText, timestamp: Date.now() };
+      setMessages((prev) => [...prev, aiMsg]);
 
       // ========================================================================
       // 2. CHECK IF WE SHOULD GENERATE INSIGHTS
