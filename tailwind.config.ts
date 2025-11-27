@@ -51,7 +51,7 @@ const config = {
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
-        ticker: "ticker 9s linear infinite" // 2x faster (was 40s, now 20s)
+        ticker: "ticker 20s linear infinite" // 2x faster (was 40s, now 20s)
       }
     }
   },
