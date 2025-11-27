@@ -45,16 +45,31 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
     { key: 'timeline_urgency', label: 'Timeline', icon: Clock },
   ];
 
+  // FIXED: More lenient field checking
+  const isFieldFilled = (value: any) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (typeof value === 'number') return true; // Numbers (including 0) count as filled
+    if (Array.isArray(value)) return value.length > 0;
+    return true; // Other truthy values count as filled
+  };
+
   const filledFields = requiredFields.filter(field => 
-    userProfile?.[field.key] && userProfile[field.key].toString().trim() !== ''
+    isFieldFilled(userProfile?.[field.key])
   ).length;
 
   const totalFields = requiredFields.length;
   const completion = Math.round((filledFields / totalFields) * 100);
   
-  console.log("📊 COMPLETION - Filled:", filledFields, "Total:", totalFields, "Completion:", completion + "%");
+  console.log("📊 COMPLETION BREAKDOWN:");
+  requiredFields.forEach(field => {
+    const value = userProfile?.[field.key];
+    const filled = isFieldFilled(value);
+    console.log(`  ${field.label}: ${filled ? '✅' : '❌'} (value: ${JSON.stringify(value)})`);
+  });
+  console.log(`📊 TOTAL: ${filledFields}/${totalFields} = ${completion}%`);
 
-  // Incomplete profile state
+  // Incomplete profile state (< 50%)
   if (completion < 50) {
     return (
       <Card className="border-2 border-dashed border-orange-300 bg-gradient-to-br from-orange-50 to-red-50">
@@ -86,7 +101,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
     );
   }
 
-  // Partially complete state
+  // Partially complete state (50-99%)
   if (completion < 100) {
     return (
       <Card className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 border-blue-200">
@@ -113,14 +128,14 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
               <MapPin className="w-4 h-4 text-blue-600" />
               <div>
                 <div className="text-xs text-muted-foreground">From</div>
-                <div className="font-medium">{userProfile?.country || 'N/A'}</div>
+                <div className="font-medium">{userProfile?.country || 'Not set'}</div>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
               <Target className="w-4 h-4 text-green-600" />
               <div>
                 <div className="text-xs text-muted-foreground">Destination</div>
-                <div className="font-medium">{userProfile?.destination_country || 'N/A'}</div>
+                <div className="font-medium">{userProfile?.destination_country || 'Not set'}</div>
               </div>
             </div>
           </div>
@@ -130,14 +145,14 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
               <Calendar className="w-4 h-4 text-purple-600" />
               <div>
                 <div className="text-xs text-muted-foreground">Age</div>
-                <div className="font-medium">{userProfile?.age ? `${userProfile.age} years` : 'N/A'}</div>
+                <div className="font-medium">{userProfile?.age ? `${userProfile.age} years` : 'Not set'}</div>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
               <GraduationCap className="w-4 h-4 text-purple-600" />
               <div>
                 <div className="text-xs text-muted-foreground">Visa Type</div>
-                <div className="font-medium">{userProfile?.visa_type || 'N/A'}</div>
+                <div className="font-medium">{userProfile?.visa_type || 'Not set'}</div>
               </div>
             </div>
           </div>
@@ -146,7 +161,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
             <Button asChild className="flex-1" variant="outline">
               <Link href="/kyc-profile">Complete Missing Fields</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="icon">
               <Link href="/kyc-profile">
                 <Edit className="w-4 h-4" />
               </Link>
@@ -157,7 +172,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
     );
   }
 
-  // Complete profile state
+  // Complete profile state (100%)
   return (
     <Card className="bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 border-green-200">
       <CardHeader className="pb-3">
@@ -208,10 +223,27 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
             </div>
           </div>
           <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <Briefcase className="w-4 h-4 text-purple-600" />
+            <GraduationCap className="w-4 h-4 text-purple-600" />
             <div>
-              <div className="text-xs text-muted-foreground">Profession</div>
-              <div className="font-medium">{userProfile?.profession || 'N/A'}</div>
+              <div className="text-xs text-muted-foreground">Visa Type</div>
+              <div className="font-medium">{userProfile?.visa_type || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+            <User className="w-4 h-4 text-blue-600" />
+            <div>
+              <div className="text-xs text-muted-foreground">Profile Type</div>
+              <div className="font-medium">{userProfile?.user_type || 'N/A'}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
+            <Clock className="w-4 h-4 text-orange-600" />
+            <div>
+              <div className="text-xs text-muted-foreground">Timeline</div>
+              <div className="font-medium">{userProfile?.timeline_urgency || 'N/A'}</div>
             </div>
           </div>
         </div>

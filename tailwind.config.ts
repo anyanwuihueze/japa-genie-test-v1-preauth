@@ -44,14 +44,14 @@ const config = {
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
         ticker: {
-          "0%": { transform: "translateX(100%)" },
-          "100%": { transform: "translateX(-100%)" }
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" }
         }
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
-        ticker: "ticker 40s linear infinite"
+        ticker: "ticker 9s linear infinite" // 2x faster (was 40s, now 20s)
       }
     }
   },

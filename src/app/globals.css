@@ -233,3 +233,17 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+.hover\:pause-animation:hover {
+  animation-play-state: paused !important;
+}
+
+/* Smooth hover transition */
+.hover\:pause-animation {
+  transition: all 0.3s ease;
+}
+
+/* Optional: Add subtle scale on hover for premium feel */
+.hover\:pause-animation:hover {
+  transform: scale(1.02);
+}
