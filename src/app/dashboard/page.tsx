@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   }
 
   // Only redirect if genuinely incomplete after retries
-  if (!profile?.country || !profile?.destination_country) {
+  if (!profile?.country) {
     redirect('/kyc-profile');
   }
 

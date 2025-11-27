@@ -68,13 +68,16 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   if (!mounted) return null;
 
+  console.log("🚨 URGENT DEBUG - userProfile OBJECT:", JSON.stringify(userProfile, null, 2));
+  console.log("🚨 URGENT DEBUG - userProfile KEYS:", userProfile ? Object.keys(userProfile) : "NO USERPROFILE");
+
   const requiredFields = [
     { key: 'country', label: 'Country', icon: MapPin },
-    { key: 'destination', label: 'Destination', icon: Target },
+    { key: 'destination_country', label: 'Destination', icon: Target },
     { key: 'age', label: 'Age', icon: Calendar },
-    { key: 'visaType', label: 'Visa Type', icon: GraduationCap },
-    { key: 'userType', label: 'Profile Type', icon: User },
-    { key: 'timelineUrgency', label: 'Timeline', icon: Clock },
+    { key: 'visa_type', label: 'Visa Type', icon: GraduationCap },
+    { key: 'user_type', label: 'Profile Type', icon: User },
+    { key: 'timeline_urgency', label: 'Timeline', icon: Clock },
   ];
 
   const filledFields = requiredFields.filter(field => 
@@ -83,6 +86,7 @@ export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: En
 
   const totalFields = requiredFields.length;
   const completion = Math.round((filledFields / totalFields) * 100);
+  console.log("🎯 COMPLETION DEBUG - Filled:", filledFields, "Total:", totalFields, "Completion:", completion, "%");
   const missingFields = requiredFields.filter(field => 
     !userProfile?.[field.key] || userProfile[field.key].toString().trim() === ''
   );
