@@ -13,7 +13,6 @@ const config = {
         foreground: "hsl(var(--foreground))",
         primary: "hsl(var(--primary))",
         "primary-foreground": "hsl(var(--primary-foreground))",
-        // Add the missing colors from your CSS
         card: "hsl(var(--card))",
         "card-foreground": "hsl(var(--card-foreground))",
         popover: "hsl(var(--popover))",
@@ -45,8 +44,8 @@ const config = {
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
         ticker: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" }
         }
       },
       animation: {
