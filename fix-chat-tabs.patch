@@ -1,0 +1,12 @@
+--- a/src/app/chat/client.tsx
++++ b/src/app/chat/client.tsx
+@@ -572,10 +572,10 @@
+ 
+       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+         {/* Chat Panel */}
+-        <div className={`${activeTab === 'chat' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 flex-col border-r border-gray-200 bg-white`}>
++        <div className={`${activeTab === 'chat' ? 'flex' : 'hidden'} md:flex flex-col border-r border-gray-200 bg-white chat-tab-panel`}>
+ 
+         {/* Insights Panel */}
+-        <div className={`${activeTab === 'insights' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-4 md:p-6 overflow-y-auto flex-col`}>
++        <div className={`${activeTab === 'insights' ? 'flex' : 'hidden'} md:flex bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-4 md:p-6 overflow-y-auto flex-col chat-tab-panel`}>

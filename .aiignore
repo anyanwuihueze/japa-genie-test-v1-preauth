@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.git/
+.dart_tool/
+build/
+dist/
+package-lock.json
+tsconfig.tsbuildinfo
+*.mp4
+*.wasm
+*.zip
+*.dill
+*.js.symbols
+japa_mobile/build/
+japa_mobile/.dart_tool/
+japa_mobile/flutter-app.zip
+public/videos/

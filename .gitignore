@@ -48,3 +48,12 @@ firestore-debug.log
 .env.local
 .env
 .env.local
+
+# Local Netlify folder
+.netlify
+
+# Large build artifacts
+tsconfig.tsbuildinfo
+japa_mobile/build/
+japa_mobile/.dart_tool/
+japa_mobile/flutter-app.zip
