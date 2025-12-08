@@ -338,3 +338,31 @@ button, a {
   min-width: 44px;
   touch-action: manipulation;
 }
+
+/* === MOBILE DROPDOWN FIX === */
+/* Override touch-action for dropdowns */
+[role="listbox"], [role="menu"], [role="dialog"] {
+  touch-action: auto !important; /* Allow scrolling */
+}
+
+/* Make select elements mobile-friendly */
+select, .select-trigger, [data-state="open"] {
+  min-height: 44px !important;
+  font-size: 16px !important; /* Prevents iOS zoom */
+  -webkit-appearance: menulist !important; /* Native mobile dropdown */
+}
+
+/* Ensure dropdowns are above everything */
+[data-radix-select-content], 
+[data-radix-dropdown-menu-content],
+[role="listbox"] {
+  z-index: 9999 !important;
+  position: relative;
+}
+
+/* Fix for Select component */
+[data-radix-select-viewport] {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
