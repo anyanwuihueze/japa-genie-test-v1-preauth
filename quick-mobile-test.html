@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Mobile Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; padding: 20px; }
+        .test { width: 100%; background: #f0f0f0; padding: 20px; margin: 10px 0; border: 2px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>Quick Mobile Zoom Test</h1>
+    <div class="test">
+        <p>Try to pinch zoom on mobile.</p>
+        <p>If you CAN zoom → Viewport is WRONG</p>
+        <p>If you CANNOT zoom → Viewport is FIXED ✅</p>
+    </div>
+    <script>
+        console.log('Viewport:', document.querySelector('meta[name="viewport"]').content);
+        console.log('Window width:', window.innerWidth, 'Screen width:', screen.width);
+        alert('Viewport: ' + document.querySelector('meta[name="viewport"]').content + 
+              '\nTry pinch zoom - should NOT work if fixed.');
+    </script>
+</body>
+</html>

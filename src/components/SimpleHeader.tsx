@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { JapaGenieLogo } from '@/components/icons';
 
 export default function SimpleHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,8 +12,9 @@ export default function SimpleHeader() {
     <header className="sticky top-0 z-50 bg-white border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="font-bold text-xl">
-          Japa Genie
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+          <JapaGenieLogo className="h-8 w-8" />
+          <span>Japa Genie</span>
         </Link>
 
         {/* Hamburger Menu */}

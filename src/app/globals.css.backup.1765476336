@@ -247,7 +247,6 @@ select:focus-visible {
 .hover\:pause-animation:hover {
   transform: scale(1.02);
 }
-
 /* ===== PWA NATIVE FEEL ===== */
 html {
   font-size: 16px;
@@ -302,7 +301,7 @@ html {
 }
 
 body {
-  
+  zoom: 1;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -338,7 +337,6 @@ button, a {
   min-height: 44px;
   min-width: 44px;
   touch-action: manipulation;
-}
 
 /* ============================================= */
 /* TARGETED MOBILE FIXES - DEC 2024 */

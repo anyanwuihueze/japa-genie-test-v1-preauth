@@ -247,7 +247,6 @@ select:focus-visible {
 .hover\:pause-animation:hover {
   transform: scale(1.02);
 }
-
 /* ===== PWA NATIVE FEEL ===== */
 html {
   font-size: 16px;
@@ -302,7 +301,7 @@ html {
 }
 
 body {
-  
+  zoom: 1;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -340,16 +339,45 @@ button, a {
   touch-action: manipulation;
 }
 
+/* === MOBILE DROPDOWN FIX === */
+/* Override touch-action for dropdowns */
+[role="listbox"], [role="menu"], [role="dialog"] {
+  touch-action: auto !important; /* Allow scrolling */
+}
+
+/* Make select elements mobile-friendly */
+select, .select-trigger, [data-state="open"] {
+  min-height: 44px !important;
+  font-size: 16px !important; /* Prevents iOS zoom */
+  -webkit-appearance: menulist !important; /* Native mobile dropdown */
+}
+
+/* Ensure dropdowns are above everything */
+[data-radix-select-content], 
+[data-radix-dropdown-menu-content],
+[role="listbox"] {
+  z-index: 9999 !important;
+  position: relative;
+}
+
+/* Fix for Select component */
+[data-radix-select-viewport] {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
+
 /* ============================================= */
 /* TARGETED MOBILE FIXES - DEC 2024 */
 /* ============================================= */
 
-/* 1. Fix mobile viewport scaling */
+/* 1. Fix mobile viewport scaling - OVERRIDE ANYTHING ELSE */
 @media (max-width: 768px) {
   html {
     font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+    zoom: 1 !important;
   }
   
   body {
@@ -357,16 +385,17 @@ button, a {
     max-width: 100vw !important;
     overflow-x: hidden !important;
     position: relative !important;
-    touch-action: pan-y !important;
+    touch-action: pan-y !important; /* Allow vertical scroll, block horizontal */
   }
   
-  /* Prevent horizontal overflow */
+  /* Prevent any element from causing horizontal scroll */
   * {
     max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
 }
 
-/* 2. Fix iOS input zoom (CORRECTED - no duplicate appearance) */
+/* 2. Fix iOS input zoom WITHOUT breaking layout */
 @media (hover: none) and (pointer: coarse) {
   input[type="text"],
   input[type="email"],
@@ -375,11 +404,13 @@ button, a {
   input[type="tel"],
   textarea,
   select {
-    font-size: 16px !important;
+    font-size: 16px !important; /* Prevents iOS zoom */
+    -webkit-appearance: none !important;
+    appearance: none !important;
   }
 }
 
-/* 3. Ensure proper tap targets */
+/* 3. Ensure proper tap targets (Apple HIG standards) */
 button, 
 a[role="button"],
 [role="button"] {
@@ -387,23 +418,9 @@ a[role="button"],
   min-width: 44px !important;
 }
 
-/* 4. Fix Safari 100vh issue */
+/* 4. Fix for Safari 100vh issue */
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: -webkit-fill-available !important;
-    min-height: 100dvh !important;
-  }
-}
-
-/* 5. Prevent elastic scrolling on iOS */
-html {
-  overscroll-behavior-y: none;
-}
-
-/* 6. Fix for mobile dropdowns */
-@media (max-width: 768px) {
-  select {
-    font-size: 16px !important;
-    padding: 12px !important;
   }
 }
