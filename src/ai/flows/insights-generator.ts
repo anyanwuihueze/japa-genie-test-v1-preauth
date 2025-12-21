@@ -33,7 +33,7 @@ interface InsightOutput {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function generateInsights(input: InsightInput): Promise<InsightOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `You are an expert immigration analyst. Generate 3-5 insights with cost estimates, alternatives, and chart data for: "${input.question}". Return ONLY JSON.`;
 

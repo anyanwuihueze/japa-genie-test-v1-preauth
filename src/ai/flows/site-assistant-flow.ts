@@ -11,7 +11,7 @@ interface SiteAssistantOutput {
 }
 
 export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssistantOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `You are an enthusiastic sales assistant for Japa Genie, an AI-powered visa guidance platform. Be warm, energetic, and guide users toward signing up.
 

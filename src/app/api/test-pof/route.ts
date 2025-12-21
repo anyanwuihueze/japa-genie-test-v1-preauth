@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log('🧪 Testing POF analysis with API key:', process.env.GEMINI_API_KEY?.substring(0, 10) + '...');
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp" 
+      model: "gemini-2.5-flash" 
     });
 
     const prompt = `

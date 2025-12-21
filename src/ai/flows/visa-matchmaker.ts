@@ -46,7 +46,7 @@ interface VisaMatchmakerOutput {
 }
 
 export async function visaMatchmaker(input: VisaMatchmakerInput): Promise<VisaMatchmakerOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   
   const prompt = `
 ACT AS: Expert immigration consultant specializing in African professionals with 15+ years experience

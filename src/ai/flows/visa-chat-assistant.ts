@@ -1,5 +1,4 @@
 import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
-// src/ai/flows/visa-chat-assistant.ts
 'use server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -101,7 +100,7 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
   const { wishCount, isSignedIn } = input;
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash', 
     systemInstruction: SYSTEM_PROMPT,
     generationConfig: {
       responseMimeType: 'application/json',
