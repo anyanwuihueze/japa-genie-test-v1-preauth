@@ -3,7 +3,6 @@ import { generateInsights } from '@/ai/insights-generator';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
-  // YOUR EXISTING WORKING CODE THAT WAS GENERATING CHARTS AND GRAPHS
   let userQuestion: string | undefined;
   let userId: string | undefined;
   
@@ -13,7 +12,6 @@ export async function POST(request: NextRequest) {
     userQuestion = question;
     userId = requestUserId;
 
-    // Validate input
     if (!userQuestion || userQuestion.trim().length === 0) {
       return NextResponse.json(
         { error: 'Question is required and cannot be empty' }, 
@@ -23,7 +21,6 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Generating premium insights for question:', userQuestion.substring(0, 100));
 
-    // YOUR EXISTING KYC PROFILE LOGIC
     let userProfile = undefined;
     
     if (userId) {
@@ -53,7 +50,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // YOUR EXISTING RETRY LOGIC
     let insights;
     let attempts = 0;
     const maxAttempts = 3;
@@ -64,9 +60,9 @@ export async function POST(request: NextRequest) {
         attempts++;
         console.log(`🔄 Attempt ${attempts}/${maxAttempts} to generate insights...`);
         
+        // CALL WITH JUST question - NO userProfile parameter
         insights = await generateInsights({ 
-          question: userQuestion,
-          userProfile: userProfile,
+          question: userQuestion
         });
 
         if (insights && insights.insights && insights.insights.length > 0) {
@@ -92,7 +88,6 @@ export async function POST(request: NextRequest) {
       throw lastError || new Error('Failed to generate insights after all retries');
     }
 
-    // YOUR EXISTING DATABASE SAVE LOGIC
     if (userId) {
       try {
         const supabase = await createClient();
@@ -114,7 +109,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // RETURN YOUR WORKING INSIGHTS WITH CHARTS AND GRAPHS
     return NextResponse.json(insights, { 
       status: 200,
       headers: {

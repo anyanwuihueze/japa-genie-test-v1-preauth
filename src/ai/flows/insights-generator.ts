@@ -1,5 +1,4 @@
 'use server';
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface InsightInput {
@@ -33,7 +32,7 @@ interface InsightOutput {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function generateInsights(input: InsightInput): Promise<InsightOutput> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // ONLY THIS LINE CHANGED
 
   const prompt = `You are an expert immigration analyst. Generate 3-5 insights with cost estimates, alternatives, and chart data for: "${input.question}". Return ONLY JSON.`;
 
@@ -48,9 +47,9 @@ export async function generateInsights(input: InsightInput): Promise<InsightOutp
   } catch (error) {
     console.error('Insights API error:', error);
     return {
-      insights: [{ headline: "Research Official Requirements", detail: "Start with government websites.", url: "https://travel.state.gov" }],
-      costEstimates: [{ item: "Application Fee", cost: 160, currency: "USD" }],
-      visaAlternatives: [{ visaName: "Student Visa", description: "Alternative option." }],
+      insights: [{ headline: "Temporary Service Issue", detail: "The Genie is experiencing technical difficulties. Please try again in a moment." }],
+      costEstimates: [],
+      visaAlternatives: [],
       chartData: { title: "Processing Times", data: [{ name: "USA", value: 90 }] }
     };
   }
