@@ -37,7 +37,7 @@ input, textarea, [contenteditable] {
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* Light desaturated blue */
+    --background: 0 0% 100%; /* CHANGED: 98% → 100% (pure white) */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -405,5 +405,63 @@ html {
   select {
     font-size: 16px !important;
     padding: 12px !important;
+  }
+}
+/* ============================================= */
+/* MOBILE TICKER FIXES - DEC 2024 */
+/* ============================================= */
+
+/* 1. Fix mobile ticker animation speed and overflow */
+@media (max-width: 768px) {
+  /* Slower animation on mobile for better readability */
+  .animate-ticker {
+    animation-duration: 60s !important; /* Was ~30s on desktop */
+  }
+  
+  /* Prevent horizontal overflow */
+  .visa-pulse-ticker-container,
+  .animate-ticker {
+    overflow-x: hidden !important;
+  }
+  
+  /* Adjust ticker item spacing for mobile */
+  .animate-ticker > div {
+    padding-left: 1rem !important;  /* Reduce from px-8 (2rem) */
+    padding-right: 1rem !important;
+  }
+  
+  /* Smaller font size for mobile */
+  .animate-ticker span.text-sm {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.25rem !important;
+  }
+  
+  /* Adjust spacing between items */
+  .animate-ticker .mx-6 {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+  }
+}
+
+/* 2. Ensure ticker container doesn't cause horizontal scroll */
+@media (max-width: 768px) {
+  .overflow-hidden {
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any horizontal scroll caused by ticker */
+  body {
+    overflow-x: hidden !important;
+  }
+}
+
+/* 3. Touch-friendly hover states (for mobile tap) */
+@media (hover: none) and (pointer: coarse) {
+  .group-hover\\:scale-110:hover {
+    transform: scale(1.05) !important; /* Smaller scale for mobile */
+  }
+  
+  .hover\\:pause-animation:hover {
+    animation-play-state: running !important; /* Keep animating on mobile */
   }
 }

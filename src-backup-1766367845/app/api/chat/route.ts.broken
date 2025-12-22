@@ -1,0 +1,300 @@
+// src/app/api/chat/route.ts - FIXED VERSION
+import { NextRequest, NextResponse } from 'next/server';
+import { visaChatAssistant } from '@/ai/flows/visa-chat-assistant';
+import { createClient } from '@/lib/supabase/server';
+import { extractVisaIntent, configureUserFromIntent } from '@/lib/visa-intent';
+import { detectMilestoneFromMessage, getTimelineGuidance } from '@/lib/progress-updater';
+
+export const runtime = 'edge';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { question, wishCount = 1, conversationHistory = [] } = body;
+
+    if (!question || typeof question !== 'string') {
+      return NextResponse.json(
+        { error: 'Question is required and must be a string' },
+        { status: 400 }
+      );
+    }
+
+    let userContext: any = {};
+    let userProgress: any = null;
+    let isSignedIn = false;
+    let currentUser: any = null;
+
+    try {
+      const supabase = await createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (user && !authError) {
+        isSignedIn = true;
+        currentUser = user;
+        
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          userContext = {
+            name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
+            country: profile.country,
+            destination: profile.destination_country,
+            profession: profile.profession,
+            visaType: profile.visa_type,
+            age: profile.age,
+            dateOfBirth: profile.date_of_birth,
+            userType: profile.user_type,
+            timelineUrgency: profile.timeline_urgency
+          };
+        }
+
+        // PHASE 1: Get user progress data for Genie context
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        let userProgress = progress;
+        if (!progress) {
+          const { data: newProgress } = await supabase
+            .from('user_progress')
+            .insert({
+              user_id: user.id,
+              profile_completed: !!profile,
+              overall_progress: profile ? 14 : 0,
+              current_stage: 'Getting Started',
+              next_recommended_action: 'Upload required documents'
+            })
+            .select()
+            .single();
+          
+          userProgress = newProgress;
+          console.log('✅ Created initial progress record for:', user.id);
+        } else {
+          userProgress = progress;
+        }
+
+        // PHASE 2: Detect and update milestones from user message
+        // ✅ FIXED: Only process if progress exists and wrapped in try-catch
+        if (progress) {
+          try {
+            const milestoneUpdate = await detectMilestoneFromMessage(question, user.id);
+          if (milestoneUpdate) {
+            
+            const milestoneNames: Record<string, string> = {
+              'documents_uploaded': '📄 Documents Uploaded',
+              'financial_ready': '💰 Financial Proof Ready',
+              'interview_prep_done': '🎤 Interview Prepared',
+              'application_submitted': '🎉 Application Submitted'
+            };
+            
+            const milestoneName = milestoneNames[milestoneUpdate.field] || '✅ Milestone Completed';
+            enhancedAnswer = enhancedAnswer || result.answer;
+            enhancedAnswer = `**${milestoneName}!**\n\n${enhancedAnswer}`;
+          }
+            if (milestoneUpdate) {
+            }
+
+            // Update chat session count
+            await supabase
+              .from('user_progress')
+              .update({
+                total_chat_messages: (progress?.total_chat_messages || 0) + 1,
+                last_chat_date: new Date().toISOString()
+              })
+              .eq('user_id', user.id);
+          } catch (milestoneError) {
+            console.error('⚠️ Milestone detection failed (non-critical):', milestoneError);
+            // ✅ Don't fail entire request if milestone detection fails
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Auth/profile fetch error:', error);
+    }
+
+    // VISA INTENT DETECTION - Smart triggering
+    let visaIntentDetected = null;
+    let enhancedAnswer = null;
+    let configuredVisa = null;
+    let isJourneyChange = false;
+
+    const needsVisaSetup = !userContext?.destination || !userContext?.visaType;
+    const isExplicitChange = /\b(instead|change to|switch to|now i want|actually)\b/i.test(question);
+    const isFirstFewMessages = conversationHistory.length < 2;
+    
+    const shouldExtractIntent = (conversationHistory.length === 0) || 
+                               isExplicitChange ||
+                               (needsVisaSetup && isFirstFewMessages);
+
+    console.log('🔍 Intent detection decision:', {
+      shouldExtract: shouldExtractIntent,
+      conversationLength: conversationHistory.length,
+      needsVisaSetup,
+      isExplicitChange,
+      hasContext: !!userContext?.destination
+    });
+
+    if (shouldExtractIntent) {
+      try {
+        const chatContext = [...conversationHistory, { role: 'user', content: question }];
+        const visaIntent = await extractVisaIntent(chatContext);
+        
+        if (visaIntent && 
+            visaIntent.destination_country && 
+            visaIntent.visa_type &&
+            visaIntent.confidence > 0.5) {
+          
+          visaIntentDetected = visaIntent;
+          console.log('🎯 Extracted visa intent:', visaIntent);
+
+          // FOR SIGNED-IN USERS: Auto-configure profile
+          if (currentUser) {
+            const supabase = await createClient();
+            const { data: currentProfile } = await supabase
+              .from('user_profiles')
+              .select('destination_country, visa_type')
+              .eq('id', currentUser.id)
+              .single();
+
+            const isChangingDestination = currentProfile?.destination_country && 
+                                         currentProfile.destination_country !== visaIntent.destination_country;
+            const isChangingVisaType = currentProfile?.visa_type && 
+                                      currentProfile.visa_type !== visaIntent.visa_type;
+
+            isJourneyChange = isChangingDestination || isChangingVisaType;
+
+            const needsUpdate = !currentProfile?.destination_country || 
+                               !currentProfile?.visa_type ||
+                               isJourneyChange;
+
+            if (needsUpdate) {
+              await configureUserFromIntent(currentUser.id, visaIntent, currentProfile);
+              configuredVisa = {
+                type: visaIntent.visa_type,
+                country: visaIntent.destination_country,
+                isChange: isJourneyChange,
+                from: isJourneyChange ? {
+                  country: currentProfile?.destination_country,
+                  visaType: currentProfile?.visa_type
+                } : null
+              };
+              
+              userContext = {
+                ...userContext,
+                destination: visaIntent.destination_country,
+                visaType: visaIntent.visa_type
+              };
+            }
+          } else {
+            console.log('👤 Visa intent detected for anonymous user');
+          }
+        } else {
+          console.log('⚠️ Intent extraction returned low confidence or incomplete data');
+        }
+      } catch (error) {
+        console.error('Error processing visa intent:', error);
+      }
+    } else {
+      console.log('⏭️ Skipping intent extraction (follow-up message)');
+    }
+
+    // PHASE 1: Prepare progress context for Genie
+    const progressContext = userProgress ? {
+      progressPercentage: userProgress.overall_progress || 0,
+      currentStage: userProgress.current_stage || 'Getting Started',
+      nextMilestone: userProgress.next_recommended_action || 'Complete Profile',
+      daysUntilDeadline: userProgress.application_deadline 
+        ? Math.ceil((new Date(userProgress.application_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        : null,
+      daysUntilTravel: userProgress.target_travel_date
+        ? Math.ceil((new Date(userProgress.target_travel_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        : null,
+      completedMilestones: {
+        profile: userProgress.profile_completed || false,
+        documentsUploaded: userProgress.documents_uploaded || false,
+        documentsVerified: userProgress.documents_verified || false,
+        financialReady: userProgress.financial_ready || false,
+        interviewPrepared: userProgress.interview_prep_done || false,
+        applicationSubmitted: userProgress.application_submitted || false,
+        decisionReceived: userProgress.decision_received || false
+      },
+      urgent: userProgress.application_deadline 
+        ? (Math.ceil((new Date(userProgress.application_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) < 30)
+        : false
+    } : null;
+
+    // Get chat response from AI with progress context
+    const result = await visaChatAssistant({
+      question,
+      wishCount,
+      conversationHistory,
+      userContext,
+      progressContext, // PHASE 1: Pass progress data to Genie
+      isSignedIn
+    });
+
+    // ENHANCE RESPONSE - Only add CTA on FIRST detection for anonymous users
+    if (visaIntentDetected) {
+      console.log('🎨 Processing visa intent for enhancement:', {
+        country: visaIntentDetected.destination_country,
+        type: visaIntentDetected.visa_type,
+        isSignedIn: !!currentUser,
+        conversationLength: conversationHistory.length,
+        fullIntent: JSON.stringify(visaIntentDetected)
+      });
+      
+      if (currentUser && configuredVisa) {
+        // Signed-in user: Show configuration message
+        if (isJourneyChange) {
+          enhancedAnswer = `🔄 **Visa Journey Updated!** I've changed your profile from **${configuredVisa.from?.visaType} to ${configuredVisa.from?.country}** → **${configuredVisa.type} to ${configuredVisa.country}**. Your progress has been reset for the new requirements.\n\n${result.answer}`;
+        } else {
+          enhancedAnswer = `🎯 **Visa Profile Configured!** I've set up your profile for **${configuredVisa.type}** to **${configuredVisa.country}**.\n\n${result.answer}`;
+        }
+      } else if (!currentUser && conversationHistory.length === 0) {
+        // Anonymous user: Show CTA ONLY on first message
+        console.log('👤 Adding signup CTA with:', {
+          visaType: visaIntentDetected.visa_type,
+          destination: visaIntentDetected.destination_country
+        });
+        
+        enhancedAnswer = `${result.answer}\n\n---\n\n🎯 **I see you're interested in ${visaIntentDetected.visa_type} visa for ${visaIntentDetected.destination_country}!**\n\nWant to track your progress and get a personalized document checklist? **Sign up now** to:\n• Track your application progress\n• Get document verification\n• Receive deadline reminders\n• Access visa success predictors`;
+      } else {
+        console.log('ℹ️ Skipping CTA (not first message or user signed in)');
+      }
+    } else {
+      console.log('ℹ️ No visa intent detected, returning plain answer');
+    }
+
+    // ✅ VISUAL FEEDBACK: Add hints for anonymous users
+    if (!isSignedIn) {
+      const hasUploadMention = /\b(upload|submit|attach|sent|provided|have|got)\b/i.test(question);
+      const hasDocMention = /\b(passport|document|certificate|bank statement|financial|proof)\b/i.test(question);
+      
+      if (hasUploadMention && hasDocMention && !enhancedAnswer) {
+        enhancedAnswer = `📄 **I see you're preparing documents!**\n\n${result.answer}\n\n💡 *Tip: Sign up to track progress, get deadline reminders, and verify documents automatically.*`;
+      }
+    }
+
+    return NextResponse.json({
+      answer: enhancedAnswer || result.answer,
+      insights: result.insights,
+      visaIntentDetected: !!visaIntentDetected,
+      isSignedIn: !!currentUser,
+      progressContext, // PHASE 1: Return progress context to frontend
+      ...(configuredVisa && { configuredVisa })
+    });
+
+  } catch (error: any) {
+    console.error('Chat API error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

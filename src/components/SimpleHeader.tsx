@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, MessageCircle } from 'lucide-react';
 import { JapaGenieLogo } from '@/components/icons';
+import { useChat } from '@/context/ChatContext'; // Import chat context
 
 export default function SimpleHeader() {
   const [isOpen, setIsOpen] = useState(false);
+  const { setIsChatOpen } = useChat(); // Get chat open function
+
+  const openChat = () => {
+    setIsChatOpen(true);
+    setIsOpen(false); // Close mobile menu
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b">
@@ -31,6 +38,14 @@ export default function SimpleHeader() {
           <div className="absolute top-16 left-0 right-0 bg-white border-b shadow-lg">
             <div className="container mx-auto px-4 py-4">
               <nav className="flex flex-col space-y-3">
+                <button
+                  onClick={openChat}
+                  className="flex items-center gap-2 py-2 text-left hover:text-blue-600 transition-colors"
+                >
+                  <MessageCircle size={18} />
+                  <span>Chat Assistant</span>
+                </button>
+                
                 <Link href="/where-youre-stuck" className="py-2" onClick={() => setIsOpen(false)}>
                   Where You're Stuck
                 </Link>

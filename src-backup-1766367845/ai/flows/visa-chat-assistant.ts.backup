@@ -1,0 +1,244 @@
+'use server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+interface VisaAssistantInput {
+  question: string;
+  wishCount: number;
+  conversationHistory?: Array<{ role: 'user' | 'assistant', content: string }>;
+  userContext?: {
+    name?: string;
+    country?: string;
+    destination?: string;
+    profession?: string;
+    visaType?: string;
+    age?: number;
+    dateOfBirth?: string;
+  };
+  isSignedIn?: boolean;
+}
+
+interface VisaAssistantOutput {
+  answer: string;
+  insights?: {
+    suggestedCountries?: Array<{
+      name: string;
+      visaType: string;
+      estimatedCost: number;
+      processingTimeMonths: number;
+      pros: string[];
+      cons: string[];
+    }>;
+    timeline?: Array<{
+      step: string;
+      durationWeeks: number;
+    }>;
+    alternativeStrategies?: string[];
+    difficulty?: string;
+    recommendations?: string[];
+  };
+}
+
+const getCurrencyInfo = (country?: string): { symbol: string; code: string; rate: number } => {
+  const countryLower = country?.toLowerCase() || '';
+  
+  if (countryLower.includes('nigeria')) {
+    return { symbol: '₦', code: 'NGN', rate: 1650 };
+  }
+  if (countryLower.includes('ghana')) {
+    return { symbol: 'GHS', code: 'GHS', rate: 12 };
+  }
+  if (countryLower.includes('kenya')) {
+    return { symbol: 'KSh', code: 'KES', rate: 130 };
+  }
+  if (countryLower.includes('south africa')) {
+    return { symbol: 'R', code: 'ZAR', rate: 18 };
+  }
+  
+  return { symbol: '$', code: 'USD', rate: 1 };
+};
+
+// Generate insights from the AI response
+const generateInsights = (question: string, answer: string): VisaAssistantOutput['insights'] => {
+  const lower = question.toLowerCase();
+  const answerLower = answer.toLowerCase();
+  
+  const countries = ['canada','australia','usa','uk','spain','germany','france','italy','netherlands'];
+  const visaKeywords = ['visa','immigration','relocate','move to','work in','study in','travel to'];
+  const isVisaRelated = countries.some(c => lower.includes(c)) || visaKeywords.some(k => lower.includes(k));
+  
+  if (!isVisaRelated) {
+    return undefined;
+  }
+  
+  // Simple insights based on content
+  const suggestedCountries = [];
+  
+  // Detect mentioned countries
+  if (lower.includes('canada') || answerLower.includes('canada')) {
+    suggestedCountries.push({
+      name: 'Canada',
+      visaType: lower.includes('study') ? 'Study Permit' : lower.includes('work') ? 'Work Permit' : 'Express Entry',
+      estimatedCost: 5000,
+      processingTimeMonths: 6,
+      pros: ['Points-based system', 'Pathway to PR', 'Strong economy'],
+      cons: ['Competitive', 'High cost of living', 'Cold climate']
+    });
+  }
+  
+  if (lower.includes('germany') || answerLower.includes('germany')) {
+    suggestedCountries.push({
+      name: 'Germany',
+      visaType: lower.includes('study') ? 'Student Visa' : 'Job Seeker Visa',
+      estimatedCost: 3000,
+      processingTimeMonths: 4,
+      pros: ['Free tuition', 'Strong job market', 'EU access'],
+      cons: ['Language barrier', 'Bureaucracy', 'Blocked account required']
+    });
+  }
+  
+  if (lower.includes('uk') || lower.includes('united kingdom') || answerLower.includes('uk')) {
+    suggestedCountries.push({
+      name: 'United Kingdom',
+      visaType: lower.includes('study') ? 'Student Visa' : 'Skilled Worker',
+      estimatedCost: 6000,
+      processingTimeMonths: 5,
+      pros: ['No language barrier', 'World-class education', 'Post-study work visa'],
+      cons: ['Expensive', 'Brexit uncertainty', 'High application fees']
+    });
+  }
+  
+  const timeline = [
+    { step: 'Document preparation', durationWeeks: 2 },
+    { step: 'Application submission', durationWeeks: 1 },
+    { step: 'Processing & review', durationWeeks: 12 },
+    { step: 'Biometrics & interview', durationWeeks: 2 },
+    { step: 'Decision & visa issuance', durationWeeks: 2 }
+  ];
+  
+  const alternativeStrategies = [
+    'Consider applying during off-peak seasons for faster processing',
+    'Look into study visa routes as they often have easier pathways',
+    'Check if you qualify for any special programs or fast-track options'
+  ];
+  
+  return {
+    suggestedCountries: suggestedCountries.length > 0 ? suggestedCountries : undefined,
+    timeline,
+    alternativeStrategies,
+    difficulty: 'Medium',
+    recommendations: alternativeStrategies
+  };
+};
+
+export async function visaChatAssistant(input: VisaAssistantInput): Promise<VisaAssistantOutput> {
+  const { question, wishCount, conversationHistory = [], userContext, isSignedIn = false } = input;
+  
+  const lowerQuestion = question.toLowerCase().trim();
+
+  if (isSimpleGreeting(lowerQuestion) && conversationHistory.length === 0) {
+    return {
+      answer: `👋 Welcome to Japa Genie! I'm your trusted visa guide with insider knowledge that goes beyond what you'll find anywhere else.
+
+${isSignedIn ? 'You have unlimited access!' : 'You have **3 free wishes** - let\'s make them count!'}
+
+**To give you the most relevant advice, tell me:**
+✅ Where you're from (e.g., Lagos, Nigeria)
+✅ Where you want to go (e.g., Canada, Germany, UK)
+✅ Your age or date of birth (helps me give age-appropriate advice)
+✅ Your visa type (Study, Work, Visit - or just say "not sure")
+
+**Example:** "I'm 24, from Lagos, want to study in Canada for my Master's"
+
+🎯 The more specific you are, the better I can guide you!`
+    };
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+  const conversationContext = conversationHistory.length > 0
+    ? conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')
+    : 'No previous conversation';
+
+  const currency = getCurrencyInfo(userContext?.country);
+  const shouldShowLocalCurrency = userContext?.country && currency.code !== 'USD';
+  const currencyFormat = shouldShowLocalCurrency 
+    ? `"${currency.symbol}X (about $Y USD)"` 
+    : `"$Y USD"`;
+
+  const userInfo = (() => {
+    const parts = [];
+    if (userContext?.country) parts.push(`from ${userContext.country}`);
+    if (userContext?.age) parts.push(`${userContext.age} years old`);
+    if (userContext?.destination) parts.push(`wants to go to ${userContext.destination}`);
+    if (userContext?.visaType) parts.push(`visa type: ${userContext.visaType}`);
+    if (userContext?.profession) parts.push(`profession: ${userContext.profession}`);
+    
+    if (parts.length === 0) return 'User context not provided yet';
+    return `User is ${parts.join(', ')}`;
+  })();
+
+  const userStatus = isSignedIn 
+    ? `User is SIGNED IN${userContext?.name ? ` (name: ${userContext.name})` : ''}. Provide thorough, premium guidance.`
+    : `User is a VISITOR (Wish ${wishCount}/3 remaining). Deliver exceptional value.`;
+
+  const systemPrompt = `You are JAPA GENIE - Africa's most trusted visa consultant. You've helped 1,200+ professionals successfully relocate.
+
+${userStatus}
+
+USER CONTEXT: ${userInfo}
+
+CURRENCY: ${currency.code} (${currency.symbol}) - Show costs as: ${currencyFormat}
+
+CONVERSATION HISTORY:
+${conversationContext}
+
+RESPONSE RULES:
+1. Use **Markdown formatting** (bold, bullets, headers like ## for sections)
+2. Be conversational and warm - write like a knowledgeable friend
+3. Show costs in ${currencyFormat} format
+4. Give specific timelines (not "several months" - say "4-6 months")
+5. Include 2-3 insider tips naturally
+6. Be honest about challenges but provide solutions
+7. For visitors: Keep response 150-200 words
+8. For signed-in: Can be 180-220 words with more detail
+
+${!isSignedIn ? `\nVISITOR STRATEGY:\n- Answer completely (never hold back)\n- Build trust with specific, actionable advice` : ''}
+
+Now respond to: "${question}"`;
+
+  try {
+    const result = await model.generateContent(systemPrompt);
+    const response = result.response;
+    let text = response.text();
+
+    text = text
+      .trim()
+      .replace(/\*\*\*/g, '**')
+      .replace(/\n{3,}/g, '\n\n');
+
+    if (!isSignedIn && !text.includes('wish') && !text.includes('Wish')) {
+      const wishesLeft = 3 - wishCount;
+      text = `${text}\n\n_(${wishesLeft} ${wishesLeft === 1 ? 'wish' : 'wishes'} remaining)_`;
+    }
+
+    // Generate insights
+    const insights = generateInsights(question, text);
+
+    return { answer: text, insights };
+  } catch (error: any) {
+    console.error('Gemini API error:', error.message || error);
+    
+    return {
+      answer: isSignedIn 
+        ? `I'm temporarily having trouble connecting. Please try asking again.`
+        : `I hit a temporary connection issue. You still have ${3 - wishCount} wishes remaining. Try asking again in a moment.`
+    };
+  }
+}
+
+function isSimpleGreeting(question: string): boolean {
+  const simpleGreetings = ['hi', 'hello', 'hey', 'yo', 'sup', 'wassup', 'hola', 'bonjour', 'hi there', 'hello there', 'good morning', 'good afternoon', 'good evening'];
+  return simpleGreetings.some(greeting => question === greeting || question.startsWith(greeting + ' ') || question.startsWith(greeting + ','));
+}
