@@ -454,3 +454,14 @@ html {
     overflow-x: hidden !important;
   }
 }
+
+/* 3. Touch-friendly hover states (for mobile tap) */
+@media (hover: none) and (pointer: coarse) {
+  .group-hover\\:scale-110:hover {
+    transform: scale(1.05) !important; /* Smaller scale for mobile */
+  }
+  
+  .hover\\:pause-animation:hover {
+    animation-play-state: running !important; /* Keep animating on mobile */
+  }
+}

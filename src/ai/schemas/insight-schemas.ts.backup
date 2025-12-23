@@ -1,0 +1,69 @@
+/**
+ * @fileOverview Fixed Insight Schemas - Build Error Resolved
+ * 
+ * KEY FIX: Made `question` optional to match actual usage patterns
+ * 
+ * Features:
+ * - Optional question field (fixes TypeScript error)
+ * - User profile context for personalization
+ * - Country suggestions with difficulty ratings
+ * - Timeline visualization data
+ * - Alternative strategies
+ */
+
+import { z } from 'zod';
+
+// ============================================================================
+// INPUT SCHEMA - ✅ FIXED: question is now optional
+// ============================================================================
+
+export const InsightInputSchema = z.object({
+  question: z.string().optional(), // ✅ FIXED: Made optional to match actual usage
+  
+  userProfile: z.object({
+    age: z.number().optional(),
+    profession: z.string().optional(),
+    country: z.string().optional(),
+    destinationCountry: z.string().optional(),
+    visaType: z.string().optional(),
+  }).optional(),
+});
+
+export type InsightInput = z.infer<typeof InsightInputSchema>;
+
+// ============================================================================
+// OUTPUT SCHEMA - Enhanced for better UX
+// ============================================================================
+
+export const InsightOutputSchema = z.object({
+  
+  // Suggested countries with all details
+  suggestedCountries: z.array(z.object({
+    name: z.string(),
+    visaType: z.string(),
+    estimatedCost: z.number(),
+    processingTimeMonths: z.number(),
+    pros: z.array(z.string()),
+    cons: z.array(z.string()),
+    difficulty: z.enum(['Easy', 'Medium', 'Hard']).optional(), // For color-coding
+    personalityTag: z.string().optional(), // For personality feature
+  })).optional(),
+
+  // Timeline steps
+  timeline: z.array(z.object({
+    step: z.string(),
+    durationWeeks: z.number(),
+    criticalNotes: z.string().optional(), // Added for enhanced timeline
+  })).optional(),
+
+  // Alternative strategies
+  alternativeStrategies: z.array(z.string()).optional(),
+
+  // Overall difficulty assessment
+  difficulty: z.string().optional(),
+
+  // General recommendations
+  recommendations: z.array(z.string()).optional(),
+});
+
+export type InsightOutput = z.infer<typeof InsightOutputSchema>;

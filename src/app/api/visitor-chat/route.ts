@@ -37,7 +37,7 @@ INSTRUCTIONS:
 YOUR RESPONSE:`;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 500
@@ -49,13 +49,15 @@ YOUR RESPONSE:`;
 
     return NextResponse.json({ response });
   } catch (error: any) {
+    console.error("❌ VISITOR CHAT ERROR:", error);
+    console.error("❌ ERROR MESSAGE:", error.message);
     console.error('Visitor chat error:', error);
     return NextResponse.json(
       {
         response: "I'm having trouble connecting right now. Please try asking about our visa services, pricing, or features.",
         error: error.message
       },
-      { status: 200 }
+      { status: 500 }
     );
   }
 }
