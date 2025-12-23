@@ -37,7 +37,7 @@ export function MockInterviewSection() {
             </TabsList>
           </div>
           <TabsContent value="student" className="mt-10">
-            <Card className="bg-primary/5 max-w-3xl mx-auto">
+            <Card className="bg-white max-w-3xl mx-auto shadow-lg">
               <CardHeader>
                 <CardTitle>Sample Interview Questions</CardTitle>
               </CardHeader>

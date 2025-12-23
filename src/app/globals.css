@@ -8,7 +8,7 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background)) !important;
+  background-color: white !important;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -98,8 +98,7 @@ input, textarea, [contenteditable] {
     border-color: hsl(var(--border));
   }
   body {
-  background-color: hsl(var(--background)) !important;
-    background-color: hsl(var(--background));
+    background-color: white !important;
     color: hsl(var(--foreground));
   }
 }
@@ -167,7 +166,7 @@ input, textarea, [contenteditable] {
   
   /* Ensure good readability for body text */
   body {
-  background-color: hsl(var(--background)) !important;
+    background-color: white !important;
     -webkit-text-size-adjust: 100%;
   }
 }
@@ -261,7 +260,7 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background)) !important;
+  background-color: white !important;
   overscroll-behavior-y: none;
   -webkit-user-select: none;
   user-select: none;
@@ -306,8 +305,7 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background)) !important;
-  
+  background-color: white !important;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -326,7 +324,7 @@ body {
   }
   
   body {
-  background-color: hsl(var(--background)) !important;
+    background-color: white !important;
     width: 100vw;
     overflow-x: hidden;
     position: relative;
@@ -359,7 +357,7 @@ button, a {
   }
   
   body {
-  background-color: hsl(var(--background)) !important;
+    background-color: white !important;
     width: 100vw !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
@@ -458,7 +456,7 @@ html {
   
   /* Prevent any horizontal scroll caused by ticker */
   body {
-  background-color: hsl(var(--background)) !important;
+    background-color: white !important;
     overflow-x: hidden !important;
   }
 }
@@ -527,6 +525,23 @@ html {
   animation: slide-in-left 0.4s ease-out;
 }
 
+/* Launch animation fade out */
+@keyframes fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; display: none; }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.5s ease-out forwards;
+  animation-delay: 1s;
+  pointer-events: none;
+}
+
+/* Ensure body is always white */
+body {
+  background-color: white !important;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .skeleton-shimmer,
@@ -534,7 +549,8 @@ html {
   .pwa-launch-logo,
   .pwa-content-fade,
   .pwa-route-slide-right,
-  .pwa-route-slide-left {
+  .pwa-route-slide-left,
+  .animate-fade-out {
     animation: none !important;
   }
 }

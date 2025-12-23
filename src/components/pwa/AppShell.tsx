@@ -1,57 +1,61 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { JapaGenieLogo } from '@/components/icons';
 import SimpleHeader from '@/components/SimpleHeader';
-import SkeletonLoader from './SkeletonLoader';
+import { JapaGenieLogo } from '@/components/icons';
 
-interface AppShellProps {
-  children: React.ReactNode;
-}
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
 
-export default function AppShell({ children }: AppShellProps) {
-  const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showLaunch, setShowLaunch] = useState(false);
-  
-  // Get skeleton type based on route
-  const getSkeletonType = () => {
-    if (pathname === '/') return 'full';
-    if (pathname.includes('/chat')) return 'card';
-    if (pathname.includes('/progress')) return 'text';
-    return 'card';
-  };
-
-  // Handle launch animation (client-side only)
   useEffect(() => {
-    const isFirstVisit = !localStorage.getItem('japa-first-visit');
-    if (isFirstVisit) {
-      setShowLaunch(true);
-      setTimeout(() => {
-      document.body.style.overflow = "auto";
-        setShowLaunch(false);
-        localStorage.setItem('japa-first-visit', 'true');
-      }, 1500);
+    // Check if first visit
+    const hasVisited = localStorage.getItem('japa-first-visit');
+    if (!hasVisited) {
+      setIsFirstVisit(true);
+      localStorage.setItem('japa-first-visit', 'true');
     }
-    
-    const handleComplete = () => setTimeout(() => setIsLoading(false), 300);
-    handleComplete();
+
+    // Simulate loading (you can replace with actual loading logic)
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle route changes for progress bar
+  useEffect(() => {
+    const handleRouteChangeStart = () => {
+      setIsLoading(true);
+    };
+
+    const handleRouteChangeComplete = () => {
+      setTimeout(() => setIsLoading(false), 300);
+    };
+
+    window.addEventListener('routeChangeStart', handleRouteChangeStart);
+    window.addEventListener('routeChangeComplete', handleRouteChangeComplete);
+
+    return () => {
+      window.removeEventListener('routeChangeStart', handleRouteChangeStart);
+      window.removeEventListener('routeChangeComplete', handleRouteChangeComplete);
+    };
   }, []);
 
   return (
     <div className="min-h-screen bg-white transition-all duration-300">
-      {/* Progress indicator for route changes */}
-      {isLoading && (
-        <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-purple-600 z-50 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-amber-400 to-purple-600 animate-progress-bar"></div>
+      {/* Launch Animation - Only on first visit */}
+      {isFirstVisit && (
+        <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50 pwa-launch-logo animate-fade-out">
+          <JapaGenieLogo className="w-32 h-32 animate-pulse" />
         </div>
       )}
 
-      {/* Launch animation (client-side only) */}
-      {showLaunch && (
-        <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50 pwa-launch-logo">
-          <JapaGenieLogo className="w-32 h-32 animate-pulse" />
+      {/* Loading Progress Bar */}
+      {isLoading && (
+        <div className="fixed top-0 left-0 right-0 h-1 z-40">
+          <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-progress-bar" />
         </div>
       )}
 
@@ -60,23 +64,11 @@ export default function AppShell({ children }: AppShellProps) {
         <SimpleHeader />
       </div>
 
-      {/* Main Content */}
+      {/* Main Content with fade-in effect */}
       <main className="relative">
-        {/* Show skeleton while loading */}
-        {isLoading ? (
-          <div className="p-4 md:p-6">
-            <SkeletonLoader 
-              type={getSkeletonType()} 
-              count={2}
-              className="max-w-6xl mx-auto"
-            />
-          </div>
-        ) : (
-          /* Show actual content with fade-in */
-          <div className="pwa-content-fade">
-            {children}
-          </div>
-        )}
+        <div className={`pwa-content-fade ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+          {children}
+        </div>
       </main>
     </div>
   );
