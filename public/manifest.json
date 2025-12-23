@@ -1,22 +1,152 @@
 {
   "name": "Japa Genie",
   "short_name": "Japa",
-  "description": "Your AI-powered Japa assistant",
+  "description": "AI-powered visa guidance & application assistant",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "orientation": "portrait",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "categories": ["lifestyle", "productivity", "education"],
+  "dir": "ltr",
+  "lang": "en-US",
+  "prefer_related_applications": false,
+  
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any monochrome"
+    },
+    {
+      "src": "/icons/icon-32x32.png",
+      "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
+      "src": "/icons/icon-64x64.png",
+      "sizes": "64x64",
       "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/screenshots/iphone-mockup.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Visa Application Dashboard"
+    },
+    {
+      "src": "/screenshots/ipad-mockup.png",
+      "sizes": "1024x1366",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Document Processing Interface"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Check Visa Status",
+      "short_name": "Status",
+      "description": "Check your visa application status",
+      "url": "/progress-map",
+      "icons": [{ "src": "/icons/shortcut-status.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Chat with Assistant",
+      "short_name": "Chat",
+      "description": "Get instant visa guidance",
+      "url": "/chat",
+      "icons": [{ "src": "/icons/shortcut-chat.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Document Generator",
+      "short_name": "Docs",
+      "description": "Generate visa documents",
+      "url": "/public-proof-of-funds",
+      "icons": [{ "src": "/icons/shortcut-docs.png", "sizes": "96x96" }]
+    }
+  ],
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+japagenie",
+      "url": "/protocol-handler?url=%s"
+    }
+  ],
+  
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  
+  "handle_links": "preferred",
+  
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "documents",
+          "accept": ["application/pdf", "image/*"]
+        }
+      ]
+    }
+  },
+  
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "image/*": [".jpg", ".jpeg", ".png", ".webp"]
+      }
     }
   ]
 }

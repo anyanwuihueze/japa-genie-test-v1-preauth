@@ -37,7 +37,7 @@ input, textarea, [contenteditable] {
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* Light desaturated blue */
+    --background: 0 0% 100%; /* CHANGED: 98% → 100% (pure white) */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -247,6 +247,7 @@ select:focus-visible {
 .hover\:pause-animation:hover {
   transform: scale(1.02);
 }
+
 /* ===== PWA NATIVE FEEL ===== */
 html {
   font-size: 16px;
@@ -301,7 +302,7 @@ html {
 }
 
 body {
-  zoom: 1;
+  
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -339,45 +340,16 @@ button, a {
   touch-action: manipulation;
 }
 
-/* === MOBILE DROPDOWN FIX === */
-/* Override touch-action for dropdowns */
-[role="listbox"], [role="menu"], [role="dialog"] {
-  touch-action: auto !important; /* Allow scrolling */
-}
-
-/* Make select elements mobile-friendly */
-select, .select-trigger, [data-state="open"] {
-  min-height: 44px !important;
-  font-size: 16px !important; /* Prevents iOS zoom */
-  -webkit-appearance: menulist !important; /* Native mobile dropdown */
-}
-
-/* Ensure dropdowns are above everything */
-[data-radix-select-content], 
-[data-radix-dropdown-menu-content],
-[role="listbox"] {
-  z-index: 9999 !important;
-  position: relative;
-}
-
-/* Fix for Select component */
-[data-radix-select-viewport] {
-  max-height: 300px !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
-}
-
 /* ============================================= */
 /* TARGETED MOBILE FIXES - DEC 2024 */
 /* ============================================= */
 
-/* 1. Fix mobile viewport scaling - OVERRIDE ANYTHING ELSE */
+/* 1. Fix mobile viewport scaling */
 @media (max-width: 768px) {
   html {
     font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
-    zoom: 1 !important;
   }
   
   body {
@@ -385,17 +357,16 @@ select, .select-trigger, [data-state="open"] {
     max-width: 100vw !important;
     overflow-x: hidden !important;
     position: relative !important;
-    touch-action: pan-y !important; /* Allow vertical scroll, block horizontal */
+    touch-action: pan-y !important;
   }
   
-  /* Prevent any element from causing horizontal scroll */
+  /* Prevent horizontal overflow */
   * {
     max-width: 100vw !important;
-    box-sizing: border-box !important;
   }
 }
 
-/* 2. Fix iOS input zoom WITHOUT breaking layout */
+/* 2. Fix iOS input zoom (CORRECTED - no duplicate appearance) */
 @media (hover: none) and (pointer: coarse) {
   input[type="text"],
   input[type="email"],
@@ -404,13 +375,11 @@ select, .select-trigger, [data-state="open"] {
   input[type="tel"],
   textarea,
   select {
-    font-size: 16px !important; /* Prevents iOS zoom */
-    -webkit-appearance: none !important;
-    appearance: none !important;
+    font-size: 16px !important;
   }
 }
 
-/* 3. Ensure proper tap targets (Apple HIG standards) */
+/* 3. Ensure proper tap targets */
 button, 
 a[role="button"],
 [role="button"] {
@@ -418,9 +387,70 @@ a[role="button"],
   min-width: 44px !important;
 }
 
-/* 4. Fix for Safari 100vh issue */
+/* 4. Fix Safari 100vh issue */
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: -webkit-fill-available !important;
+    min-height: 100dvh !important;
+  }
+}
+
+/* 5. Prevent elastic scrolling on iOS */
+html {
+  overscroll-behavior-y: none;
+}
+
+/* 6. Fix for mobile dropdowns */
+@media (max-width: 768px) {
+  select {
+    font-size: 16px !important;
+    padding: 12px !important;
+  }
+}
+/* ============================================= */
+/* MOBILE TICKER FIXES - DEC 2024 */
+/* ============================================= */
+
+/* 1. Fix mobile ticker animation speed and overflow */
+@media (max-width: 768px) {
+  /* Slower animation on mobile for better readability */
+  .animate-ticker {
+    animation-duration: 60s !important; /* Was ~30s on desktop */
+  }
+  
+  /* Prevent horizontal overflow */
+  .visa-pulse-ticker-container,
+  .animate-ticker {
+    overflow-x: hidden !important;
+  }
+  
+  /* Adjust ticker item spacing for mobile */
+  .animate-ticker > div {
+    padding-left: 1rem !important;  /* Reduce from px-8 (2rem) */
+    padding-right: 1rem !important;
+  }
+  
+  /* Smaller font size for mobile */
+  .animate-ticker span.text-sm {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.25rem !important;
+  }
+  
+  /* Adjust spacing between items */
+  .animate-ticker .mx-6 {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+  }
+}
+
+/* 2. Ensure ticker container doesn't cause horizontal scroll */
+@media (max-width: 768px) {
+  .overflow-hidden {
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any horizontal scroll caused by ticker */
+  body {
+    overflow-x: hidden !important;
   }
 }
