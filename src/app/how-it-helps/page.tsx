@@ -1,3 +1,7 @@
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+
 export default function HowItHelpsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">

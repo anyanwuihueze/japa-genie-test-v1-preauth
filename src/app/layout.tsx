@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AppShell>
               {children}
             </AppShell>
+            {/* Floating button hidden on mobile, shown on desktop */}
             <div className="hidden md:block">
               <FloatingChatButton />
             </div>

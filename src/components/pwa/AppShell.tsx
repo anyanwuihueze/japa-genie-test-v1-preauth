@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import SimpleHeader from '@/components/SimpleHeader';
 import { AppFooter } from '@/components/layout/app-footer';
+import { PWANavigation } from '@/components/pwa/PWANavigation';
 import { JapaGenieLogo } from '@/components/icons';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -42,11 +43,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Content - FLEX GROW TO PUSH FOOTER DOWN */}
-      <main className="flex-grow">
+      <main className="flex-grow pb-16"> {/* Added padding for bottom nav */}
         <div className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
           {children}
         </div>
       </main>
+
+      {/* PWA Navigation Bar (Mobile only) */}
+      <PWANavigation />
 
       {/* App Footer */}
       <AppFooter />

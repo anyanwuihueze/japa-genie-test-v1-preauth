@@ -1,4 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+// Simple function to read knowledge files (no Genkit dependency)
+async function getKnowledgeFromFAQ(query: string): Promise<string> {
+  try {
+    const knowledgePath = path.join(process.cwd(), 'src', 'ai', 'knowledge');
+    const files = await fs.readdir(knowledgePath);
+    const markdownFiles = files.filter(file => file.endsWith('.md'));
+    
+    let allKnowledge = '';
+    for (const file of markdownFiles) {
+      const filePath = path.join(knowledgePath, file);
+      const content = await fs.readFile(filePath, 'utf-8');
+      allKnowledge += `\n=== ${file} ===\n${content}\n`;
+    }
+    
+    return allKnowledge || 'No knowledge base found.';
+  } catch (error) {
+    console.error('Error reading knowledge base:', error);
+    return 'Could not access knowledge base.';
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +37,13 @@ export async function POST(request: NextRequest) {
       .map((msg: any) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
       .join('\n') || '';
 
+    // GET ACTUAL KNOWLEDGE FROM FAQ
+    const knowledge = await getKnowledgeFromFAQ(message);
+
     const prompt = `You are Japa Genie, a world-class visa strategist site assistant.
 
-KNOWLEDGE BASE:
-- Features: AI Eligibility Checker, Document Verification, Mock Interviews, Progress Dashboard
-- Pricing: One-Time Access (₦15,000-₦45,000), Pro Plan (₦18,000/month), Premium (₦54,000/month)
-- Payment: Stripe (international), Paystack (Nigeria)
-- For visa-specific questions (eligibility, documents): Direct users to sign up
-- For general questions (pricing, features): Answer freely
+ACTUAL KNOWLEDGE BASE (FAQ):
+${knowledge}
 
 ${context ? `CONVERSATION HISTORY:\n${context}\n\n` : ''}
 USER QUESTION: "${message}"
@@ -29,10 +51,12 @@ USER QUESTION: "${message}"
 ${emailCaptured ? 'User has provided email - unlimited questions.' : 'User is in free tier.'}
 
 INSTRUCTIONS:
-1. Answer ONLY if about Japa Genie features, pricing, app usage
-2. If visa-specific question: "That's a great visa question! Sign up for personalized answers."
-3. Keep responses under 100 words
-4. Be friendly and helpful
+1. Use the KNOWLEDGE BASE above to answer questions
+2. Answer ONLY if about Japa Genie features, pricing, app usage
+3. If visa-specific question: "That's a great visa question! Sign up for personalized answers."
+4. Keep responses under 100 words
+5. Be friendly and helpful
+6. If knowledge base doesn't have answer, say you don't know
 
 YOUR RESPONSE:`;
 
@@ -53,7 +77,7 @@ YOUR RESPONSE:`;
         messages: [
           {
             role: 'system',
-            content: 'You are Japa Genie site assistant. Be concise and helpful.'
+            content: 'You are Japa Genie site assistant. Use the provided knowledge base to answer questions.'
           },
           {
             role: 'user',
