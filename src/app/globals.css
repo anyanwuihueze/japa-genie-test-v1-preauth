@@ -601,3 +601,54 @@ html {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
+
+/* ============================================= */
+/* PHASE 2: Button & Mobile Formatting Fixes */
+/* ============================================= */
+
+/* Mobile button text fixes */
+@media (max-width: 640px) {
+  .mobile-btn-fix {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+    min-height: 44px !important;
+  }
+  
+  /* Prevent text overflow in buttons */
+  button span, 
+  .btn-text {
+    display: inline-block;
+    max-width: calc(100% - 40px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Card buttons on mobile */
+  .mobile-card-btn {
+    padding: 0.75rem !important;
+    min-height: 80px !important;
+  }
+  
+  .mobile-card-btn h3 {
+    font-size: 0.9rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .mobile-card-btn p {
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Tablet button adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-btn-fix {
+    font-size: 0.9375rem !important;
+  }
+}
