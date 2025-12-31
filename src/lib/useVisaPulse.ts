@@ -61,27 +61,22 @@ const FALLBACK_PULSE_DATA = [
   },
 ];
 
-async function fetcher(days = 30) {
+async function fetcher() {
   const supabase = createClient();
   
-  // Calculate date threshold (DATE only, not timestamp)
-  const dateThreshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0]; // Get just YYYY-MM-DD
-  
-  console.log('🔍 Fetching visa pulse data...', { days, dateThreshold });
+  console.log('🔍 Fetching visa pulse data...');
   
   try {
+    // REMOVED: .gte('created_at', dateThreshold) - Get ALL data now
     const { data, error } = await supabase
       .from('visa_pulse')
       .select('*')
-      .gte('created_at', dateThreshold)
       .order('created_at', { ascending: false })
       .limit(50);
     
     if (error) {
-      console.error('❌ Supabase fetch error:', error);
-      console.warn('⚠️ Using fallback data instead');
+      console.warn('⚠️ Supabase fetch warning:', error.message);
+      console.info('📋 Using fallback data instead');
       return FALLBACK_PULSE_DATA;
     }
     
@@ -92,26 +87,29 @@ async function fetcher(days = 30) {
     }
     
     // If Supabase returned no data, use fallback
-    console.warn('⚠️ No recent data in Supabase, using fallback data');
+    console.info('📋 No data in Supabase, using fallback');
     return FALLBACK_PULSE_DATA;
     
   } catch (err) {
-    console.error('❌ Fetch exception:', err);
-    console.warn('⚠️ Using fallback data due to exception');
+    console.warn('⚠️ Fetch warning:', err);
+    console.info('📋 Using fallback data');
     return FALLBACK_PULSE_DATA;
   }
 }
 
-export default function useVisaPulse(days = 30) {
+export default function useVisaPulse() {
   const { data, error, isLoading } = useSWR(
-    ['visa-pulse', days], 
-    () => fetcher(days), 
+    'visa-pulse', 
+    fetcher, 
     {
       refreshInterval: 300_000, // Refresh every 5 minutes
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      fallbackData: FALLBACK_PULSE_DATA, // Show this immediately while loading
-      dedupingInterval: 60_000, // Prevent duplicate requests within 1 min
+      fallbackData: FALLBACK_PULSE_DATA,
+      dedupingInterval: 60_000,
+      onError: (err) => {
+        console.info('📋 Visa Pulse: Using cached/fallback data');
+      }
     }
   );
 

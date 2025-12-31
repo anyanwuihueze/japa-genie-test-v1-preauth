@@ -4,7 +4,8 @@ import { Inter } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ChatProvider } from '@/context/ChatContext'
-import AppShell from '@/components/pwa/AppShell' // ← NEW IMPORT
+import AppShell from '@/components/pwa/AppShell'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import FloatingChatButton from '@/components/layout/floating-chat-button'
 
 const inter = Inter({
@@ -22,18 +23,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
           <ChatProvider>
-            {/* AppShell now handles SimpleHeader AND skeleton loading */}
             <AppShell>
               {children}
             </AppShell>
-            {/* Floating button hidden on mobile, shown on desktop */}
             <div className="hidden md:block">
               <FloatingChatButton />
             </div>
+            <InstallPrompt />
           </ChatProvider>
           <Toaster />
         </AuthProvider>
