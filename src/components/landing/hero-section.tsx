@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, ChevronRight } from "lucide-react";
 import VisaPulseTicker from '@/components/visa-pulse-ticker';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -41,20 +41,18 @@ export function HeroSection() {
                 )}
               </div>
               <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row items-center">
-                <div className="relative w-full min-[400px]:w-auto">
-                  {/* Pointing finger animation */}
-                  <div 
-                    className="absolute -left-10 top-1/2 -translate-y-1/2 text-4xl animate-pointFromLeft"
-                    style={{ filter: 'grayscale(0%) brightness(1.1) hue-rotate(20deg)' }}
-                    aria-hidden="true"
-                  >
-                    👉🏽
+                <div className="relative w-full min-[400px]:w-auto flex items-center">
+                  {/* Animated Chevrons */}
+                  <div className="flex items-center mr-2">
+                    <ChevronRight className="w-8 h-8 text-blue-400 animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                    <ChevronRight className="w-8 h-8 text-blue-400 animate-chevron-pulse" style={{ animationDelay: '0.2s' }} />
+                    <ChevronRight className="w-8 h-8 text-blue-400 animate-chevron-pulse" style={{ animationDelay: '0.4s' }} />
                   </div>
                   
                   {user ? (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-blue-500 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/dashboard" className="flex items-center justify-center gap-2">
@@ -65,7 +63,7 @@ export function HeroSection() {
                   ) : (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/kyc" className="flex items-center justify-center gap-2">
