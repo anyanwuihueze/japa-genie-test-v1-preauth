@@ -48,7 +48,7 @@
 
 /* Animation classes */
 .animate-ticker {
-  animation: ticker 46s linear infinite;
+  animation: ticker 20s linear infinite;
   display: flex;
   width: max-content;
 }

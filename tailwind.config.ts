@@ -50,10 +50,6 @@ const config = {
         pointDown: {
           "0%, 100%": { transform: "translateY(-4px)" },
           "50%": { transform: "translateY(4px)" }
-        },
-        glow: {
-          "0%, 100%": { filter: 'drop-shadow(0 0 5px hsl(var(--primary)))' },
-          "50%": { filter: 'drop-shadow(0 0 15px hsl(var(--primary)))' },
         }
       },
       animation: {
@@ -61,7 +57,7 @@ const config = {
         fadeInUp: "fadeInUp 0.8s ease-out",
         ticker: "ticker 46s linear infinite",
         pointDown: "pointDown 1.5s ease-in-out infinite",
-        glow: "glow 2.5s ease-in-out infinite",
+        glow: "glow 2.5s ease-in-out infinite"
       }
     }
   },
