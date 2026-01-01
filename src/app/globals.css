@@ -21,3 +21,47 @@
   line-clamp: 2;
   -webkit-line-clamp: 2;
 }
+
+/* ============================================= */
+/* RESTORE ANIMATIONS LOST IN CORRUPTION */
+/* ============================================= */
+
+/* Ticker animation */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Glow animation for buttons - FIXED VERSION */
+@keyframes glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px hsl(var(--primary))) drop-shadow(0 0 12px hsl(var(--primary)));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px hsl(var(--primary))) drop-shadow(0 0 24px hsl(var(--primary)));
+  }
+}
+
+/* Animation classes */
+.animate-ticker {
+  animation: ticker 46s linear infinite;
+  display: flex;
+  width: max-content;
+}
+
+/* FIXED: Use filter drop-shadow instead of box-shadow */
+.animate-glow {
+  animation: glow 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+/* Ticker container */
+.ticker-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}

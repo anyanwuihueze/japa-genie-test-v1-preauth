@@ -52,14 +52,14 @@ const config = {
           "50%": { transform: "translateY(4px)" }
         },
         glow: {
-          "0%, 100%": { boxShadow: '0 0 5px hsl(var(--primary))' },
-          "50%": { boxShadow: '0 0 20px hsl(var(--primary))' },
+          "0%, 100%": { filter: 'drop-shadow(0 0 5px hsl(var(--primary)))' },
+          "50%": { filter: 'drop-shadow(0 0 15px hsl(var(--primary)))' },
         }
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
-        ticker: "ticker 30s linear infinite",
+        ticker: "ticker 46s linear infinite",
         pointDown: "pointDown 1.5s ease-in-out infinite",
         glow: "glow 2.5s ease-in-out infinite",
       }
