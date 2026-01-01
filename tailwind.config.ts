@@ -47,17 +47,22 @@ const config = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" }
         },
-        pointDown: {
-          "0%, 100%": { transform: "translateY(-4px)" },
-          "50%": { transform: "translateY(4px)" }
+        pointFromLeft: { // Renamed for clarity
+          "0%": { opacity: "0", transform: "translateX(-50px) scale(0.8)" },
+          "70%": { opacity: "1", transform: "translateX(10px) scale(1.1)" },
+          "100%": { opacity: "1", transform: "translateX(0) scale(1)" },
+        },
+        glow: {
+          "0%, 100%": { filter: "drop-shadow(0 0 8px hsl(var(--primary)))" },
+          "50%": { filter: "drop-shadow(0 0 16px hsl(var(--primary)))" },
         }
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
         ticker: "ticker 46s linear infinite",
-        pointDown: "pointDown 1.5s ease-in-out infinite",
-        glow: "glow 2.5s ease-in-out infinite"
+        pointFromLeft: "pointFromLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards",
+        glow: "glow 2.5s ease-in-out infinite", // Added glow animation
       }
     }
   },

@@ -40,22 +40,21 @@ export function HeroSection() {
                   </>
                 )}
               </div>
-              <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row">
-                {/* Pointing finger wrapper */}
+              <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row items-center">
                 <div className="relative w-full min-[400px]:w-auto">
-                  {/* Animated pointing finger - light brown */}
+                  {/* Pointing finger animation */}
                   <div 
-                    className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-pointDown"
+                    className="absolute -left-10 top-1/2 -translate-y-1/2 text-4xl animate-pointFromLeft"
                     style={{ filter: 'grayscale(0%) brightness(1.1) hue-rotate(20deg)' }}
                     aria-hidden="true"
                   >
-                    👇🏽
+                    👉🏽
                   </div>
                   
                   {user ? (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-blue-500 text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-blue-500 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/dashboard" className="flex items-center justify-center gap-2">
@@ -66,7 +65,7 @@ export function HeroSection() {
                   ) : (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
                       asChild
                     >
                       <Link href="/kyc" className="flex items-center justify-center gap-2">

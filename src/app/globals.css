@@ -3,27 +3,8 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* Keep only your pointing finger animation */
-@media (prefers-reduced-motion: reduce) {
-  .animate-pointDown {
-    animation: none !important;
-  }
-}
-
-.animate-pointDown {
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Fix line-clamp warning - MUST be in a CSS class */
-.line-clamp-2 {
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-}
-
 /* ============================================= */
-/* RESTORE ANIMATIONS LOST IN CORRUPTION */
+/* ANIMATIONS & STYLES */
 /* ============================================= */
 
 /* Ticker animation */
@@ -33,6 +14,22 @@
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+/* NEW: Pointing from left animation */
+@keyframes pointFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.8);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(10px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -48,15 +45,19 @@
 
 /* Animation classes */
 .animate-ticker {
-  animation: ticker 20s linear infinite;
+  animation: ticker 46s linear infinite; /* Restored longer duration */
   display: flex;
   width: max-content;
 }
 
-/* FIXED: Use filter drop-shadow instead of box-shadow */
 .animate-glow {
   animation: glow 2.5s ease-in-out infinite;
   position: relative;
+}
+
+.animate-pointFromLeft {
+  animation: pointFromLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+  opacity: 0; /* Start hidden */
 }
 
 /* Ticker container */
@@ -64,4 +65,10 @@
   overflow: hidden;
   position: relative;
   width: 100%;
+}
+
+/* Fix line-clamp warning */
+.line-clamp-2 {
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
 }
