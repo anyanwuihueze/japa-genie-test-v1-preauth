@@ -49,7 +49,7 @@ export default function EligibilityCheckClient() {
       });
       
       // In production, you'd redirect to results page with the data
-      router.push('/eligibility-results');
+      // router.push('/eligibility-results');
       
       // For now, just show success
       toast({

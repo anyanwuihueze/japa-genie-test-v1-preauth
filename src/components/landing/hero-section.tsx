@@ -41,8 +41,18 @@ export function HeroSection() {
                 )}
               </div>
               <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row">
-                {user ? (
-                  <>
+                {/* Pointing finger wrapper */}
+                <div className="relative w-full min-[400px]:w-auto">
+                  {/* Animated pointing finger - light brown */}
+                  <div 
+                    className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-pointDown"
+                    style={{ filter: 'grayscale(0%) brightness(1.1) hue-rotate(20deg)' }}
+                    aria-hidden="true"
+                  >
+                    👇🏽
+                  </div>
+                  
+                  {user ? (
                     <Button
                       size="lg"
                       className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-blue-500 text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
@@ -53,20 +63,7 @@ export function HeroSection() {
                         <span>Go to Dashboard</span>
                       </Link>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
-                      asChild
-                    >
-                      <Link href="/kyc">
-                        <span className="text-sm sm:text-base">Ask AI Assistant</span>
-                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Button
                       size="lg"
                       className="group w-full min-[400px]:w-auto bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
@@ -77,18 +74,33 @@ export function HeroSection() {
                         <span>Start Your Journey</span>
                       </Link>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
-                      asChild
-                    >
-                      <Link href="/how-it-works">
-                        <span className="text-sm sm:text-base">Learn How It Works</span>
-                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
-                  </>
+                  )}
+                </div>
+                
+                {user ? (
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
+                    asChild
+                  >
+                    <Link href="/kyc">
+                      <span className="text-sm sm:text-base">Ask AI Assistant</span>
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
+                    asChild
+                  >
+                    <Link href="/how-it-works">
+                      <span className="text-sm sm:text-base">Learn How It Works</span>
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
                 )}
               </div>
             </div>

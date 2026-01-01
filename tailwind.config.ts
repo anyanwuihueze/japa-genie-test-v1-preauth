@@ -46,12 +46,22 @@ const config = {
         ticker: {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" }
+        },
+        pointDown: {
+          "0%, 100%": { transform: "translateY(-4px)" },
+          "50%": { transform: "translateY(4px)" }
+        },
+        glow: {
+          "0%, 100%": { boxShadow: '0 0 5px hsl(var(--primary))' },
+          "50%": { boxShadow: '0 0 20px hsl(var(--primary))' },
         }
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         fadeInUp: "fadeInUp 0.8s ease-out",
-        ticker: "ticker 20s linear infinite" // 2x faster (was 40s, now 20s)
+        ticker: "ticker 20s linear infinite",
+        pointDown: "pointDown 1.5s ease-in-out infinite",
+        glow: "glow 2.5s ease-in-out infinite",
       }
     }
   },

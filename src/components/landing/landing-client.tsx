@@ -13,8 +13,8 @@ const WhatWeDoSection = dynamic(
   { loading: () => <Skeleton className="h-[500px] w-full" /> }
 );
 
-const MockInterviewSection = dynamic(
-  () => import('./mock-interview-section').then(mod => mod.MockInterviewSection),
+const EligibilityCheckSection = dynamic(
+  () => import('./eligibility-check-section').then(mod => mod.EligibilityCheckSection),
   { loading: () => <Skeleton className="h-[500px] w-full" /> }
 );
 
@@ -28,7 +28,7 @@ export default function LandingClient() {
     <>
       <HowItWorksAnimated />
       <WhatWeDoSection />
-      <MockInterviewSection />
+      <EligibilityCheckSection />
       <TestimonialsSection />
     </>
   );

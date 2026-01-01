@@ -1,0 +1,17 @@
+/* ============================================= */
+/* POINTING FINGER ANIMATION ACCESSIBILITY */
+/* ============================================= */
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pointDown {
+    animation: none !important;
+  }
+}
+
+/* Ensure pointing finger has smooth rendering */
+.animate-pointDown {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
