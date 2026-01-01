@@ -42,11 +42,11 @@ export function HeroSection() {
               </div>
               <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row items-center">
                 <div className="relative w-full min-[400px]:w-auto flex items-center">
-                  {/* Animated Chevrons - SMALLER, CLOSER, and ANIMATED */}
-                  <div className="flex items-center -mr-2">
-                    <ChevronRight className="w-6 h-6 text-blue-400 animate-chevron-pulse" style={{ animationDelay: '0s' }} />
-                    <ChevronRight className="w-6 h-6 text-blue-400 animate-chevron-pulse -ml-3" style={{ animationDelay: '0.2s' }} />
-                    <ChevronRight className="w-6 h-6 text-blue-400 animate-chevron-pulse -ml-3" style={{ animationDelay: '0.4s' }} />
+                  
+                  <div className="flex items-center mr-2">
+                    <ChevronRight className="w-5 h-5 text-blue-400 animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                    <ChevronRight className="w-5 h-5 text-blue-400 animate-chevron-pulse -ml-2" style={{ animationDelay: '0.2s' }} />
+                    <ChevronRight className="w-5 h-5 text-blue-400 animate-chevron-pulse -ml-2" style={{ animationDelay: '0.4s' }} />
                   </div>
                   
                   {user ? (
