@@ -84,7 +84,7 @@ export function HeroSection() {
                     className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
                     asChild
                   >
-                    <Link href="/kyc">
+                    <Link href="/chat">
                       <span className="text-sm sm:text-base">Ask AI Assistant</span>
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
@@ -98,7 +98,7 @@ export function HeroSection() {
                   >
                     <Link href="/how-it-works">
                       <span className="text-sm sm:text-base">Learn How It Works</span>
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                 )}
