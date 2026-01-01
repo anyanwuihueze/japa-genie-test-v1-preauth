@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 const USD_TO_NGN_RATE = 1500;
 
 function CheckoutContent() {
+  const router = useRouter();
   const [plan, setPlan] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [loading, setLoading] = useState(false);
@@ -68,6 +70,8 @@ function CheckoutContent() {
         console.log(`✅ Converted: $${data.usdAmount} → ₦${data.ngnAmount.toLocaleString()}`);
       }
       
+      // ✅ KEEP for external payment URLs (Stripe/Paystack)
+      // These MUST open in browser for payment processing
       window.location.href = data.url;
     } catch (error: any) {
       alert(error.message || 'Payment error. Please try again.');
@@ -80,7 +84,8 @@ function CheckoutContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">No Plan Selected</h2>
-          <Button onClick={() => window.location.href = '/pricing'}>
+          {/* ✅ FIXED: Use router.push for PWA compatibility */}
+          <Button onClick={() => router.push('/pricing')}>
             Back to Plans
           </Button>
         </div>
@@ -141,9 +146,10 @@ function CheckoutContent() {
                 `Pay ${paymentMethod === 'paystack' ? `₦${ngnPrice.toLocaleString()}` : `$${plan.price}`}`
               )}
             </Button>
+            {/* ✅ FIXED: Use router.push for PWA compatibility */}
             <Button 
               variant="outline" 
-              onClick={() => window.location.href = '/pricing'}
+              onClick={() => router.push('/pricing')}
               className="w-full"
             >
               Back to Plans

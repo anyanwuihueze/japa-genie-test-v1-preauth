@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('�� Auth state changed:', event)
+      console.log('🔄 Auth state changed:', event)
       setUser(session?.user ?? null)
       
       // Force reload on sign in to ensure UI updates
@@ -68,12 +68,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🚀 Starting Google sign in...')
       
+      // Get kyc_session_id from sessionStorage if exists
+      const kycSessionId = sessionStorage.getItem('kyc_session_id')
+      console.log('📋 KYC Session ID found:', kycSessionId)
+      
+      // Build state parameter: contains both next path and kyc_session_id
+      let stateParams = ''
+      if (redirectPath) {
+        stateParams += `next=${encodeURIComponent(redirectPath)}`
+      }
+      if (kycSessionId) {
+        if (stateParams) stateParams += '&'
+        stateParams += `kyc_session_id=${encodeURIComponent(kycSessionId)}`
+      }
+      
       let callbackUrl = `${window.location.origin}/auth/callback`
       if (redirectPath) {
         callbackUrl += `?next=${encodeURIComponent(redirectPath)}`
       }
       
       console.log('🌐 Callback URL:', callbackUrl)
+      console.log('🔑 State params:', stateParams)
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -83,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             access_type: 'offline',
             prompt: 'consent',
           },
+          // ✅ CRITICAL FIX: Pass kyc_session_id in state
+          ...(stateParams && { state: stateParams })
         },
       })
       
@@ -92,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      console.log('✅ OAuth initiated')
+      console.log('✅ OAuth initiated with KYC context')
     } catch (err) {
       console.error('💥 Error:', err)
       alert('An unexpected error occurred during login')
