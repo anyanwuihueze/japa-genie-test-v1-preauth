@@ -1,36 +1,36 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { FileText, Users, Briefcase, Target } from 'lucide-react';
+import { FileText, Users, Briefcase, Target, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
   {
     icon: Target,
     title: "AI Visa Matchmaker",
-    description: "Get matched to countries with the highest approval rates for your specific profile.",
-    details: "Our AI analyzes your qualifications and budget to recommend the best visa pathways for you.",
+    description: "Instantly discover which countries match your profile and budget.",
+    details: "Our AI analyzes your qualifications to recommend the best visa pathways with highest approval rates.",
     href: "/visa-matchmaker"
   },
   {
     icon: FileText,
     title: "Visa Rejection Reversal",
-    description: "Expert strategies to successfully appeal or reapply after a rejection.",
-    details: "We analyze rejection reasons and guide you step-by-step with tailored reapplication strategies that maximize approval odds.",
+    description: "Turn your rejection into approval with expert strategies.",
+    details: "We analyze rejection reasons and guide you step-by-step with tailored reapplication strategies that work.",
     href: "/rejection-reversal"
   },
   {
     icon: Users,
     title: "Rejection-Proof Documents",
-    description: "Guaranteed document templates and guidance to minimize refusal risk.",
-    details: "From cover letters to financial statements, we provide ready-to-use templates reviewed by immigration experts.",
+    description: "Use our templates to create embassy-ready documents.",
+    details: "From cover letters to financial statements, get ready-to-use templates reviewed by immigration experts.",
     href: "/document-check"
   },
   {
     icon: Briefcase,
     title: "Proof of Funds Guidance",
-    description: "Trusted pathways to meet financial requirements without stress.",
-    details: "Learn safe, verifiable methods to present proof of funds that embassies accept with confidence.",
+    description: "Meet financial requirements with confidence.",
+    details: "Learn safe, verifiable methods to present proof of funds that embassies accept without question.",
     href: "/public-proof-of-funds"
   }
 ];
@@ -41,10 +41,10 @@ export function WhatWeDoSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center space-y-4 mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary">
-            What We Do
+            Explore Our Tools
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Your complete toolkit for a successful visa application.
+            Everything you need for a successful visa application.
           </p>
         </header>
 
@@ -65,8 +65,10 @@ export function WhatWeDoSection() {
                   <p className="text-sm text-slate-400 mb-4">{feature.description}</p>
                 </div>
                 <div className="mt-auto">
-                  <div className="text-sm text-primary group-hover:text-amber-400 transition-colors font-medium">
-                    Learn More →
+                  <div className="flex items-center justify-center gap-1 text-sm text-primary group-hover:text-amber-400 transition-colors font-medium">
+                    <ChevronRight className="w-4 h-4 animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                    <ChevronRight className="w-4 h-4 animate-chevron-pulse -ml-1" style={{ animationDelay: '0.2s' }} />
+                    <span>Try This Tool</span>
                   </div>
                 </div>
               </Link>

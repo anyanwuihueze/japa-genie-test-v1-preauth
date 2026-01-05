@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, FileInput, Sparkles, Plane, BarChart, Bot, CheckCircle, Users, ShieldCheck, Calculator } from 'lucide-react';
+import { UserPlus, FileInput, Sparkles, Plane, BarChart, Bot, CheckCircle, Users, ShieldCheck, Calculator, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const steps = [
@@ -99,17 +99,34 @@ export default function HowItWorksPage() {
             Whether you need AI guidance or human expert support, Japa Genie has you covered. 
             Get personalized proof of funds calculations, document reviews, and interview coaching.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow">
-              <Link href="/kyc">
-                Start with AI Assistant <Sparkles className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50">
-              <Link href="/experts">
-                Connect with Human Experts <Users className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* AI Assistant Button with Chevrons */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-1.5" style={{ animationDelay: '0.2s' }} />
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-1.5" style={{ animationDelay: '0.4s' }} />
+              </div>
+              <Button asChild size="lg" className="bg-gradient-to-r from-amber-400 to-primary text-primary-foreground hover:shadow-lg transition-shadow">
+                <Link href="/kyc">
+                  Start with AI Assistant <Sparkles className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* Human Experts Button with Chevrons */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-1.5" style={{ animationDelay: '0.2s' }} />
+                <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-1.5" style={{ animationDelay: '0.4s' }} />
+              </div>
+              <Button asChild size="lg" variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50">
+                <Link href="/experts">
+                  Connect with Human Experts <Users className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
             ✅ Free AI assistance • ✅ Verified experts • ✅ Money-back guarantee

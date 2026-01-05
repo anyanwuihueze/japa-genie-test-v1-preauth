@@ -48,8 +48,9 @@ const config = {
           "100%": { transform: "translateX(-50%)" }
         },
         "chevron-pulse": {
-          "0%, 100%": { opacity: "0.3", transform: "translateX(0)" },
-          "50%": { opacity: "1", transform: "translateX(2px)" },
+          "0%": { opacity: "0.2", transform: "translateX(-3px)" },
+          "50%": { opacity: "1", transform: "translateX(6px)" },
+          "100%": { opacity: "0.2", transform: "translateX(-3px)" },
         },
         glow: {
           '0%, 100%': { filter: 'drop-shadow(0 0 5px hsl(var(--primary)))' },

@@ -1,5 +1,5 @@
 // src/ai/flows/analyze-proof-of-funds.ts - PRODUCTION READY
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
@@ -70,8 +70,8 @@ export async function analyzeProofOfFunds(
   try {
     console.log('🤖 Starting POF analysis for:', input.userProfile.destination_country);
 
-    const model = groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 2000,
@@ -155,7 +155,7 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
 
     console.log('📤 Sending request to Gemini...');
     const result = await model.generateContent(prompt);
-    const responseText = completion.choices[0].message.content;
+    const responseText = result.response.text();
     
     console.log('📥 Received response, length:', responseText.length);
 

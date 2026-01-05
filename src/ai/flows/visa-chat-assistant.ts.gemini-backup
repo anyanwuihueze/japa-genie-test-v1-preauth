@@ -1,8 +1,8 @@
 import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
 'use server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
 /* ---------- TYPES ---------- */
 interface VisaAssistantInput {
@@ -40,6 +40,46 @@ interface VisaAssistantOutput {
   };
 }
 
+/* ---------- SCHEMA (bypass TS strictness) ---------- */
+const visaInsightsSchema = {
+  type: 'OBJECT',
+  properties: {
+    chatResponse: { type: 'STRING' },
+    suggestedCountries: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING' },
+          visaType: { type: 'STRING' },
+          estimatedCost: { type: 'NUMBER' },
+          processingTimeMonths: { type: 'NUMBER' },
+          pros: { type: 'ARRAY', items: { type: 'STRING' } },
+          cons: { type: 'ARRAY', items: { type: 'STRING' } },
+        },
+        required: ['name', 'visaType', 'estimatedCost', 'processingTimeMonths', 'pros', 'cons'],
+      },
+    },
+    timeline: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          step: { type: 'STRING' },
+          durationWeeks: { type: 'NUMBER' },
+        },
+        required: ['step', 'durationWeeks'],
+      },
+    },
+    alternativeStrategies: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
+  },
+  required: ['chatResponse'],
+};
+
+/* ---------- PROMPT BUILDER ---------- */
 const SYSTEM_PROMPT = `You are Japa Genie, a world-class visa strategist with 8+ years analyzing African → Global migration patterns.
 Speak in Markdown, cite real stats, never guarantee approval.
 Use the EXACT user details (age, country, destination, etc.) provided in the prompt below.
@@ -62,7 +102,9 @@ CRITICAL OUTPUT FORMAT - You MUST return valid JSON with ALL these fields:
     {"step": "Submit application", "durationWeeks": 1},
     {"step": "Wait for processing", "durationWeeks": 8}
   ],
-  "alternativeStrategies": ["Alternative path description"]
+  "alternativeStrategies": [
+    {"strategy": "Alternative path description", "successRate": 75}
+  ]
 }
 
 MANDATORY: For ANY visa question, include AT LEAST:
@@ -83,20 +125,21 @@ function buildPrompt(input: VisaAssistantInput): string {
   return `${history}Context: ${ctx}\nQuestion: ${question}`;
 }
 
+/* ---------- EXPORTED ACTION ---------- */
 export async function visaChatAssistant(input: VisaAssistantInput): Promise<VisaAssistantOutput> {
   const { wishCount, isSignedIn } = input;
 
-  const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: buildPrompt(input) }
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0.7,
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash', 
+    systemInstruction: SYSTEM_PROMPT,
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: visaInsightsSchema as any,
+    },
   });
 
-  const data = JSON.parse(completion.choices[0].message.content || '{}');
+  const result = await model.generateContent(buildPrompt(input));
+  const data = JSON.parse(result.response.text());
 
   let answer = data.chatResponse?.replace(/\(?\d+\s*wishes?\s*remaining\)?/gi, '').trim() || '';
 

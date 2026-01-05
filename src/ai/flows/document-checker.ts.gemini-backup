@@ -1,6 +1,6 @@
 // src/ai/flows/document-checker.ts
 'use server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
@@ -148,8 +148,8 @@ const COUNTRY_RULES: Record<string, string> = {
 };
 
 export async function documentChecker(input: DocumentCheckerInput): Promise<DocumentCheckerOutput> {
-  const model = groq.chat.completions.create({ 
-    model: 'llama-3.3-70b-versatile',
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash",
     generationConfig: {
       temperature: 0.4, // CHANGED: Lower temp for more factual analysis
       maxOutputTokens: 3000 // CHANGED: Increased for detailed analysis

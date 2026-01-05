@@ -1,6 +1,6 @@
 'use server';
 
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { 
   type RejectionStrategyInput,
   type RejectionStrategyOutput 
@@ -12,8 +12,8 @@ export type { RejectionStrategyInput, RejectionStrategyOutput };
 
 export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
   try {
-    const model = groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 2000
