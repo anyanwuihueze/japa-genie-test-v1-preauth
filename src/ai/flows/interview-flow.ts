@@ -1,6 +1,10 @@
 'use server';
 import Groq from 'groq-sdk';
 
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
+
 interface InterviewQuestionInput {
   visaType: string;
   destination: string;
@@ -12,12 +16,8 @@ interface InterviewQuestionOutput {
   question: string;
 }
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-
 export async function generateInterviewQuestion(input: InterviewQuestionInput): Promise<InterviewQuestionOutput> {
   try {
-    const model = groq.chat.completions.create({ model: 'llama-3.3-70b-versatile' });
-
     const prompt = `You are an expert visa consular officer. Generate ONE realistic visa interview question.
 
 Visa: ${input.visaType}
@@ -27,10 +27,13 @@ Previous Questions: ${input.previousQuestions.join(', ') || 'None'}
 
 Generate ONE new, relevant question that a real officer would ask.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const question = response.text().trim();
-
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    });
+    
+    const question = completion.choices[0].message.content?.trim() || '';
     return { question };
   } catch (error: any) {
     console.error('Interview error:', error);

@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { siteAssistant } from '@/ai/flows/site-assistant-flow';
 
@@ -11,9 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // Call the reliable AI flow
     const result = await siteAssistant({ question: message });
-
     return NextResponse.json({ response: result.answer });
     
   } catch (error: any) {

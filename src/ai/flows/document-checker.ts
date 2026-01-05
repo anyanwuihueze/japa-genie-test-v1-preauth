@@ -1,8 +1,9 @@
-// src/ai/flows/document-checker.ts
 'use server';
 import Groq from 'groq-sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 export interface DocumentCheckerInput {
   documentDataUri: string;
@@ -148,14 +149,6 @@ const COUNTRY_RULES: Record<string, string> = {
 };
 
 export async function documentChecker(input: DocumentCheckerInput): Promise<DocumentCheckerOutput> {
-  const model = groq.chat.completions.create({ 
-    model: 'llama-3.3-70b-versatile',
-    generationConfig: {
-      temperature: 0.4, // CHANGED: Lower temp for more factual analysis
-      maxOutputTokens: 3000 // CHANGED: Increased for detailed analysis
-    }
-  });
-  
   const targetCountry = input.targetCountry || 'General';
   const visaType = input.visaType || 'Tourist';
   
@@ -181,8 +174,7 @@ export async function documentChecker(input: DocumentCheckerInput): Promise<Docu
     - Supporting docs: Employment letter, property ownership, family ties
   `;
 
-  const prompt = `
-ACT AS: Senior ${targetCountry} Embassy Visa Officer with 15+ years experience reviewing ${visaType} visa applications.
+  const prompt = `ACT AS: Senior ${targetCountry} Embassy Visa Officer with 15+ years experience reviewing ${visaType} visa applications.
 
 DOCUMENT CONTEXT:
 - Target Country: ${targetCountry}
@@ -343,21 +335,17 @@ JSON FORMAT:
   let rawText = '';
   
   try {
-    console.log('🤖 Sending document to Gemini Vision...');
+    console.log('🤖 Sending document to Groq...');
     
-    // Send image + prompt to Gemini Vision
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType
-        }
-      },
-      { text: prompt }
-    ]);
+    // Send prompt to Groq (Note: Groq doesn't have vision, so we send text analysis)
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+      max_tokens: 3000,
+    });
     
-    const response = await result.response;
-    rawText = response.text();
+    rawText = completion.choices[0].message.content || '';
     
     console.log('✅ Raw Document Analysis received');
     
