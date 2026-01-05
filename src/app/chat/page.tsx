@@ -1,5 +1,7 @@
-// src/app/chat/page.tsx - FIXED VERSION
+
+// src/app/chat/page.tsx - FINAL FIX VERSION
 'use client';
+
 import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { createClient } from '@/lib/supabase/client';
@@ -11,52 +13,47 @@ function ChatPageContent() {
   const { user, loading: authLoading } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [initialKycData, setInitialKycData] = useState(null);
   const supabase = createClient();
   const searchParams = useSearchParams();
 
-  // 🚨 FIXED: Read KYC from URL params OR sessionStorage
   useEffect(() => {
-    console.log('🔍 Chat page checking for KYC data...');
+    console.log('🔍 ChatPageContent: Mounted. Checking for KYC data...');
     
-    // Check URL params first (from KYC redirect)
+    // Read from URL params once on component mount
     const country = searchParams.get('country');
     const destination = searchParams.get('destination');
     const age = searchParams.get('age');
     const visaType = searchParams.get('visaType');
-    const profession = searchParams.get('profession');
     const sessionId = searchParams.get('sessionId');
 
     if (country && destination && age && visaType) {
-      console.log('✅ Found KYC in URL params, saving to sessionStorage');
+      console.log('✅ Found KYC data in URL params. Saving to sessionStorage...');
       
       const kycData = {
         country,
         destination,
         age,
         visaType,
-        profession: profession || undefined,
+        profession: searchParams.get('profession') || undefined,
         userType: searchParams.get('userType') || undefined,
-        timelineUrgency: searchParams.get('timelineUrgency') || undefined
+        timelineUrgency: searchParams.get('timelineUrgency') || undefined,
       };
       
       sessionStorage.setItem('kycData', JSON.stringify(kycData));
-      
-      // Save session ID if provided
       if (sessionId) {
         sessionStorage.setItem('kyc_session_id', sessionId);
       }
       
-      console.log('🎯 KYC data saved from URL:', kycData);
+      setInitialKycData(kycData); // Pass data directly to client
+      console.log('✅ KYC data ready to be passed to ChatClient:', kycData);
     } else {
-      // Check if KYC already exists in sessionStorage
-      const existingKYC = sessionStorage.getItem('kycData');
-      if (existingKYC) {
-        console.log('✅ KYC already in sessionStorage:', JSON.parse(existingKYC));
-      } else {
-        console.log('⚠️ No KYC data found in URL or sessionStorage');
-      }
+      console.log('⚠️ No KYC data found in URL. ChatClient will check sessionStorage.');
     }
-  }, [searchParams]);
+
+    // This effect should only run once to grab initial URL params.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     async function checkOnboarding() {
@@ -65,7 +62,6 @@ function ChatPageContent() {
         return;
       }
 
-      // Check if onboarding already completed
       const onboardingComplete = localStorage.getItem('name_onboarding_complete');
       if (onboardingComplete === 'true') {
         setIsCheckingProfile(false);
@@ -73,21 +69,20 @@ function ChatPageContent() {
       }
 
       try {
-        // Check if user has preferred_name in database
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('user_profiles')
           .select('preferred_name')
           .eq('id', user.id)
           .single();
 
-        // ✅ FIXED LINE: Only show modal if no name AND not completed onboarding
-        if ((error || !profile?.preferred_name) && !localStorage.getItem('name_onboarding_complete')) {
+        if (!profile?.preferred_name) {
           setShowModal(true);
+        } else {
+          localStorage.setItem('name_onboarding_complete', 'true');
         }
-
-        setIsCheckingProfile(false);
       } catch (error) {
-        console.error('Error checking profile:', error);
+        console.error('Error checking profile for onboarding:', error);
+      } finally {
         setIsCheckingProfile(false);
       }
     }
@@ -97,21 +92,21 @@ function ChatPageContent() {
 
   if (authLoading || isCheckingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your chat...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      {showModal && (
-        <WelcomeNameModal 
-          user={user}
-          onComplete={() => setShowModal(false)}
-        />
+      {showModal && user && (
+        <WelcomeNameModal user={user} onComplete={() => setShowModal(false)} />
       )}
-      <ChatClient />
+      <ChatClient initialKycData={initialKycData} />
     </>
   );
 }

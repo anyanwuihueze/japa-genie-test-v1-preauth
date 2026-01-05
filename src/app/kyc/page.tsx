@@ -1,18 +1,19 @@
-// src/app/kyc/page.tsx - FIXED VERSION
+
+// src/app/kyc/page.tsx - FINAL FIX VERSION
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { createClient } from '@/lib/supabase/client';
-import NameModal from '@/components/modals/NameModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, User, MapPin, Calendar, Briefcase, GraduationCap, Clock, DollarSign, Target } from 'lucide-react';
+import { ArrowRight, User, MapPin, Calendar, Briefcase, Clock, DollarSign, Target } from 'lucide-react';
 import { ALL_COUNTRIES } from '@/lib/countries';
+import NameModal from '@/components/modals/NameModal';
 
 interface KYCData {
   country: string;
@@ -37,19 +38,14 @@ export default function KYCPage() {
   });
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isRedirecting, setIsRedirecting] = useState(false); // 🚨 NEW: Lock to prevent race conditions
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isRedirecting) return; // 🚨 PREVENT double submission
-    
     setLoading(true);
-    setIsRedirecting(true); // 🚨 LOCK the redirect
 
     try {
       const sessionId = user ? null : generateSessionId();
       
-      // Save to KYC sessions for analytics
       await supabase.from('kyc_sessions').insert({
         user_id: user?.id || null,
         session_id: sessionId,
@@ -63,7 +59,6 @@ export default function KYCPage() {
         budget: formData.budget || null
       });
 
-      // Save to user profiles if logged in
       if (user?.id) {
         await supabase.from('user_profiles').upsert({
           id: user.id,
@@ -80,7 +75,7 @@ export default function KYCPage() {
         });
       }
 
-      // 🚨 CRITICAL FIX: Build URL parameters BEFORE any storage
+      // ✅ FIX: Pass data via URL parameters to guarantee delivery
       const params = new URLSearchParams();
       params.append('country', formData.country);
       params.append('destination', formData.destination);
@@ -91,31 +86,12 @@ export default function KYCPage() {
       if (formData.timelineUrgency) params.append('timelineUrgency', formData.timelineUrgency);
       if (sessionId) params.append('sessionId', sessionId);
 
-      // 🚨 Save to sessionStorage AFTER building params
-      sessionStorage.setItem('kycData', JSON.stringify({
-        country: formData.country,
-        destination: formData.destination,
-        age: formData.age,
-        visaType: formData.visaType,
-        profession: formData.profession,
-        userType: formData.userType,
-        timelineUrgency: formData.timelineUrgency,
-        budget: formData.budget
-      }));
-
-      if (!user) sessionStorage.setItem('kyc_session_id', sessionId!);
-      
-      // 🚨 FORCE REDIRECT WITH PARAMS - No race condition
-      console.log('✅ KYC complete, redirecting to chat with params:', params.toString());
       router.push(`/chat?${params.toString()}`);
       
     } catch (error) {
       console.error('KYC submission error:', error);
       alert('Error saving data. Please try again.');
-      setIsRedirecting(false); // 🚨 Unlock on error
-    } finally {
       setLoading(false);
-      // Don't unlock isRedirecting - let the redirect complete
     }
   };
 
@@ -130,13 +106,6 @@ export default function KYCPage() {
   const prevStep = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
-
-  // 🚨 BLOCK auth state changes during KYC
-  useEffect(() => {
-    if (isRedirecting) {
-      console.log('🚫 KYC redirect in progress - ignoring auth changes');
-    }
-  }, [isRedirecting]);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
 
@@ -249,6 +218,7 @@ export default function KYCPage() {
                   <Select 
                     onValueChange={(v) => updateField(currentStepData.field, v)} 
                     required={currentStepData.required}
+                    value={formData[currentStepData.field]}
                   >
                     <SelectTrigger className="h-12 text-lg">
                       <SelectValue placeholder={currentStepData.placeholder} />
@@ -274,6 +244,7 @@ export default function KYCPage() {
                   <Select 
                     onValueChange={(v) => updateField(currentStepData.field, v)} 
                     required={currentStepData.required}
+                    value={formData[currentStepData.field]}
                   >
                     <SelectTrigger className="h-12 text-lg">
                       <SelectValue placeholder={currentStepData.placeholder} />
@@ -288,6 +259,7 @@ export default function KYCPage() {
                   <Select 
                     onValueChange={(v) => updateField(currentStepData.field, v)} 
                     required={currentStepData.required}
+                    value={formData[currentStepData.field]}
                   >
                     <SelectTrigger className="h-12 text-lg">
                       <SelectValue placeholder={currentStepData.placeholder} />
@@ -335,9 +307,9 @@ export default function KYCPage() {
                   <Button
                     type="submit"
                     className="flex-1 h-14 text-lg bg-gradient-to-r from-blue-600 to-purple-600"
-                    disabled={loading || isRedirecting || (currentStepData.required && !formData[currentStepData.field])}
+                    disabled={loading || (currentStepData.required && !formData[currentStepData.field])}
                   >
-                    {loading || isRedirecting ? "Processing..." : "Get Personalized Advice"}
+                    {loading ? "Saving..." : "Get Personalized Advice"}
                   </Button>
                 )}
               </div>
