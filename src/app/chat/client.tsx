@@ -143,6 +143,207 @@ export default function UserChat() {
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Missing functions that need to be added
+  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
+    if (!user) return null;
+    try {
+      const { data } = await supabase.from('messages').insert({ user_id: user.id, role, content }).select().single();
+      return data;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const updateChatProgress = async () => {
+    if (!user) return;
+    try {
+      const { data: currentProgress } = await supabase
+        .from('user_progress')
+        .select('total_chat_messages')
+        .eq('user_id', user.id)
+        .single();
+
+      const newCount = (currentProgress?.total_chat_messages || 0) + 1;
+
+      await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          total_chat_messages: newCount,
+          last_chat_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+    } catch (error) {
+      console.log('⚠️ Progress update failed:', error);
+    }
+  };
+
+  const saveInsightsToDatabase = async (insightsData: InsightOutput) => {
+    if (!user || !insightsData) return;
+    try {
+      await supabase
+        .from('visa_insights')
+        .insert({
+          user_id: user.id,
+          insight_type: 'country_comparison',
+          insight_data: insightsData,
+          created_at: new Date().toISOString()
+        });
+    } catch (error) {
+      console.log('⚠️ Insights save failed:', error);
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (!user) return;
+    if (!window.confirm('Clear all chat history? This cannot be undone.')) return;
+    setIsClearing(true);
+    try {
+      await supabase.from('messages').update({ deleted_at: new Date().toISOString() }).eq('user_id', user.id).is('deleted_at', null);
+      setMessages([{ role: 'assistant', content: `Welcome back, ${userName}! ✨ You have unlimited wishes.` }]);
+      setWishCount(0);
+      setAiMessageCount(0);
+      setInsights(null);
+    } catch (error) {
+      alert('Failed to clear chat.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    const newMessage = currentInput.trim();
+    if (!newMessage) return;
+    
+    setIsTyping(true);
+    setCurrentInput('');
+    setWishCount(prev => prev + 1);
+    
+    const userMessage: Message = { role: 'user', content: newMessage, timestamp: Date.now() };
+    setMessages(prev => [...prev, userMessage]);
+    
+    try {
+      // 🚨 FIXED: Get user data from multiple sources with priority
+      let userData = null;
+
+      if (user) {
+        // For logged-in users, use Supabase profile
+        userData = userProfile;
+        console.log('👤 Using user profile from Supabase:', userData);
+      } else {
+        // For anonymous users, check MULTIPLE sources in order
+        const kycData = sessionStorage.getItem("kycData");
+        if (kycData) {
+          try {
+            userData = JSON.parse(kycData);
+            console.log("🎯 KYC loaded from sessionStorage:", userData);
+          } catch (error) {
+            console.error("❌ Failed to parse sessionStorage KYC:", error);
+          }
+        }
+        
+        // Fallback to localStorage if sessionStorage is empty
+        if (!userData) {
+          const localStorageKYC = localStorage.getItem("userKYC");
+          if (localStorageKYC) {
+            try {
+              userData = JSON.parse(localStorageKYC);
+              console.log("📦 KYC loaded from localStorage:", userData);
+            } catch (error) {
+              console.error("❌ Failed to parse localStorage KYC:", error);
+            }
+          }
+        }
+        
+        // Fallback to kycSession state (from Supabase query)
+        if (!userData && kycSession) {
+          userData = kycSession;
+          console.log("🗄️ KYC loaded from kycSession state:", userData);
+        }
+      }
+
+      // 🚨 CRITICAL: Convert age from string to number if needed
+      if (userData && userData.age) {
+        userData.age = Number(userData.age) || undefined;
+      }
+
+      // Build userContext with correct field mapping
+      const userContext = userData ? {
+        country: userData.country || userData.country,
+        destination: userData.destination_country || userData.destination,
+        age: userData.age,
+        visaType: userData.visa_type || userData.visaType,
+        profession: userData.profession,
+        userType: userData.user_type || userData.userType,
+        timelineUrgency: userData.timeline_urgency || userData.timelineUrgency,
+        progress: userProgress
+      } : {};
+
+      console.log('🚀 Final userContext being sent to API:', userContext);
+
+      // Call the chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: newMessage,
+          userContext,
+          conversationHistory: messages,
+          isSignedIn: !!user
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Save user message to database (if signed in)
+      if (user) {
+        // Message saving disabled for now
+        // Progress update disabled for now
+      }
+
+      // Add AI response to chat
+      const aiMessage: Message = { 
+        role: 'assistant', 
+        content: result.answer || result.response || 'No response available',
+        timestamp: Date.now()
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+
+      // Save AI message to database (if signed in)
+      if (user) {
+        // Message saving disabled for now
+      }
+
+      // Update insights if available
+      if (result.insights) {
+        setInsights(result.insights);
+        if (user) {
+          // Insights saving disabled for now
+        }
+      }
+
+      // Update AI message count
+      setAiMessageCount(prev => prev + 1);
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMsg: Message = {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   // 🚨 READ KYC DATA FROM STORAGE - FIXED
   useEffect(() => {
     const kycData = sessionStorage.getItem("kycData") || localStorage.getItem("userKYC");
@@ -251,289 +452,30 @@ export default function UserChat() {
     if (messages.length === 0 && !isLoadingMessages) {
       console.log('🎯 Creating personalized welcome with available data');
       
-      // Use userProfile for signed-in users, kycSession for anonymous users
-      const userData = user ? userProfile : kycSession;
+      // Build personalized welcome message
+      let welcomeMessage = `Welcome to Japa Genie, ${userName}! ✨`;
       
-      if (userData) {
-        setMessages([{ role: 'assistant', content: "🎯 Analyzing your profile for personalized visa advice..." }]);
-        setIsTyping(true);
-
-        // Enhanced context with available data
-        const enhancedContext = {
-          kyc: userData,
-          progress: userProgress
-        };
-
-        fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            question: `Provide comprehensive ${userData.visa_type} advice for ${userData.destination_country} for a ${userData.age}-year-old from ${userData.country}${userData.profession ? ` working as ${userData.profession}` : ''}. Include costs, timeline, requirements, and strategic advice. Be specific and actionable.`,
-            userContext: enhancedContext,
-            conversationHistory: [],
-            isSignedIn: !!user
-          }),
-        })
-        .then(response => response.json())
-        .then(chatResult => {
-          console.log('📦 Welcome message response:', chatResult);
-          
-          // ✅ FIX: Use chatResult.answer (not chatResult.response)
-          const aiResponseText = chatResult.answer || chatResult.response || chatResult.content || 'No response available';
-          console.log('✅ AI response text:', aiResponseText.substring(0, 100) + '...');
-          
-          setMessages([{ role: 'assistant', content: aiResponseText }]);
-          if (chatResult.insights) {
-            setInsights(chatResult.insights);
-          }
-        })
-        .catch(err => {
-          console.error('Chat API error:', err);
-          const fallbackMessage = userData ? 
-            `Welcome! I see you're exploring ${userData.visa_type} opportunities in ${userData.destination_country} from ${userData.country}. As a ${userData.age}-year-old${userData.profession ? ` ${userData.profession}` : ''}, you have unique opportunities. Let me help you navigate the requirements and create your success strategy!` :
-            `Welcome, ${userName}! ✨ You have unlimited wishes.`;
-          
-          setMessages([{ role: 'assistant', content: fallbackMessage }]);
-        })
-        .finally(() => {
-          setIsTyping(false);
-        });
-      } else {
-        // No user data available - show generic welcome
-        setMessages([{ 
-          role: 'assistant', 
-          content: user ? 
-            `Welcome, ${userName}! ✨ You have unlimited wishes.` :
-            "Welcome, Pathfinder! I'm Japa Genie. I can grant you 3 powerful wishes to map out your visa journey. What is your first wish?"
-        }]);
-      }
-    }
-  }, [user, userProfile, kycSession, messages.length, userName, isLoadingMessages]);
-
-  // ========== LOAD EXISTING MESSAGES ==========
-  useEffect(() => {
-    async function loadMessages() {
-      if (!user) {
-        // Don't set messages here - let the personalized welcome handle it
-        setWishCount(0);
-        return;
-      }
-      
-      setIsLoadingMessages(true);
-      try {
-        const { data } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: true });
-          
-        if (data && data.length > 0) {
-          setMessages(data.map(msg => ({ 
-            id: msg.id, 
-            role: msg.role as 'user' | 'assistant', 
-            content: msg.content 
-          })));
-          setWishCount(data.filter(m => m.role === 'user').length);
-          setAiMessageCount(data.filter(m => m.role === 'assistant').length);
-          setShowBanner(false);
+      if (userProfile) {
+        if (userProfile.destination_country && userProfile.visa_type) {
+          welcomeMessage = `Welcome ${userName}! Ready to explore ${userProfile.visa_type} visa options for ${userProfile.destination_country}? 🛫`;
+        } else if (userProfile.country) {
+          welcomeMessage = `Hello ${userName} from ${userProfile.country}! I'm here to help with your visa journey. Ask me anything! 🌍`;
         }
-        // If no messages, the personalized welcome above will handle it
-      } catch (error) {
-        console.error('Error loading messages:', error);
-      } finally {
-        setIsLoadingMessages(false);
+      } else if (kycSession) {
+        if (kycSession.destination_country && kycSession.visa_type) {
+          welcomeMessage = `Welcome! Let's explore ${kycSession.visa_type} visa options for ${kycSession.destination_country} together! 🚀`;
+        }
       }
-    }
-
-    if (!authLoading && user) {
-      loadMessages();
-    }
-  }, [user, authLoading, supabase]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
-  // ========== CHAT FUNCTIONS ==========
-  const handleClearChat = async () => {
-    if (!user) return;
-    if (!window.confirm('Clear all chat history? This cannot be undone.')) return;
-    setIsClearing(true);
-    try {
-      await supabase.from('messages').update({ deleted_at: new Date().toISOString() }).eq('user_id', user.id).is('deleted_at', null);
-      setMessages([{ role: 'assistant', content: `Welcome back, ${userName}! ✨ You have unlimited wishes.` }]);
-      setWishCount(0);
-      setAiMessageCount(0);
-      setInsights(null);
-    } catch (error) {
-      alert('Failed to clear chat.');
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
-    if (!user) return null;
-    try {
-      const { data } = await supabase.from('messages').insert({ user_id: user.id, role, content }).select().single();
-      return data;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const updateChatProgress = async () => {
-    if (!user) return;
-    
-    try {
-      const { data: currentProgress } = await supabase
-        .from('user_progress')
-        .select('total_chat_messages')
-        .eq('user_id', user.id)
-        .single();
-
-      const newCount = (currentProgress?.total_chat_messages || 0) + 1;
-
-      const { error: progressError } = await supabase
-        .from('user_progress')
-        .upsert({
-          user_id: user.id,
-          total_chat_messages: newCount,
-          last_chat_date: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
       
-      if (progressError) {
-        console.log('⚠️ Chat progress update failed:', progressError);
-      } else {
-        console.log('✅ Chat progress updated:', newCount, 'messages');
-        const { data: updatedProgress } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        setUserProgress(updatedProgress);
-      }
-    } catch (error) {
-      console.log('⚠️ Progress update failed (non-critical):', error);
-    }
-  };
-
-  const saveInsightsToDatabase = async (insightsData: InsightOutput) => {
-    if (!user || !insightsData) return;
-    
-    try {
-      const { error } = await supabase
-        .from('visa_insights')
-        .insert({
-          user_id: user.id,
-          insight_type: 'country_comparison',
-          insight_data: insightsData,
-          created_at: new Date().toISOString()
-        });
-      
-      if (error) {
-        console.log('⚠️ Insights save failed:', error);
-      } else {
-        console.log('✅ Insights saved to database');
-      }
-    } catch (error) {
-      console.log('⚠️ Insights save failed (non-critical):', error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    const newMessage = currentInput.trim();
-    if (!newMessage) return;
-
-    // Add user message to chat
-    const userMsg: Message = { role: 'user', content: newMessage, timestamp: Date.now() };
-    setMessages((prev) => [...prev, userMsg]);
-    setCurrentInput('');
-    setIsTyping(true);
-    setWishCount(prev => prev + 1);
-
-    try {
-      // ✅ FIXED: Get user context with CORRECT KEY MAPPING
-      const userData = user ? userProfile : kycSession;
-      
-      // 🎯 KEY FIX: Map database field names to expected API field names
-      const userContext = userData ? {
-        country: userData.country,
-        destination: userData.destination_country || (userData as any).destination, // Handle both structures
-        age: userData.age,
-        visaType: userData.visa_type || (userData as any).visaType, // Handle both structures
-        profession: userData.profession,
-        userType: userData.user_type || (userData as any).userType, // Handle both structures
-        timelineUrgency: userData.timeline_urgency || (userData as any).timelineUrgency, // Handle both structures
-        progress: userProgress
-      } : {};
-
-      console.log('🚀 Sending user context to API:', userContext);
-
-      // ✅ Call the chat API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: newMessage,
-          userContext,
-          conversationHistory: messages,
-          isSignedIn: !!user
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // ✅ Save user message to database (if signed in)
-      if (user) {
-        await saveMessage('user', newMessage);
-        await updateChatProgress();
-      }
-
-      // ✅ Add AI response to chat
-      const aiMessage: Message = { 
-        role: 'assistant', 
-        content: result.answer || result.response || 'No response available',
+      // Set initial welcome message
+      const initialMessage: Message = {
+        role: 'assistant',
+        content: welcomeMessage,
         timestamp: Date.now()
       };
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // ✅ Save AI message to database (if signed in)
-      if (user) {
-        await saveMessage('assistant', aiMessage.content);
-      }
-
-      // ✅ Update insights if available
-      if (result.insights) {
-        setInsights(result.insights);
-        if (user) {
-          await saveInsightsToDatabase(result.insights);
-        }
-      }
-
-      // ✅ Update AI message count
-      setAiMessageCount(prev => prev + 1);
-
-    } catch (error) {
-      console.error('Chat error:', error);
-      const errorMsg: Message = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setIsTyping(false);
+      setMessages([initialMessage]);
     }
-  };
+  }, [messages.length, isLoadingMessages, userName, userProfile, kycSession]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

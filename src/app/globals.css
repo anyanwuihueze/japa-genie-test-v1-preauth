@@ -184,16 +184,16 @@ input, select, textarea {
 }
 
 /* ============================================= */
-/* CHAT PANEL BACKGROUND FIX - ONLY THIS CHANGES */
+/* CHAT PANEL BACKGROUND FIX - SPECIFIC TARGETING */
 /* ============================================= */
 
-/* Fix transparent chat panel - SAFE */
-[data-radix-dialog-content] {
+/* ✅ FIXED: Only target site assistant SHEETS (chat panel) */
+[data-radix-sheet-content] {
   background: white !important;
   backdrop-filter: none !important;
 }
 
-.dark [data-radix-dialog-content] {
+.dark [data-radix-sheet-content] {
   background: #0f172a !important;
 }
 

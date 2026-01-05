@@ -40,7 +40,7 @@ interface VisaAssistantOutput {
   };
 }
 
-/* ---------- SYSTEM PROMPT - SEPARATE FROM USER CONTEXT ---------- */
+/* ---------- SYSTEM PROMPT ---------- */
 const SYSTEM_PROMPT = `You are Japa Genie, a world-class visa strategist with 8+ years analyzing African → Global migration patterns.
 Speak in Markdown, cite real stats, never guarantee approval.
 
@@ -75,12 +75,10 @@ Even for simple questions, provide these insights to help users visualize their 
 function buildUserPrompt(input: VisaAssistantInput): string {
   const { question, conversationHistory = [], userContext } = input;
   
-  // Build conversation history cleanly
   const history = conversationHistory.length
     ? `Previous conversation:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n`
     : '';
     
-  // Build user context cleanly
   const ctx = userContext
     ? `User Profile: ${userContext.name || 'User'} (${userContext.age || 'unknown'} years) from ${userContext.country || 'unknown'} → ${userContext.destination || 'unknown'} (${userContext.visaType || 'unknown'}), works as ${userContext.profession || 'unknown'}, timeline: ${userContext.timelineUrgency || 'unknown'}`
     : 'No profile data available';
@@ -89,10 +87,7 @@ function buildUserPrompt(input: VisaAssistantInput): string {
 }
 
 export async function visaChatAssistant(input: VisaAssistantInput): Promise<VisaAssistantOutput> {
-  const { wishCount, isSignedIn } = input;
-
   try {
-    // PROPER GROQ MESSAGE STRUCTURE - SEPARATE SYSTEM AND USER
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
@@ -105,12 +100,8 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
 
     const data = JSON.parse(completion.choices[0].message.content || '{}');
 
-    let answer = data.chatResponse?.replace(/\(?\d+\s*wishes?\s*remaining\)?/gi, '').trim() || '';
-
-    if (!isSignedIn) {
-      const left = Math.max(0, 3 - wishCount);
-      answer += `\n\n_(${left} ${left === 1 ? 'wish' : 'wishes'} remaining)_`;
-    }
+    // CLEAN ANSWER - NO WISH COUNTING
+    let answer = data.chatResponse || '';
 
     const hasInsights =
       (data.suggestedCountries?.length > 0) ||
@@ -132,7 +123,6 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
   } catch (error) {
     console.error('Visa chat assistant error:', error);
     
-    // Fallback response
     return {
       answer: "I'm having trouble processing your visa question right now. Please try asking about specific countries, visa types, or your eligibility requirements.",
       insights: undefined

@@ -1,11 +1,11 @@
-// src/app/kyc/page.tsx - 5-QUESTION POWERHOUSE VERSION
+// src/app/kyc/page.tsx - FIXED VERSION
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import NameModal from '@/components/modals/NameModal';
 import { createClient } from '@/lib/supabase/client';
+import NameModal from '@/components/modals/NameModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,10 +37,14 @@ export default function KYCPage() {
   });
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isRedirecting, setIsRedirecting] = useState(false); // 🚨 NEW: Lock to prevent race conditions
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isRedirecting) return; // 🚨 PREVENT double submission
+    
     setLoading(true);
+    setIsRedirecting(true); // 🚨 LOCK the redirect
 
     try {
       const sessionId = user ? null : generateSessionId();
@@ -76,7 +80,18 @@ export default function KYCPage() {
         });
       }
 
-      // 🚀 SAVE KYC DATA FOR GENIE
+      // 🚨 CRITICAL FIX: Build URL parameters BEFORE any storage
+      const params = new URLSearchParams();
+      params.append('country', formData.country);
+      params.append('destination', formData.destination);
+      params.append('age', formData.age);
+      params.append('visaType', formData.visaType);
+      if (formData.profession) params.append('profession', formData.profession);
+      if (formData.userType) params.append('userType', formData.userType);
+      if (formData.timelineUrgency) params.append('timelineUrgency', formData.timelineUrgency);
+      if (sessionId) params.append('sessionId', sessionId);
+
+      // 🚨 Save to sessionStorage AFTER building params
       sessionStorage.setItem('kycData', JSON.stringify({
         country: formData.country,
         destination: formData.destination,
@@ -89,11 +104,18 @@ export default function KYCPage() {
       }));
 
       if (!user) sessionStorage.setItem('kyc_session_id', sessionId!);
-      router.push('/chat');
+      
+      // 🚨 FORCE REDIRECT WITH PARAMS - No race condition
+      console.log('✅ KYC complete, redirecting to chat with params:', params.toString());
+      router.push(`/chat?${params.toString()}`);
+      
     } catch (error) {
+      console.error('KYC submission error:', error);
       alert('Error saving data. Please try again.');
+      setIsRedirecting(false); // 🚨 Unlock on error
     } finally {
       setLoading(false);
+      // Don't unlock isRedirecting - let the redirect complete
     }
   };
 
@@ -108,6 +130,13 @@ export default function KYCPage() {
   const prevStep = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
+
+  // 🚨 BLOCK auth state changes during KYC
+  useEffect(() => {
+    if (isRedirecting) {
+      console.log('🚫 KYC redirect in progress - ignoring auth changes');
+    }
+  }, [isRedirecting]);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
 
@@ -306,9 +335,9 @@ export default function KYCPage() {
                   <Button
                     type="submit"
                     className="flex-1 h-14 text-lg bg-gradient-to-r from-blue-600 to-purple-600"
-                    disabled={loading || (currentStepData.required && !formData[currentStepData.field])}
+                    disabled={loading || isRedirecting || (currentStepData.required && !formData[currentStepData.field])}
                   >
-                    {loading ? "Saving..." : "Get Personalized Advice"}
+                    {loading || isRedirecting ? "Processing..." : "Get Personalized Advice"}
                   </Button>
                 )}
               </div>

@@ -13,7 +13,7 @@ interface Message {
   sender: 'user' | 'assistant';
 }
 
-const MAX_FREE_QUESTIONS = 5;
+const MAX_FREE_QUESTIONS = 999;
 const SESSION_KEY = 'chat_session_id';
 const QUESTIONS_KEY = 'chat_questions_count';
 const EMAIL_KEY = 'user_email_captured';

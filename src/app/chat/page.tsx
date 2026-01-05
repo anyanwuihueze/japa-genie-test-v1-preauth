@@ -1,4 +1,4 @@
-// src/app/chat/page.tsx - FIXED WITH SUSPENSE
+// src/app/chat/page.tsx - FIXED VERSION
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/AuthContext';
@@ -14,25 +14,49 @@ function ChatPageContent() {
   const supabase = createClient();
   const searchParams = useSearchParams();
 
-  // KYC DATA READING - ONLY ADDITION
+  // 🚨 FIXED: Read KYC from URL params OR sessionStorage
   useEffect(() => {
+    console.log('🔍 Chat page checking for KYC data...');
+    
+    // Check URL params first (from KYC redirect)
     const country = searchParams.get('country');
     const destination = searchParams.get('destination');
     const age = searchParams.get('age');
     const visaType = searchParams.get('visaType');
     const profession = searchParams.get('profession');
+    const sessionId = searchParams.get('sessionId');
 
     if (country && destination && age && visaType) {
-      sessionStorage.setItem('kycData', JSON.stringify({
+      console.log('✅ Found KYC in URL params, saving to sessionStorage');
+      
+      const kycData = {
         country,
         destination,
         age,
         visaType,
-        profession: profession || undefined
-      }));
+        profession: profession || undefined,
+        userType: searchParams.get('userType') || undefined,
+        timelineUrgency: searchParams.get('timelineUrgency') || undefined
+      };
+      
+      sessionStorage.setItem('kycData', JSON.stringify(kycData));
+      
+      // Save session ID if provided
+      if (sessionId) {
+        sessionStorage.setItem('kyc_session_id', sessionId);
+      }
+      
+      console.log('🎯 KYC data saved from URL:', kycData);
+    } else {
+      // Check if KYC already exists in sessionStorage
+      const existingKYC = sessionStorage.getItem('kycData');
+      if (existingKYC) {
+        console.log('✅ KYC already in sessionStorage:', JSON.parse(existingKYC));
+      } else {
+        console.log('⚠️ No KYC data found in URL or sessionStorage');
+      }
     }
   }, [searchParams]);
-  // END OF KYC DATA READING
 
   useEffect(() => {
     async function checkOnboarding() {
