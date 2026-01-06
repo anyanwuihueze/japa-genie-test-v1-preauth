@@ -1,5 +1,5 @@
-'use server';
 import { groq } from '@/lib/groq-client';
+'use server';
 
 
 interface UserProfile {

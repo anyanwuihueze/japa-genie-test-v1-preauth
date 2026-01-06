@@ -1,0 +1,1778 @@
+Debugger listening on ws://127.0.0.1:9229/09661b25-5067-4ba5-a3d9-5311a4dbd44f
+For help, see: https://nodejs.org/en/docs/inspector
+
+> nextn@0.1.0 dev
+> next dev --turbopack -p 9003 -p 9002
+
+Starting inspector on 127.0.0.1:9229 failed: address already in use
+Debugger listening on ws://127.0.0.1:9230/70b9b8a0-f27e-4459-b6fb-09520ecfa90c
+For help, see: https://nodejs.org/en/docs/inspector
+   the --inspect option was detected, the Next.js router server should be inspected at 9230.
+   ▲ Next.js 15.3.8 (Turbopack)
+   - Local:        http://localhost:9002
+   - Network:      http://10.88.0.3:9002
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+2026-01-05T15:39:29.550Z next:router-server:filesystem nextDataRoutes Set(0) {}
+2026-01-05T15:39:29.556Z next:router-server:filesystem dynamicRoutes []
+2026-01-05T15:39:29.556Z next:router-server:filesystem customRoutes {
+  headers: [],
+  rewrites: { beforeFiles: [], afterFiles: [], fallback: [] },
+  redirects: [
+    {
+      source: '/:path+/',
+      destination: '/:path+',
+      permanent: true,
+      locale: undefined,
+      internal: true
+    }
+  ]
+}
+2026-01-05T15:39:29.572Z next:router-server:filesystem publicFolderItems Set(0) {}
+2026-01-05T15:39:29.572Z next:router-server:filesystem nextStaticFolderItems Set(0) {}
+2026-01-05T15:39:29.572Z next:router-server:filesystem pageFiles Set(0) {}
+2026-01-05T15:39:29.572Z next:router-server:filesystem appFiles Set(0) {}
+Creating turbopack project { dir: '/home/user/studio', testMode: true }
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 2.5s
+ ✓ Ready in 6s
+ ⚠ Webpack is configured while Turbopack is not, which may cause problems.
+ ⚠ See instructions if you need to configure Turbopack:
+  https://nextjs.org/docs/app/api-reference/next-config-js/turbo
+
+2026-01-05T15:44:45.051Z next:router-server:main requestHandler! /videos/Welcome-to-Japa-Genie.mp4 {
+  matchedOutput: {
+    type: 'publicFolder',
+    fsPath: '/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/public',
+    itemPath: '/videos/Welcome-to-Japa-Genie.mp4'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/videos/Welcome-to-Japa-Genie.mp4',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:44:45.055Z send stat "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:44:45.058Z send pipe "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:44:45.058Z send accept ranges
+2026-01-05T15:44:45.059Z send cache-control public, max-age=0
+2026-01-05T15:44:45.059Z send modified Sun, 28 Sep 2025 04:12:23 GMT
+2026-01-05T15:44:45.059Z send etag W/"d8964-1998e8594fd"
+2026-01-05T15:44:45.059Z send content-type video/mp4
+2026-01-05T15:44:45.065Z send not modified
+2026-01-05T15:44:45.066Z compression undefined not compressible
+2026-01-05T15:44:45.066Z compression no compression: filtered
+2026-01-05T15:44:48.324Z next:router-server:main requestHandler! / {
+  matchedOutput: {
+    type: 'appFile',
+    fsPath: undefined,
+    locale: undefined,
+    itemsRoot: undefined,
+    itemPath: '/'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: { pathname: '/', query: [Object: null prototype] {} },
+  finished: true
+}
+2026-01-05T15:44:48.325Z next:router-server:main invokeRender / {
+  connection: 'upgrade',
+  host: '127.0.0.1:9002',
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0',
+  accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'accept-encoding': 'gzip, deflate, br, zstd',
+  'accept-language': 'en-US,en;q=0.9',
+  'cache-control': 'max-age=0',
+  cookie: 'vscode-secret-key-path=/ide-start/mint-key; vscode-cli-secret-half=RZLJrDHDYJd1yJJmxsW0hM2jeJI089I6tQozSJgkNyc',
+  referer: 'https://6000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev/',
+  'sec-ch-ua': '"Opera";v="125", "Not?A_Brand";v="8", "Chromium";v="141"',
+  'sec-ch-ua-arch': '"x86"',
+  'sec-ch-ua-bitness': '"64"',
+  'sec-ch-ua-form-factors': '"Desktop"',
+  'sec-ch-ua-full-version': '"125.0.5729.49"',
+  'sec-ch-ua-full-version-list': '"Opera";v="125.0.5729.49", "Not?A_Brand";v="8.0.0.0", "Chromium";v="141.0.7390.125"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-model': '""',
+  'sec-ch-ua-platform': '"Windows"',
+  'sec-ch-ua-platform-version': '"10.0.0"',
+  'sec-ch-ua-wow64': '?0',
+  'sec-fetch-dest': 'iframe',
+  'sec-fetch-mode': 'navigate',
+  'sec-fetch-site': 'same-origin',
+  'sec-fetch-storage-access': 'active',
+  'sec-fetch-user': '?1',
+  'sec-user-ip': '10.20.20.214',
+  'upgrade-insecure-requests': '1',
+  'x-forwarded-host': '6000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev',
+  'x-goog-workstations-endpoint': 'workstations-a24d7985-1fdb-462f-ac2e-82562e367d66.europe-west1-d.c.monospace-3.internal.:980'
+}
+ ○ Compiling / ...
+Starting inspector on 127.0.0.1:9230 failed: address already in use
+
+
+Source path: ./src/app/globals.css
+Setting up new context...
+Finding changed files: 24.361ms
+Reading changed files: 471.977ms
+Sorting candidates: 26.73ms
+Generate rules: 1.056s
+Build stylesheet: 60.666ms
+Potential classes:  10680
+Active contexts:  1
+JIT TOTAL: 2.667s
+
+
+ ✓ Compiled / in 30.1s
+2026-01-05T15:45:19.869Z compression gzip compression
+ GET / 200 in 31686ms
+2026-01-05T15:45:21.004Z next:router-server:main requestHandler! /_next/static/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:21.007Z send stat "/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css"
+2026-01-05T15:45:21.009Z send pipe "/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css"
+2026-01-05T15:45:21.009Z send accept ranges
+2026-01-05T15:45:21.011Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:21.011Z send etag W/"1940c-19b8ebc70a1"
+2026-01-05T15:45:21.013Z send content-type text/css
+2026-01-05T15:45:21.020Z compression gzip compression
+2026-01-05T15:45:21.285Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:21.285Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js"
+2026-01-05T15:45:21.288Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js"
+2026-01-05T15:45:21.288Z send accept ranges
+2026-01-05T15:45:21.289Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:21.289Z send etag W/"2da-19b8ebc70ba"
+2026-01-05T15:45:21.291Z send content-type application/javascript
+2026-01-05T15:45:21.296Z compression no compression: size below threshold
+2026-01-05T15:45:21.353Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_compiled_2ce9398a._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:21.355Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js"
+2026-01-05T15:45:21.355Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js"
+2026-01-05T15:45:21.355Z send accept ranges
+2026-01-05T15:45:21.355Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:21.355Z send etag W/"10eed4-19b8ebc70b3"
+2026-01-05T15:45:21.356Z send content-type application/javascript
+2026-01-05T15:45:21.358Z compression gzip compression
+2026-01-05T15:45:21.886Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_client_8f19e6fb._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:21.887Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js"
+2026-01-05T15:45:21.889Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js"
+2026-01-05T15:45:21.889Z send accept ranges
+2026-01-05T15:45:21.889Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:21.889Z send etag W/"f399c-19b8ebc707b"
+2026-01-05T15:45:21.889Z send content-type application/javascript
+2026-01-05T15:45:21.896Z compression gzip compression
+2026-01-05T15:45:23.953Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_0eb1e458._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_0eb1e458._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_0eb1e458._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:23.958Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js"
+2026-01-05T15:45:23.959Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js"
+2026-01-05T15:45:23.959Z send accept ranges
+2026-01-05T15:45:23.959Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:23.960Z send etag W/"1773f-19b8ebc7007"
+2026-01-05T15:45:23.960Z send content-type application/javascript
+2026-01-05T15:45:23.974Z compression gzip compression
+2026-01-05T15:45:23.977Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:23.977Z send stat "/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js"
+2026-01-05T15:45:23.979Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js"
+2026-01-05T15:45:23.980Z send accept ranges
+2026-01-05T15:45:23.980Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:23.980Z send etag W/"d7f-19b8ebc7080"
+2026-01-05T15:45:23.980Z send content-type application/javascript
+2026-01-05T15:45:23.989Z compression gzip compression
+2026-01-05T15:45:24.343Z next:router-server:main requestHandler! /_next/static/chunks/_e69f0d32._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_e69f0d32._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_e69f0d32._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_e69f0d32._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:24.344Z send stat "/home/user/studio/.next/static/chunks/_e69f0d32._.js"
+2026-01-05T15:45:24.344Z send pipe "/home/user/studio/.next/static/chunks/_e69f0d32._.js"
+2026-01-05T15:45:24.345Z send accept ranges
+2026-01-05T15:45:24.345Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:24.345Z send etag W/"213-19b8ebc70a2"
+2026-01-05T15:45:24.345Z send content-type application/javascript
+2026-01-05T15:45:24.351Z compression no compression: size below threshold
+2026-01-05T15:45:24.402Z next:router-server:main requestHandler! /_next/static/chunks/_a894171a._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_a894171a._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_a894171a._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_a894171a._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:24.402Z send stat "/home/user/studio/.next/static/chunks/_a894171a._.js"
+2026-01-05T15:45:24.403Z send pipe "/home/user/studio/.next/static/chunks/_a894171a._.js"
+2026-01-05T15:45:24.403Z send accept ranges
+2026-01-05T15:45:24.403Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:24.404Z send etag W/"1049a-19b8ebc6f65"
+2026-01-05T15:45:24.404Z send content-type application/javascript
+2026-01-05T15:45:24.409Z compression gzip compression
+2026-01-05T15:45:24.543Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_1a6ee436._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_1a6ee436._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:24.544Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js"
+2026-01-05T15:45:24.545Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js"
+2026-01-05T15:45:24.546Z send accept ranges
+2026-01-05T15:45:24.546Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:24.546Z send etag W/"1cd5e-19b8ebc6fe9"
+2026-01-05T15:45:24.549Z send content-type application/javascript
+2026-01-05T15:45:24.557Z compression gzip compression
+2026-01-05T15:45:24.798Z next:router-server:main requestHandler! /_next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_favicon_ico_mjs_756fb309._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:24.801Z send stat "/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js"
+2026-01-05T15:45:24.804Z send pipe "/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js"
+2026-01-05T15:45:24.805Z send accept ranges
+2026-01-05T15:45:24.805Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:24.805Z send etag W/"104-19b8ebc709a"
+2026-01-05T15:45:24.805Z send content-type application/javascript
+2026-01-05T15:45:24.811Z compression no compression: size below threshold
+2026-01-05T15:45:24.995Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:24.997Z send stat "/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js"
+2026-01-05T15:45:24.998Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js"
+2026-01-05T15:45:24.998Z send accept ranges
+2026-01-05T15:45:24.998Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:24.998Z send etag W/"215-19b8ebc6f55"
+2026-01-05T15:45:24.998Z send content-type application/javascript
+2026-01-05T15:45:25.005Z compression no compression: size below threshold
+2026-01-05T15:45:25.189Z next:router-server:main requestHandler! /_next/static/chunks/src_300a66b8._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_300a66b8._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_300a66b8._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_300a66b8._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:25.190Z send stat "/home/user/studio/.next/static/chunks/src_300a66b8._.js"
+2026-01-05T15:45:25.192Z send pipe "/home/user/studio/.next/static/chunks/src_300a66b8._.js"
+2026-01-05T15:45:25.192Z send accept ranges
+2026-01-05T15:45:25.192Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:25.192Z send etag W/"3ea83-19b8ebc6ff2"
+2026-01-05T15:45:25.192Z send content-type application/javascript
+2026-01-05T15:45:25.193Z compression gzip compression
+2026-01-05T15:45:25.219Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:25.220Z send stat "/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js"
+2026-01-05T15:45:25.223Z send pipe "/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js"
+2026-01-05T15:45:25.223Z send accept ranges
+2026-01-05T15:45:25.224Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:25.224Z send etag W/"21ad1-19b8ebc704d"
+2026-01-05T15:45:25.224Z send content-type application/javascript
+2026-01-05T15:45:25.225Z compression gzip compression
+2026-01-05T15:45:25.604Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:25.605Z send stat "/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js"
+2026-01-05T15:45:25.607Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js"
+2026-01-05T15:45:25.608Z send accept ranges
+2026-01-05T15:45:25.610Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:25.614Z send etag W/"4a069-19b8ebc70e6"
+2026-01-05T15:45:25.614Z send content-type application/javascript
+2026-01-05T15:45:25.619Z compression gzip compression
+2026-01-05T15:45:25.714Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_cff6f9c1._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_cff6f9c1._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_cff6f9c1._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:25.715Z send stat "/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js"
+2026-01-05T15:45:25.717Z send pipe "/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js"
+2026-01-05T15:45:25.718Z send accept ranges
+2026-01-05T15:45:25.718Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:25.719Z send etag W/"d5508-19b8ebc7022"
+2026-01-05T15:45:25.719Z send content-type application/javascript
+2026-01-05T15:45:25.723Z compression gzip compression
+2026-01-05T15:45:26.492Z next:router-server:main requestHandler! /_next/static/chunks/src_app_layout_tsx_007ca514._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_layout_tsx_007ca514._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_layout_tsx_007ca514._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:26.493Z send stat "/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js"
+2026-01-05T15:45:26.494Z send pipe "/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js"
+2026-01-05T15:45:26.494Z send accept ranges
+2026-01-05T15:45:26.495Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:26.496Z send etag W/"23d-19b8ebc6f56"
+2026-01-05T15:45:26.496Z send content-type application/javascript
+2026-01-05T15:45:26.500Z compression no compression: size below threshold
+2026-01-05T15:45:26.760Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_70d73d08._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_70d73d08._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_70d73d08._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:26.760Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js"
+2026-01-05T15:45:26.761Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js"
+2026-01-05T15:45:26.761Z send accept ranges
+2026-01-05T15:45:26.761Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:26.761Z send etag W/"a70-19b8ed58bd5"
+2026-01-05T15:45:26.761Z send content-type application/javascript
+2026-01-05T15:45:26.765Z compression gzip compression
+2026-01-05T15:45:26.942Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_65775bd6._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_65775bd6._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_65775bd6._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:26.942Z send stat "/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js"
+2026-01-05T15:45:26.943Z send pipe "/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js"
+2026-01-05T15:45:26.943Z send accept ranges
+2026-01-05T15:45:26.943Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:26.943Z send etag W/"1dd8f-19b8ed58bf5"
+2026-01-05T15:45:26.943Z send content-type application/javascript
+2026-01-05T15:45:26.945Z compression gzip compression
+2026-01-05T15:45:27.158Z next:router-server:main requestHandler! /_next/static/chunks/src_9762d557._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_9762d557._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_9762d557._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_9762d557._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:27.159Z send stat "/home/user/studio/.next/static/chunks/src_9762d557._.js"
+2026-01-05T15:45:27.162Z send pipe "/home/user/studio/.next/static/chunks/src_9762d557._.js"
+2026-01-05T15:45:27.162Z send accept ranges
+2026-01-05T15:45:27.162Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:27.162Z send etag W/"12648-19b8ed58bde"
+2026-01-05T15:45:27.162Z send content-type application/javascript
+2026-01-05T15:45:27.167Z compression gzip compression
+2026-01-05T15:45:27.365Z next:router-server:main requestHandler! /_next/static/chunks/src_app_page_tsx_0d96c705._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_page_tsx_0d96c705._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_page_tsx_0d96c705._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:27.366Z send stat "/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js"
+2026-01-05T15:45:27.366Z send pipe "/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js"
+2026-01-05T15:45:27.366Z send accept ranges
+2026-01-05T15:45:27.367Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:27.367Z send etag W/"157-19b8ed58c66"
+2026-01-05T15:45:27.368Z send content-type application/javascript
+2026-01-05T15:45:27.369Z compression no compression: size below threshold
+2026-01-05T15:45:27.404Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:27.404Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js"
+2026-01-05T15:45:27.407Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js"
+2026-01-05T15:45:27.411Z send accept ranges
+2026-01-05T15:45:27.412Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:27.419Z send etag W/"9b69-19b8ed58c2a"
+2026-01-05T15:45:27.420Z send content-type application/javascript
+2026-01-05T15:45:27.425Z compression gzip compression
+2026-01-05T15:45:27.552Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:27.555Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js"
+2026-01-05T15:45:27.558Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js"
+2026-01-05T15:45:27.560Z send accept ranges
+2026-01-05T15:45:27.560Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:27.560Z send etag W/"11e-19b8ed58c4d"
+2026-01-05T15:45:27.560Z send content-type application/javascript
+2026-01-05T15:45:27.562Z compression no compression: size below threshold
+2026-01-05T15:45:27.637Z next:router-server:main requestHandler! /_next/static/chunks/_641bc1ae._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_641bc1ae._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_641bc1ae._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_641bc1ae._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:27.638Z send stat "/home/user/studio/.next/static/chunks/_641bc1ae._.js"
+2026-01-05T15:45:27.640Z send pipe "/home/user/studio/.next/static/chunks/_641bc1ae._.js"
+2026-01-05T15:45:27.640Z send accept ranges
+2026-01-05T15:45:27.640Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:27.640Z send etag W/"8735-19b8ed58c70"
+2026-01-05T15:45:27.640Z send content-type application/javascript
+2026-01-05T15:45:27.647Z compression gzip compression
+2026-01-05T15:45:28.025Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:28.025Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.026Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.026Z send accept ranges
+2026-01-05T15:45:28.026Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:28.026Z send etag W/"ee-19b8ed58c34"
+2026-01-05T15:45:28.026Z send content-type application/javascript
+2026-01-05T15:45:28.031Z compression no compression: size below threshold
+2026-01-05T15:45:28.056Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:28.057Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js"
+2026-01-05T15:45:28.061Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js"
+2026-01-05T15:45:28.061Z send accept ranges
+2026-01-05T15:45:28.061Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:28.061Z send etag W/"2be2-19b8ed58c50"
+2026-01-05T15:45:28.061Z send content-type application/javascript
+2026-01-05T15:45:28.064Z compression gzip compression
+2026-01-05T15:45:28.656Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:28.657Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.658Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.658Z send accept ranges
+2026-01-05T15:45:28.658Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:28.658Z send etag W/"122-19b8ed58c19"
+2026-01-05T15:45:28.658Z send content-type application/javascript
+2026-01-05T15:45:28.665Z compression no compression: size below threshold
+2026-01-05T15:45:28.669Z next:router-server:main requestHandler! /_next/static/chunks/_db872b9d._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_db872b9d._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_db872b9d._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_db872b9d._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:28.670Z send stat "/home/user/studio/.next/static/chunks/_db872b9d._.js"
+2026-01-05T15:45:28.672Z send pipe "/home/user/studio/.next/static/chunks/_db872b9d._.js"
+2026-01-05T15:45:28.675Z send accept ranges
+2026-01-05T15:45:28.677Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:28.677Z send etag W/"1fa7b-19b8ed58c0e"
+2026-01-05T15:45:28.677Z send content-type application/javascript
+2026-01-05T15:45:28.684Z compression gzip compression
+2026-01-05T15:45:28.910Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:28.910Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.914Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js"
+2026-01-05T15:45:28.914Z send accept ranges
+2026-01-05T15:45:28.914Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:45:28.914Z send etag W/"ee-19b8ed58c41"
+2026-01-05T15:45:28.914Z send content-type application/javascript
+2026-01-05T15:45:28.917Z compression no compression: size below threshold
+ ⚠ Cross origin request detected from 6000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+2026-01-05T15:45:29.169Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:29.172Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js"
+2026-01-05T15:45:29.174Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js"
+2026-01-05T15:45:29.174Z send accept ranges
+2026-01-05T15:45:29.174Z send modified Mon, 05 Jan 2026 15:17:53 GMT
+2026-01-05T15:45:29.174Z send etag W/"3c7e-19b8ebc7112"
+2026-01-05T15:45:29.175Z send content-type application/javascript
+2026-01-05T15:45:29.178Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:45:29.185Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js"
+2026-01-05T15:45:29.187Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js"
+2026-01-05T15:45:29.188Z send accept ranges
+2026-01-05T15:45:29.188Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:45:29.188Z send etag W/"11e-19b8ebc70b9"
+2026-01-05T15:45:29.189Z send content-type application/javascript
+2026-01-05T15:45:29.189Z compression gzip compression
+2026-01-05T15:45:29.194Z compression no compression: size below threshold
+2026-01-05T15:48:50.130Z next:router-server:main requestHandler! /api/debug-env {
+  matchedOutput: null,
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: { pathname: '/api/debug-env', query: [Object: null prototype] {} },
+  finished: false
+}
+2026-01-05T15:48:50.131Z next:router-server:main invokeRender /api/debug-env { host: 'localhost:9002', 'user-agent': 'curl/8.12.1', accept: '*/*' }
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 6.9s
+2026-01-05T15:48:57.646Z compression no compression: not acceptable
+ GET /api/debug-env 404 in 7560ms
+2026-01-05T15:49:21.912Z next:router-server:main requestHandler! /api/test-chat {
+  matchedOutput: {
+    type: 'appFile',
+    fsPath: undefined,
+    locale: undefined,
+    itemsRoot: undefined,
+    itemPath: '/api/test-chat'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: { pathname: '/api/test-chat', query: [Object: null prototype] {} },
+  finished: true
+}
+2026-01-05T15:49:21.915Z next:router-server:main invokeRender /api/test-chat {
+  host: 'localhost:9002',
+  'user-agent': 'curl/8.12.1',
+  accept: '*/*',
+  'content-type': 'application/json',
+  'content-length': '19'
+}
+Finding changed files: 44.199ms
+Reading changed files: 31.281ms
+Sorting candidates: 4.699ms
+Generate rules: 9.743ms
+Build stylesheet: 0.038ms
+Potential classes:  57
+JIT TOTAL: 532.109ms
+ ○ Compiling /api/test-chat ...
+ ✓ Compiled /api/test-chat in 3.2s
+Test chat endpoint called with: test
+2026-01-05T15:49:25.569Z compression [ 'application/json' ] not compressible
+2026-01-05T15:49:25.575Z compression no compression: filtered
+ POST /api/test-chat 200 in 3665ms
+2026-01-05T15:57:51.183Z next:router-server:main requestHandler! /videos/Welcome-to-Japa-Genie.mp4 {
+  matchedOutput: {
+    type: 'publicFolder',
+    fsPath: '/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/public',
+    itemPath: '/videos/Welcome-to-Japa-Genie.mp4'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/videos/Welcome-to-Japa-Genie.mp4',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:51.187Z send stat "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.189Z send pipe "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.190Z send accept ranges
+2026-01-05T15:57:51.191Z send cache-control public, max-age=0
+2026-01-05T15:57:51.193Z send modified Sun, 28 Sep 2025 04:12:23 GMT
+2026-01-05T15:57:51.193Z send etag W/"d8964-1998e8594fd"
+2026-01-05T15:57:51.193Z send content-type video/mp4
+2026-01-05T15:57:51.193Z send not modified
+2026-01-05T15:57:51.194Z compression undefined not compressible
+2026-01-05T15:57:51.194Z compression no compression: filtered
+2026-01-05T15:57:51.422Z next:router-server:main requestHandler! /videos/Welcome-to-Japa-Genie.mp4 {
+  matchedOutput: {
+    type: 'publicFolder',
+    fsPath: '/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/public',
+    itemPath: '/videos/Welcome-to-Japa-Genie.mp4'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/videos/Welcome-to-Japa-Genie.mp4',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:51.423Z send stat "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.423Z send pipe "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.427Z send accept ranges
+2026-01-05T15:57:51.428Z send cache-control public, max-age=0
+2026-01-05T15:57:51.428Z send modified Sun, 28 Sep 2025 04:12:23 GMT
+2026-01-05T15:57:51.428Z send etag W/"d8964-1998e8594fd"
+2026-01-05T15:57:51.428Z send content-type video/mp4
+2026-01-05T15:57:51.428Z send not modified
+2026-01-05T15:57:51.428Z compression undefined not compressible
+2026-01-05T15:57:51.428Z compression no compression: filtered
+2026-01-05T15:57:51.700Z next:router-server:main requestHandler! /videos/Welcome-to-Japa-Genie.mp4 {
+  matchedOutput: {
+    type: 'publicFolder',
+    fsPath: '/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/public',
+    itemPath: '/videos/Welcome-to-Japa-Genie.mp4'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/videos/Welcome-to-Japa-Genie.mp4',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:51.701Z send stat "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.704Z send pipe "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:57:51.704Z send accept ranges
+2026-01-05T15:57:51.704Z send cache-control public, max-age=0
+2026-01-05T15:57:51.704Z send modified Sun, 28 Sep 2025 04:12:23 GMT
+2026-01-05T15:57:51.704Z send etag W/"d8964-1998e8594fd"
+2026-01-05T15:57:51.704Z send content-type video/mp4
+2026-01-05T15:57:51.704Z send not modified
+2026-01-05T15:57:51.704Z compression undefined not compressible
+2026-01-05T15:57:51.704Z compression no compression: filtered
+2026-01-05T15:57:55.044Z next:router-server:main requestHandler! / {
+  matchedOutput: {
+    type: 'appFile',
+    fsPath: undefined,
+    locale: undefined,
+    itemsRoot: undefined,
+    itemPath: '/'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: { pathname: '/', query: [Object: null prototype] {} },
+  finished: true
+}
+2026-01-05T15:57:55.046Z next:router-server:main invokeRender / {
+  connection: 'upgrade',
+  host: '127.0.0.1:9002',
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0',
+  accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'accept-encoding': 'gzip, deflate, br, zstd',
+  'accept-language': 'en-US,en;q=0.9',
+  'cache-control': 'max-age=0',
+  cookie: 'vscode-secret-key-path=/ide-start/mint-key; vscode-cli-secret-half=RZLJrDHDYJd1yJJmxsW0hM2jeJI089I6tQozSJgkNyc',
+  referer: 'https://6000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev/',
+  'sec-ch-ua': '"Opera";v="125", "Not?A_Brand";v="8", "Chromium";v="141"',
+  'sec-ch-ua-arch': '"x86"',
+  'sec-ch-ua-bitness': '"64"',
+  'sec-ch-ua-form-factors': '"Desktop"',
+  'sec-ch-ua-full-version': '"125.0.5729.49"',
+  'sec-ch-ua-full-version-list': '"Opera";v="125.0.5729.49", "Not?A_Brand";v="8.0.0.0", "Chromium";v="141.0.7390.125"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-model': '""',
+  'sec-ch-ua-platform': '"Windows"',
+  'sec-ch-ua-platform-version': '"10.0.0"',
+  'sec-ch-ua-wow64': '?0',
+  'sec-fetch-dest': 'iframe',
+  'sec-fetch-mode': 'navigate',
+  'sec-fetch-site': 'same-origin',
+  'sec-fetch-storage-access': 'active',
+  'sec-fetch-user': '?1',
+  'sec-user-ip': '10.20.20.194',
+  'upgrade-insecure-requests': '1',
+  'x-forwarded-host': '6000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev',
+  'x-goog-workstations-endpoint': 'workstations-a24d7985-1fdb-462f-ac2e-82562e367d66.europe-west1-d.c.monospace-3.internal.:980'
+}
+2026-01-05T15:57:56.473Z compression gzip compression
+ GET / 200 in 1778ms
+2026-01-05T15:57:57.227Z next:router-server:main requestHandler! /_next/static/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Broot-of-the-server%5D__f01bcf0b._.css',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.228Z send stat "/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css"
+2026-01-05T15:57:57.232Z send pipe "/home/user/studio/.next/static/chunks/[root-of-the-server]__f01bcf0b._.css"
+2026-01-05T15:57:57.232Z send accept ranges
+2026-01-05T15:57:57.232Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:57.232Z send etag W/"1940c-19b8ebc70a1"
+2026-01-05T15:57:57.233Z send content-type text/css
+2026-01-05T15:57:57.237Z compression gzip compression
+2026-01-05T15:57:57.467Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.468Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js"
+2026-01-05T15:57:57.468Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_17e42fcf._.js"
+2026-01-05T15:57:57.468Z send accept ranges
+2026-01-05T15:57:57.468Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:57.468Z send etag W/"2da-19b8ebc70ba"
+2026-01-05T15:57:57.468Z send content-type application/javascript
+2026-01-05T15:57:57.471Z compression no compression: size below threshold
+2026-01-05T15:57:57.588Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_compiled_2ce9398a._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.589Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js"
+2026-01-05T15:57:57.592Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js"
+2026-01-05T15:57:57.592Z send accept ranges
+2026-01-05T15:57:57.592Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:57.592Z send etag W/"10eed4-19b8ebc70b3"
+2026-01-05T15:57:57.592Z send content-type application/javascript
+2026-01-05T15:57:57.597Z compression gzip compression
+2026-01-05T15:57:57.683Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_client_8f19e6fb._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.683Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js"
+2026-01-05T15:57:57.686Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_0eb1e458._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_0eb1e458._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_0eb1e458._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.687Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js"
+2026-01-05T15:57:57.689Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js"
+2026-01-05T15:57:57.689Z send accept ranges
+2026-01-05T15:57:57.689Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:57.689Z send etag W/"f399c-19b8ebc707b"
+2026-01-05T15:57:57.689Z send content-type application/javascript
+2026-01-05T15:57:57.694Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_0eb1e458._.js"
+2026-01-05T15:57:57.694Z send accept ranges
+2026-01-05T15:57:57.694Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:57.695Z send etag W/"1773f-19b8ebc7007"
+2026-01-05T15:57:57.695Z send content-type application/javascript
+2026-01-05T15:57:57.701Z compression gzip compression
+2026-01-05T15:57:57.706Z compression gzip compression
+2026-01-05T15:57:57.983Z next:router-server:main requestHandler! /_next/static/chunks/_a894171a._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_a894171a._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_a894171a._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_a894171a._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:57.984Z send stat "/home/user/studio/.next/static/chunks/_a894171a._.js"
+2026-01-05T15:57:58.006Z send pipe "/home/user/studio/.next/static/chunks/_a894171a._.js"
+2026-01-05T15:57:58.006Z send accept ranges
+2026-01-05T15:57:58.007Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.007Z send etag W/"1049a-19b8ebc6f65"
+2026-01-05T15:57:58.010Z send content-type application/javascript
+2026-01-05T15:57:58.025Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.026Z send stat "/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js"
+2026-01-05T15:57:58.032Z next:router-server:main requestHandler! /_next/static/chunks/_e69f0d32._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_e69f0d32._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_e69f0d32._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_e69f0d32._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.033Z send stat "/home/user/studio/.next/static/chunks/_e69f0d32._.js"
+2026-01-05T15:57:58.036Z compression gzip compression
+2026-01-05T15:57:58.043Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@swc_helpers_cjs_00636ac3._.js"
+2026-01-05T15:57:58.043Z send accept ranges
+2026-01-05T15:57:58.043Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.043Z send etag W/"d7f-19b8ebc7080"
+2026-01-05T15:57:58.043Z send content-type application/javascript
+2026-01-05T15:57:58.046Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_next_dist_1a6ee436._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_next_dist_1a6ee436._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.049Z send stat "/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js"
+2026-01-05T15:57:58.049Z send pipe "/home/user/studio/.next/static/chunks/_e69f0d32._.js"
+2026-01-05T15:57:58.050Z send accept ranges
+2026-01-05T15:57:58.050Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.050Z send etag W/"213-19b8ebc70a2"
+2026-01-05T15:57:58.050Z send content-type application/javascript
+2026-01-05T15:57:58.062Z send pipe "/home/user/studio/.next/static/chunks/node_modules_next_dist_1a6ee436._.js"
+2026-01-05T15:57:58.062Z send accept ranges
+2026-01-05T15:57:58.065Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.065Z send etag W/"1cd5e-19b8ebc6fe9"
+2026-01-05T15:57:58.065Z send content-type application/javascript
+2026-01-05T15:57:58.067Z compression gzip compression
+2026-01-05T15:57:58.078Z compression no compression: size below threshold
+2026-01-05T15:57:58.100Z compression gzip compression
+2026-01-05T15:57:58.284Z next:router-server:main requestHandler! /_next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_favicon_ico_mjs_756fb309._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.285Z send stat "/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js"
+2026-01-05T15:57:58.287Z send pipe "/home/user/studio/.next/static/chunks/src_app_favicon_ico_mjs_756fb309._.js"
+2026-01-05T15:57:58.287Z send accept ranges
+2026-01-05T15:57:58.289Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.289Z send etag W/"104-19b8ebc709a"
+2026-01-05T15:57:58.289Z send content-type application/javascript
+2026-01-05T15:57:58.294Z compression no compression: size below threshold
+2026-01-05T15:57:58.403Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40supabase_node-fetch_browser_f9866ffb.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.406Z send stat "/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js"
+2026-01-05T15:57:58.419Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@supabase_node-fetch_browser_f9866ffb.js"
+2026-01-05T15:57:58.421Z send accept ranges
+2026-01-05T15:57:58.421Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.421Z send etag W/"215-19b8ebc6f55"
+2026-01-05T15:57:58.421Z send content-type application/javascript
+2026-01-05T15:57:58.437Z compression no compression: size below threshold
+2026-01-05T15:57:58.449Z next:router-server:main requestHandler! /_next/static/chunks/src_300a66b8._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_300a66b8._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_300a66b8._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_300a66b8._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:58.457Z send stat "/home/user/studio/.next/static/chunks/src_300a66b8._.js"
+2026-01-05T15:57:58.460Z send pipe "/home/user/studio/.next/static/chunks/src_300a66b8._.js"
+2026-01-05T15:57:58.467Z send accept ranges
+2026-01-05T15:57:58.467Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:58.467Z send etag W/"3ea83-19b8ebc6ff2"
+2026-01-05T15:57:58.467Z send content-type application/javascript
+2026-01-05T15:57:58.472Z compression gzip compression
+2026-01-05T15:57:59.008Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.021Z send stat "/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js"
+2026-01-05T15:57:59.045Z send pipe "/home/user/studio/.next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_b854acb4._.js"
+2026-01-05T15:57:59.045Z send accept ranges
+2026-01-05T15:57:59.045Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:59.045Z send etag W/"21ad1-19b8ebc704d"
+2026-01-05T15:57:59.045Z send content-type application/javascript
+2026-01-05T15:57:59.082Z compression gzip compression
+2026-01-05T15:57:59.098Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_cff6f9c1._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_cff6f9c1._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_cff6f9c1._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.098Z send stat "/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js"
+2026-01-05T15:57:59.099Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_6ccbf858._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.100Z send stat "/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js"
+2026-01-05T15:57:59.100Z next:router-server:main requestHandler! /_next/static/chunks/src_app_layout_tsx_007ca514._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_layout_tsx_007ca514._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_layout_tsx_007ca514._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.101Z send stat "/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js"
+2026-01-05T15:57:59.106Z send pipe "/home/user/studio/.next/static/chunks/node_modules_cff6f9c1._.js"
+2026-01-05T15:57:59.106Z send accept ranges
+2026-01-05T15:57:59.106Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:59.106Z send etag W/"d5508-19b8ebc7022"
+2026-01-05T15:57:59.106Z send content-type application/javascript
+2026-01-05T15:57:59.112Z send pipe "/home/user/studio/.next/static/chunks/node_modules_@supabase_auth-js_dist_module_6ccbf858._.js"
+2026-01-05T15:57:59.112Z send accept ranges
+2026-01-05T15:57:59.112Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:59.112Z send etag W/"4a069-19b8ebc70e6"
+2026-01-05T15:57:59.113Z send content-type application/javascript
+2026-01-05T15:57:59.113Z send pipe "/home/user/studio/.next/static/chunks/src_app_layout_tsx_007ca514._.js"
+2026-01-05T15:57:59.113Z send accept ranges
+2026-01-05T15:57:59.113Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:57:59.113Z send etag W/"23d-19b8ebc6f56"
+2026-01-05T15:57:59.113Z send content-type application/javascript
+2026-01-05T15:57:59.116Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_70d73d08._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_70d73d08._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_70d73d08._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.119Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js"
+2026-01-05T15:57:59.125Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_70d73d08._.js"
+2026-01-05T15:57:59.125Z send accept ranges
+2026-01-05T15:57:59.125Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:57:59.125Z send etag W/"a70-19b8ed58bd5"
+2026-01-05T15:57:59.125Z send content-type application/javascript
+2026-01-05T15:57:59.127Z compression gzip compression
+2026-01-05T15:57:59.130Z compression gzip compression
+2026-01-05T15:57:59.133Z compression no compression: size below threshold
+2026-01-05T15:57:59.187Z compression gzip compression
+2026-01-05T15:57:59.634Z next:router-server:main requestHandler! /_next/static/chunks/node_modules_65775bd6._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/node_modules_65775bd6._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/node_modules_65775bd6._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.644Z send stat "/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js"
+2026-01-05T15:57:59.662Z send pipe "/home/user/studio/.next/static/chunks/node_modules_65775bd6._.js"
+2026-01-05T15:57:59.664Z send accept ranges
+2026-01-05T15:57:59.665Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:57:59.665Z send etag W/"1dd8f-19b8ed58bf5"
+2026-01-05T15:57:59.665Z send content-type application/javascript
+2026-01-05T15:57:59.668Z next:router-server:main requestHandler! /_next/static/chunks/src_9762d557._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_9762d557._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_9762d557._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_9762d557._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.669Z send stat "/home/user/studio/.next/static/chunks/src_9762d557._.js"
+2026-01-05T15:57:59.677Z send pipe "/home/user/studio/.next/static/chunks/src_9762d557._.js"
+2026-01-05T15:57:59.677Z send accept ranges
+2026-01-05T15:57:59.677Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:57:59.677Z send etag W/"12648-19b8ed58bde"
+2026-01-05T15:57:59.677Z send content-type application/javascript
+2026-01-05T15:57:59.679Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.679Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js"
+2026-01-05T15:57:59.687Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_cc684acc._.js"
+2026-01-05T15:57:59.688Z send accept ranges
+2026-01-05T15:57:59.688Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:57:59.688Z send etag W/"9b69-19b8ed58c2a"
+2026-01-05T15:57:59.688Z send content-type application/javascript
+2026-01-05T15:57:59.693Z compression gzip compression
+2026-01-05T15:57:59.694Z next:router-server:main requestHandler! /_next/static/chunks/src_app_page_tsx_0d96c705._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_app_page_tsx_0d96c705._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_app_page_tsx_0d96c705._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:57:59.695Z send stat "/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js"
+2026-01-05T15:57:59.695Z compression gzip compression
+2026-01-05T15:57:59.700Z send pipe "/home/user/studio/.next/static/chunks/src_app_page_tsx_0d96c705._.js"
+2026-01-05T15:57:59.701Z send accept ranges
+2026-01-05T15:57:59.704Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:57:59.704Z send etag W/"157-19b8ed58c66"
+2026-01-05T15:57:59.704Z send content-type application/javascript
+2026-01-05T15:57:59.738Z compression no compression: size below threshold
+2026-01-05T15:57:59.752Z compression gzip compression
+2026-01-05T15:58:00.669Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:00.670Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js"
+2026-01-05T15:58:00.672Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_how-it-works-animated_tsx_11780b30._.js"
+2026-01-05T15:58:00.672Z send accept ranges
+2026-01-05T15:58:00.672Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:00.672Z send etag W/"11e-19b8ed58c4d"
+2026-01-05T15:58:00.672Z send content-type application/javascript
+2026-01-05T15:58:00.731Z compression no compression: size below threshold
+2026-01-05T15:58:01.098Z next:router-server:main requestHandler! /_next/static/chunks/_641bc1ae._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_641bc1ae._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_641bc1ae._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_641bc1ae._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.107Z send stat "/home/user/studio/.next/static/chunks/_641bc1ae._.js"
+2026-01-05T15:58:01.122Z send pipe "/home/user/studio/.next/static/chunks/_641bc1ae._.js"
+2026-01-05T15:58:01.122Z send accept ranges
+2026-01-05T15:58:01.122Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.122Z send etag W/"8735-19b8ed58c70"
+2026-01-05T15:58:01.122Z send content-type application/javascript
+2026-01-05T15:58:01.123Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.123Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.123Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.128Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js"
+2026-01-05T15:58:01.131Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_what-we-do-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.131Z send accept ranges
+2026-01-05T15:58:01.131Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.131Z send etag W/"ee-19b8ed58c34"
+2026-01-05T15:58:01.132Z send content-type application/javascript
+2026-01-05T15:58:01.132Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_671d4671._.js"
+2026-01-05T15:58:01.138Z send accept ranges
+2026-01-05T15:58:01.138Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.138Z send etag W/"2be2-19b8ed58c50"
+2026-01-05T15:58:01.138Z send content-type application/javascript
+2026-01-05T15:58:01.139Z compression gzip compression
+2026-01-05T15:58:01.157Z compression gzip compression
+2026-01-05T15:58:01.162Z compression no compression: size below threshold
+2026-01-05T15:58:01.403Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.405Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.410Z next:router-server:main requestHandler! /_next/static/chunks/_db872b9d._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/_db872b9d._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/_db872b9d._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/_db872b9d._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.410Z send stat "/home/user/studio/.next/static/chunks/_db872b9d._.js"
+2026-01-05T15:58:01.412Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_eligibility-check-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.414Z send accept ranges
+2026-01-05T15:58:01.417Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.417Z send etag W/"122-19b8ed58c19"
+2026-01-05T15:58:01.422Z send content-type application/javascript
+2026-01-05T15:58:01.430Z send pipe "/home/user/studio/.next/static/chunks/_db872b9d._.js"
+2026-01-05T15:58:01.430Z send accept ranges
+2026-01-05T15:58:01.430Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.430Z send etag W/"1fa7b-19b8ed58c0e"
+2026-01-05T15:58:01.431Z send content-type application/javascript
+2026-01-05T15:58:01.440Z compression no compression: size below threshold
+2026-01-05T15:58:01.463Z compression gzip compression
+2026-01-05T15:58:01.511Z next:router-server:main requestHandler! /_next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.512Z send stat "/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.537Z send pipe "/home/user/studio/.next/static/chunks/src_components_landing_testimonials-section_tsx_11780b30._.js"
+2026-01-05T15:58:01.537Z send accept ranges
+2026-01-05T15:58:01.537Z send modified Mon, 05 Jan 2026 15:45:18 GMT
+2026-01-05T15:58:01.537Z send etag W/"ee-19b8ed58c41"
+2026-01-05T15:58:01.537Z send content-type application/javascript
+2026-01-05T15:58:01.541Z next:router-server:main requestHandler! /videos/Welcome-to-Japa-Genie.mp4 {
+  matchedOutput: {
+    type: 'publicFolder',
+    fsPath: '/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/public',
+    itemPath: '/videos/Welcome-to-Japa-Genie.mp4'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/videos/Welcome-to-Japa-Genie.mp4',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:01.544Z send stat "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:58:01.553Z send pipe "/home/user/studio/public/videos/Welcome-to-Japa-Genie.mp4"
+2026-01-05T15:58:01.553Z send accept ranges
+2026-01-05T15:58:01.560Z send cache-control public, max-age=0
+2026-01-05T15:58:01.561Z send modified Sun, 28 Sep 2025 04:12:23 GMT
+2026-01-05T15:58:01.561Z send etag W/"d8964-1998e8594fd"
+2026-01-05T15:58:01.561Z send content-type video/mp4
+2026-01-05T15:58:01.562Z send not modified
+2026-01-05T15:58:01.562Z compression undefined not compressible
+2026-01-05T15:58:01.563Z compression no compression: filtered
+2026-01-05T15:58:01.576Z compression no compression: size below threshold
+2026-01-05T15:58:10.704Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:10.706Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js"
+2026-01-05T15:58:10.709Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js"
+2026-01-05T15:58:10.709Z send accept ranges
+2026-01-05T15:58:10.709Z send modified Mon, 05 Jan 2026 15:17:53 GMT
+2026-01-05T15:58:10.709Z send etag W/"3c7e-19b8ebc7112"
+2026-01-05T15:58:10.709Z send content-type application/javascript
+2026-01-05T15:58:10.716Z compression gzip compression
+2026-01-05T15:58:10.757Z next:router-server:main requestHandler! /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js {
+  matchedOutput: {
+    type: 'nextStaticFolder',
+    fsPath: '/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js',
+    locale: undefined,
+    itemsRoot: '/home/user/studio/.next/static',
+    itemPath: '/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js'
+  },
+  statusCode: undefined,
+  resHeaders: {},
+  bodyStream: false,
+  parsedUrl: {
+    pathname: '/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js',
+    query: [Object: null prototype] {}
+  },
+  finished: true
+}
+2026-01-05T15:58:10.759Z send stat "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js"
+2026-01-05T15:58:10.761Z send pipe "/home/user/studio/.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e80e495f._.js"
+2026-01-05T15:58:10.761Z send accept ranges
+2026-01-05T15:58:10.761Z send modified Mon, 05 Jan 2026 15:17:52 GMT
+2026-01-05T15:58:10.761Z send etag W/"11e-19b8ebc70b9"
+2026-01-05T15:58:10.762Z send content-type application/javascript
+2026-01-05T15:58:10.765Z compression no compression: size below threshold

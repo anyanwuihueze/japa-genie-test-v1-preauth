@@ -1,5 +1,8 @@
-'use server';
 import { groq } from '@/lib/groq-client';
+'use server';
+
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 interface InterviewQuestionInput {
   visaType: string;

@@ -106,7 +106,7 @@ function ChatPageContent() {
       {showModal && user && (
         <WelcomeNameModal user={user} onComplete={() => setShowModal(false)} />
       )}
-      <ChatClient initialKycData={initialKycData} />
+      <ChatClient />
     </>
   );
 }

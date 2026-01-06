@@ -1,6 +1,9 @@
-'use server';
 import { groq } from '@/lib/groq-client';
+'use server';
 import { SITE_ASSISTANT_CONTEXT } from '@/lib/site-assistant-context';
+
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 interface SiteAssistantInput {
   question: string;

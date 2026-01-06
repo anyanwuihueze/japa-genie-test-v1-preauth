@@ -1,6 +1,6 @@
-'use server';
 import { groq } from '@/lib/groq-client';
 // src/ai/flows/analyze-proof-of-funds.ts - PRODUCTION READY
+'use server';
 
 
 export interface ProofOfFundsInput {

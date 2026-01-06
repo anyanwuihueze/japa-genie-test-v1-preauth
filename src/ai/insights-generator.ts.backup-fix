@@ -1,6 +1,11 @@
-'use server';
 import { groq } from '@/lib/groq-client';
+'use server';
+
 import { InsightInput, InsightOutput } from '@/ai/schemas/insight-schemas';
+
+const groqClient = new Groq({
+  apiKey: process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY!
+});
 
 export async function generateInsights(input: InsightInput): Promise<InsightOutput> {
   const prompt = `You are an expert immigration analyst.
@@ -43,7 +48,7 @@ Return ONLY valid JSON in this EXACT format (no markdown, no backticks):
 Generate 3-5 insights, 2-4 cost estimates, 2-3 alternatives, and chart data with 3-5 countries.`;
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await groqClient.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are an expert immigration analyst. Return ONLY valid JSON, no other text.' },
