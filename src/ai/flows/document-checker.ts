@@ -34,52 +34,51 @@ interface DocumentAnalysis {
   };
 }
 
-/**
- * 🔥 VISION-POWERED DOCUMENT CHECKER
- * Uses Groq Vision API to ACTUALLY SEE the document
- * Performs real OCR and analysis - NO HALLUCINATIONS
- */
 export async function documentChecker(
   input: DocumentCheckerInput
 ): Promise<DocumentAnalysis> {
   try {
-    console.log('👁️ Starting VISION analysis for:', input.visaType, 'visa to', input.targetCountry);
+    console.log('👁️ Starting VISION analysis with LLaVA for:', input.visaType, 'visa to', input.targetCountry);
 
-    // STEP 1: Get real embassy requirements from web
-    const embassyRequirements = await fetchEmbassyRequirements(
+    const embassyRequirements = fetchEmbassyRequirements(
       input.targetCountry || 'General',
       input.visaType || 'Tourist'
     );
 
-    // STEP 2: Use Groq VISION API to analyze the actual document
+    console.log('📋 Embassy requirements fetched');
+
     const visionAnalysis = await analyzeDocumentWithVision(
       input.documentDataUri,
       embassyRequirements
     );
 
-    console.log('✅ Vision analysis complete');
+    console.log('✅ LLaVA vision analysis complete');
     return visionAnalysis;
 
   } catch (error: any) {
     console.error('❌ Document checker error:', error);
-    throw new Error(`Document analysis failed: ${error.message}`);
+    
+    return {
+      documentType: 'Unknown',
+      overallStatus: 'critical',
+      criticalIssues: [{
+        issue: 'Document Analysis Failed',
+        impact: error.message || 'Could not analyze document',
+        recommendation: 'Please upload a clear, high-resolution document (minimum 100x100 pixels)'
+      }],
+      warnings: [],
+      passed: [],
+      extractedData: { dates: [], amounts: [], signatures: [], stamps: [] },
+      embassyCompliance: {
+        meetsStandards: false,
+        specificRequirements: [],
+        missingElements: ['Analysis could not be completed']
+      }
+    };
   }
 }
 
-/**
- * Fetch REAL embassy requirements from the internet
- */
-async function fetchEmbassyRequirements(
-  country: string,
-  visaType: string
-): Promise<string> {
-  // Build search query for current requirements
-  const searchQuery = `${country} ${visaType} visa document requirements 2025 official embassy`;
-  
-  console.log('🌐 Fetching real embassy requirements:', searchQuery);
-
-  // In production, you would call a web search API here
-  // For now, return structured requirements based on common standards
+function fetchEmbassyRequirements(country: string, visaType: string): string {
   const requirements = `
 ${country} ${visaType} Visa Requirements (2025):
 
@@ -108,66 +107,33 @@ ${getCountrySpecificRequirements(country, visaType)}
   return requirements;
 }
 
-/**
- * Get country-specific requirements
- */
 function getCountrySpecificRequirements(country: string, visaType: string): string {
-  const countryRules: Record<string, string> = {
-    'Canada': `
-- Bank statements must show 4-6 months history
-- Minimum funds: CAD $20,635 + tuition (students)
-- Account seasoning: 90+ days required
-- GIC certificate required for Student Direct Stream
-- All documents must be notarized
-    `,
-    'United Kingdom': `
-- 28-day financial rule (funds held for 28 consecutive days)
-- Minimum: £1,483/month (London) or £1,136/month (outside London)
-- Account seasoning: 28+ days before application
-- Bank letter must be dated within 31 days of application
-- TB test certificate required from specific countries
-    `,
-    'United States': `
-- Bank statements for last 3-6 months
-- I-20 form required (students)
-- DS-160 confirmation required
-- Proof of strong ties to home country essential
-- Interview required for most applicants
-    `,
-    'Australia': `
-- Genuine Temporary Entrant (GTE) requirement
-- Financial capacity for 12 months minimum
-- Health insurance (OSHC for students)
-- English language proficiency proof
-- Character requirements and police certificates
-    `,
+  const rules: Record<string, string> = {
+    'Canada': '- Bank statements must show 4-6 months history\n- Minimum funds: CAD $20,635 + tuition\n- Account seasoning: 90+ days required\n- GIC certificate required for Student Direct Stream',
+    'United Kingdom': '- 28-day financial rule (funds held for 28 consecutive days)\n- Minimum: £1,483/month (London) or £1,136/month (outside London) for 9 months.\n- Account seasoning: 28+ days before application\n- Bank letter must be dated within 31 days of application',
+    'United States': '- Bank statements for last 3-6 months\n- I-20 form required (students)\n- DS-160 confirmation required\n- Proof of strong ties to home country essential\n- Interview required for most applicants',
+    'Australia': '- Genuine Temporary Entrant (GTE) requirement\n- Financial capacity for 12 months minimum\n- Health insurance (OSHC for students)\n- English language proficiency proof\n- Character requirements and police certificates',
   };
-
-  return countryRules[country] || 'Standard visa requirements apply.';
+  return rules[country] || 'Standard visa requirements apply.';
 }
 
-/**
- * 👁️ VISION API: Analyze document using Groq's llama-4-scout model
- * This ACTUALLY SEES the document - not just metadata!
- */
 async function analyzeDocumentWithVision(
   documentDataUri: string,
   embassyRequirements: string
 ): Promise<DocumentAnalysis> {
   
-  const prompt = `You are an expert visa document analyst. Analyze this document image and extract ALL information.
+  const prompt = `You are an expert visa document analyst. Analyze this document image based on the provided embassy requirements.
 
 EMBASSY REQUIREMENTS TO CHECK AGAINST:
 ${embassyRequirements}
 
 YOUR ANALYSIS MUST:
-1. Extract ALL visible text (OCR)
-2. Identify document type (passport, bank statement, employment letter, etc.)
-3. Find ALL dates, amounts, signatures, stamps
-4. Check for missing elements required by embassy
-5. Assess document quality (readability, authenticity markers)
-6. Compare extracted info against embassy requirements
-7. Flag ANY inconsistencies or red flags
+1. Identify the document type (e.g., passport, bank statement).
+2. Extract all visible text, focusing on names, dates, amounts, and official numbers.
+3. Find all signatures and official stamps.
+4. Check for any missing elements required by the embassy rules.
+5. Assess the document's quality (readability, blurriness, authenticity markers).
+6. Flag any inconsistencies or red flags.
 
 Return your analysis as a JSON object with this EXACT structure:
 {
@@ -200,11 +166,13 @@ Return your analysis as a JSON object with this EXACT structure:
   }
 }
 
-CRITICAL: Base your analysis ONLY on what you can actually see in the document. Do not assume or hallucinate information.`;
+CRITICAL: Base your analysis ONLY on what you can actually see in the document. Respond with ONLY the valid JSON object.`;
 
   try {
+    console.log('🔄 Calling Groq Vision API (LLaVA)...');
+    
     const completion = await groq.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'llava-v1.5-7b-hf', // <-- VISION-ENABLED MODEL
       messages: [
         {
           role: 'user',
@@ -217,64 +185,47 @@ CRITICAL: Base your analysis ONLY on what you can actually see in the document. 
           ]
         }
       ],
-      response_format: { type: 'json_object' },
       temperature: 0.2,
-      max_completion_tokens: 2048,
+      max_tokens: 2048,
     });
 
-    const responseText = completion.choices[0].message.content || '{}';
-    
-    // Clean and parse JSON response
-    let cleanedText = responseText.trim()
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    let analysis: DocumentAnalysis;
-    try {
-      analysis = JSON.parse(cleanedText);
-    } catch (parseError) {
-      // Try to extract JSON from mixed content
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Could not parse AI response as JSON');
-      }
-    }
-
-    // Validate structure
-    if (!analysis.documentType || !analysis.overallStatus) {
-      throw new Error('AI returned incomplete analysis structure');
-    }
-
-    return analysis;
+    return await parseGroqResponse(completion);
 
   } catch (error: any) {
     console.error('❌ Vision analysis failed:', error);
-    
-    // Return error analysis instead of throwing
-    return {
-      documentType: 'Unknown',
-      overallStatus: 'critical',
-      criticalIssues: [{
-        issue: 'Document Analysis Failed',
-        impact: 'Could not analyze document using AI vision',
-        recommendation: 'Ensure document is a valid image (JPG, PNG, PDF) and try again'
-      }],
-      warnings: [],
-      passed: [],
-      extractedData: {
-        dates: [],
-        amounts: [],
-        signatures: [],
-        stamps: []
-      },
-      embassyCompliance: {
-        meetsStandards: false,
-        specificRequirements: [],
-        missingElements: ['Analysis could not be completed']
-      }
-    };
+    throw new Error(`Vision API error: ${error.message || 'Unknown error'}`);
   }
+}
+
+async function parseGroqResponse(completion: any): Promise<DocumentAnalysis> {
+  console.log('✅ Groq Vision API responded');
+
+  const responseText = completion.choices[0].message.content || '{}';
+  
+  // Clean the response: remove markdown and trim whitespace
+  let cleanedText = responseText.trim()
+    .replace(/```json\n?/g, '')
+    .replace(/```\n?/g, '')
+    .trim();
+
+  let analysis: DocumentAnalysis;
+  try {
+    analysis = JSON.parse(cleanedText);
+    console.log('✅ JSON parsed successfully');
+  } catch (parseError) {
+    console.error('❌ JSON parse failed, attempting extraction from mixed content...');
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      analysis = JSON.parse(jsonMatch[0]);
+      console.log('✅ JSON extracted and parsed');
+    } else {
+      throw new Error('Could not parse AI response as JSON');
+    }
+  }
+
+  if (!analysis.documentType || !analysis.overallStatus) {
+    throw new Error('AI returned incomplete analysis structure');
+  }
+
+  return analysis;
 }

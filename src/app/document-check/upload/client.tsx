@@ -60,7 +60,9 @@ export default function DocumentUploadClient({ user }: DocumentUploadClientProps
     setError(null);
     
     try {
-      // Convert file to base64 data URI (the format your API expects)
+      console.log('📤 Starting analysis for:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
+      
+      // Convert file to base64 data URI
       const dataUri = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -70,7 +72,9 @@ export default function DocumentUploadClient({ user }: DocumentUploadClientProps
         reader.readAsDataURL(file);
       });
       
-      // Call your document-check API with the correct format
+      console.log('✅ File converted to base64, sending to API...');
+      
+      // Call your document-check API
       const response = await fetch('/api/document-check', {
         method: 'POST',
         headers: {
@@ -83,14 +87,32 @@ export default function DocumentUploadClient({ user }: DocumentUploadClientProps
         }),
       });
       
+      console.log('📡 API response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ API error:', errorData);
         throw new Error(errorData.error || 'Analysis failed');
       }
       
       const data = await response.json();
-      setResult(data);
+      console.log('📥 Received analysis:', data);
+      
+      // ✅ FIX: API now returns direct object (no wrapper)
+      // But we still handle both formats for safety
+      const analysis = data.data || data;
+      
+      // Validate we got the expected structure
+      if (!analysis.documentType && !analysis.overallStatus) {
+        console.error('❌ Invalid response structure:', analysis);
+        throw new Error('Invalid response format from API');
+      }
+      
+      setResult(analysis);
+      console.log('✅ Analysis complete! Status:', analysis.overallStatus);
+      
     } catch (err: any) {
+      console.error('❌ Analysis failed:', err);
       setError(err.message || 'Failed to analyze document');
     } finally {
       setLoading(false);
