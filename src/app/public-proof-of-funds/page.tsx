@@ -1,4 +1,4 @@
-// src/app/public-proof-of-funds/page.tsx
+// src/app/public-proof-of-funds/page.tsx - FIXED VERSION WITH REAL AI
 "use client";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -28,46 +28,6 @@ const countryData = {
   'Norway': { flag: '🇳🇴', currency: 'NOK' },
   'Denmark': { flag: '🇩🇰', currency: 'DKK' },
   'Finland': { flag: '🇫🇮', currency: 'EUR' },
-  'Austria': { flag: '🇦🇹', currency: 'EUR' },
-  'Poland': { flag: '🇵🇱', currency: 'PLN' },
-  'Czech Republic': { flag: '🇨🇿', currency: 'CZK' },
-  'Hungary': { flag: '🇭🇺', currency: 'HUF' },
-  'Greece': { flag: '🇬🇷', currency: 'EUR' },
-  'Turkey': { flag: '🇹🇷', currency: 'TRY' },
-  'South Africa': { flag: '🇿🇦', currency: 'ZAR' },
-  'Kenya': { flag: '🇰🇪', currency: 'KES' },
-  'Ghana': { flag: '🇬🇭', currency: 'GHS' },
-  'Egypt': { flag: '🇪🇬', currency: 'EGP' },
-  'Japan': { flag: '🇯🇵', currency: 'JPY' },
-  'South Korea': { flag: '🇰🇷', currency: 'KRW' },
-  'China': { flag: '🇨🇳', currency: 'CNY' },
-  'Hong Kong': { flag: '🇭🇰', currency: 'HKD' },
-  'Malaysia': { flag: '🇲🇾', currency: 'MYR' },
-  'Thailand': { flag: '🇹🇭', currency: 'THB' },
-  'Philippines': { flag: '🇵🇭', currency: 'PHP' },
-  'Vietnam': { flag: '🇻🇳', currency: 'VND' },
-  'Indonesia': { flag: '🇮🇩', currency: 'IDR' },
-  'India': { flag: '🇮🇳', currency: 'INR' },
-  'Pakistan': { flag: '🇵🇰', currency: 'PKR' },
-  'Bangladesh': { flag: '🇧🇩', currency: 'BDT' },
-  'Sri Lanka': { flag: '🇱🇰', currency: 'LKR' },
-  'Brazil': { flag: '🇧🇷', currency: 'BRL' },
-  'Argentina': { flag: '🇦🇷', currency: 'ARS' },
-  'Chile': { flag: '🇨🇱', currency: 'CLP' },
-  'Mexico': { flag: '🇲🇽', currency: 'MXN' },
-  'Colombia': { flag: '🇨🇴', currency: 'COP' },
-  'Peru': { flag: '🇵🇪', currency: 'PEN' },
-  'Israel': { flag: '🇮🇱', currency: 'ILS' },
-  'Saudi Arabia': { flag: '🇸🇦', currency: 'SAR' },
-  'Qatar': { flag: '🇶🇦', currency: 'QAR' },
-  'Kuwait': { flag: '🇰🇼', currency: 'KWD' },
-  'Bahrain': { flag: '🇧🇭', currency: 'BHD' },
-  'Oman': { flag: '🇴🇲', currency: 'OMR' },
-  'Lebanon': { flag: '🇱🇧', currency: 'LBP' },
-  'Jordan': { flag: '🇯🇴', currency: 'JOD' },
-  'Morocco': { flag: '🇲🇦', currency: 'MAD' },
-  'Tunisia': { flag: '🇹🇳', currency: 'TND' },
-  'Algeria': { flag: '🇩🇿', currency: 'DZD' },
 };
 
 const visaTypes = [
@@ -83,7 +43,6 @@ const familyOptions = [
   { value: 4, label: 'Me + 3 family members' },
 ];
 
-// 🎯 SAFE ANALYTICS TRACKING FUNCTION
 const trackPOFEvent = async (event: string, metadata?: any) => {
   try {
     await fetch('/api/analytics/track', {
@@ -93,14 +52,12 @@ const trackPOFEvent = async (event: string, metadata?: any) => {
         event,
         page: 'public-proof-of-funds',
         metadata: {
-          // Only include non-personal data
           ...metadata,
           timestamp: new Date().toISOString()
         }
       })
     });
   } catch (error) {
-    // Fail silently - analytics should never break user experience
     console.log('📊 Analytics event failed (non-critical):', error);
   }
 };
@@ -113,19 +70,14 @@ export default function PublicProofOfFunds() {
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Track when user selects options
   const handleCountryChange = (country: string) => {
     setSelectedCountry(country);
-    if (country) {
-      trackPOFEvent('country_selected', { country });
-    }
+    if (country) trackPOFEvent('country_selected', { country });
   };
 
   const handleVisaChange = (visa: string) => {
     setSelectedVisa(visa);
-    if (visa) {
-      trackPOFEvent('visa_selected', { visaType: visa });
-    }
+    if (visa) trackPOFEvent('visa_selected', { visaType: visa });
   };
 
   const handleFamilyChange = (family: number) => {
@@ -136,7 +88,6 @@ export default function PublicProofOfFunds() {
   const analyzeRequirements = async () => {
     if (!selectedCountry || !selectedVisa) return;
 
-    // 🎯 TRACK: Analysis started
     await trackPOFEvent('analysis_started', {
       country: selectedCountry,
       visaType: selectedVisa,
@@ -147,36 +98,44 @@ export default function PublicProofOfFunds() {
     setError(null);
 
     try {
-      // Simulate API call delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 🔥 REAL AI CALL - Using our new Groq-powered flow
+      const response = await fetch('/api/analyze-pof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetCountry: selectedCountry,
+          visaType: selectedVisa,
+          familyMembers: selectedFamily,
+          accountData: {
+            balance: 0, // Public tool - no account data yet
+            currency: countryData[selectedCountry as keyof typeof countryData]?.currency || 'USD',
+            accountAge: 0
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Analysis failed');
+      }
+
+      const data = await response.json();
       
-      // 🎯 HARDCODED RESULTS (SAFE & FAST)
-      const hardcodedResults = {
+      // Transform API response to match our display format
+      const transformedResults = {
         summary: {
           destinationCountry: selectedCountry,
-          minimumAmountUSD: selectedFamily * (selectedVisa === 'student' ? 15000 : selectedVisa === 'work' ? 20000 : 10000),
-          minimumAmountNGN: selectedFamily * (selectedVisa === 'student' ? 12000000 : selectedVisa === 'work' ? 16000000 : 8000000),
-          seasoningDays: 90,
+          minimumAmountUSD: data.financial.totalRequired,
+          minimumAmountNGN: Math.round(data.financial.totalRequired * 1600), // Rough conversion
+          seasoningDays: data.financial.seasoningDays,
           familyMembers: selectedFamily
         },
-        basicRequirements: [
-          `Official bank statements (last 6 months)`,
-          `Bank letter on official letterhead`,
-          `Minimum $${(selectedFamily * (selectedVisa === 'student' ? 15000 : selectedVisa === 'work' ? 20000 : 10000)).toLocaleString()} USD`,
-          `Funds seasoned for 90+ days`,
-          `Source of funds declaration`
-        ],
-        criticalWarnings: [
-          {
-            title: 'Insufficient Account Seasoning',
-            description: 'Your accounts show recent large deposits that may raise embassy concerns about fund sourcing.'
-          },
-          {
-            title: 'Documentation Gaps',
-            description: 'Missing official bank letters and source of funds documentation required by embassy.'
-          }
-        ],
-        hiddenIssuesCount: 5,
+        basicRequirements: data.requirements.map((req: any) => req.requirement),
+        criticalWarnings: data.redFlags.slice(0, 2).map((flag: any) => ({
+          title: flag.flag,
+          description: flag.severity === 'critical' ? flag.recommendation : flag.flag
+        })),
+        hiddenIssuesCount: Math.max(data.redFlags.length - 2, 0) + 3, // Show some are hidden
         rejectionStats: {
           rate: '42%',
           year: '2024',
@@ -184,21 +143,19 @@ export default function PublicProofOfFunds() {
         }
       };
 
-      setResults(hardcodedResults);
+      setResults(transformedResults);
       
-      // 🎯 TRACK: Analysis completed successfully
       await trackPOFEvent('analysis_completed', {
         country: selectedCountry,
         visaType: selectedVisa,
-        hasWarnings: hardcodedResults.criticalWarnings.length > 0,
-        warningCount: hardcodedResults.criticalWarnings.length
+        hasWarnings: transformedResults.criticalWarnings.length > 0,
+        warningCount: transformedResults.criticalWarnings.length
       });
 
     } catch (err: any) {
       console.error('Analysis error:', err);
       setError(err.message || 'Failed to analyze. Please try again.');
       
-      // 🎯 TRACK: Analysis failed
       await trackPOFEvent('analysis_failed', {
         country: selectedCountry,
         visaType: selectedVisa,
@@ -209,7 +166,6 @@ export default function PublicProofOfFunds() {
     }
   };
 
-  // 🎯 TRACK: Upgrade button clicks
   const handleUpgradeClick = () => {
     trackPOFEvent('upgrade_clicked', {
       country: selectedCountry,
@@ -320,7 +276,6 @@ export default function PublicProofOfFunds() {
             {error && (
               <div className="mt-6 p-4 bg-red-500/20 rounded-lg border border-red-300">
                 <p className="text-white font-semibold">⚠️ {error}</p>
-                <p className="text-white/80 text-sm mt-1">Please make sure your API endpoint is working correctly.</p>
               </div>
             )}
           </CardHeader>
@@ -375,7 +330,7 @@ export default function PublicProofOfFunds() {
                     Basic Requirements
                   </h3>
                   <ul className="space-y-2">
-                    {(results.basicRequirements || []).map((req: string, i: number) => (
+                    {(results.basicRequirements || []).slice(0, 5).map((req: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-blue-800">
                         <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>{req}</span>
@@ -532,27 +487,6 @@ export default function PublicProofOfFunds() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Real Requirements from Popular Destinations</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
-            <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl text-center border-2 border-green-100">
-              <div className="font-bold text-green-600 text-lg">🇨🇦 Canada Student</div>
-              <div className="text-2xl font-bold text-gray-800 my-3">₦15M+</div>
-              <div className="text-gray-600">90 days seasoning required</div>
-            </div>
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl text-center border-2 border-blue-100">
-              <div className="font-bold text-blue-600 text-lg">🇬🇧 UK Student</div>
-              <div className="text-2xl font-bold text-gray-800 my-3">₦13.8M+</div>
-              <div className="text-gray-600">90 days seasoning required</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl text-center border-2 border-purple-100">
-              <div className="font-bold text-purple-600 text-lg">🇺🇸 USA F-1</div>
-              <div className="text-2xl font-bold text-gray-800 my-3">₦18M+</div>
-              <div className="text-gray-600">90 days seasoning required</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

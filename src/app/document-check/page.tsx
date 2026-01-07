@@ -1,3 +1,4 @@
+// src/app/document-check/page.tsx - UPDATED (Removed "Gemini" references)
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Shield, FileWarning, AlertTriangle, XCircle, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
@@ -296,7 +297,7 @@ export default function DocumentCheckLandingPage() {
                 <div>
                   <h3 className="text-xl font-bold mb-2">AI Analyzes in 30 Seconds</h3>
                   <p className="text-muted-foreground">
-                    Our Gemini-powered AI reads your document like an embassy officer would - checking every signature, date, and format.
+                    Our AI-powered system reads your document like an embassy officer would - checking every signature, date, and format.
                   </p>
                 </div>
               </div>

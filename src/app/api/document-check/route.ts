@@ -1,50 +1,36 @@
-export const runtime = 'nodejs';
-
+import { NextRequest, NextResponse } from 'next/server';
 import { documentChecker } from '@/ai/flows/document-checker';
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    console.log('📄 Document check request received');
-
-    if (!body.documentDataUri) {
-      return new Response(
-        JSON.stringify({ error: 'Missing documentDataUri' }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const base64Data = body.documentDataUri.split(',')[1];
-    if (!base64Data) {
-      return new Response(
-        JSON.stringify({ error: 'Malformed data URI' }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('🤖 Calling AI document checker...');
+    const body = await request.json();
     
-    // Call the actual AI flow
+    // Validate required fields
+    if (!body.documentDataUri) {
+      return NextResponse.json(
+        { success: false, error: 'documentDataUri is required' },
+        { status: 400 }
+      );
+    }
+
+    // Call your AI flow
     const result = await documentChecker({
       documentDataUri: body.documentDataUri,
-      targetCountry: body.targetCountry || 'General',
-      visaType: body.visaType || 'Tourist',
+      targetCountry: body.targetCountry,
+      visaType: body.visaType,
+      userId: body.userId
     });
 
-    console.log('✅ AI analysis complete');
+    return NextResponse.json({
+      success: true,
+      data: result
+    });
 
-    return new Response(
-      JSON.stringify(result), 
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (e: any) {
-    console.error('❌ /api/document-check crash:', e);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to analyze document',
-        details: e.message 
-      }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+  } catch (error: any) {
+    console.error('❌ Document check API error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
     );
   }
 }

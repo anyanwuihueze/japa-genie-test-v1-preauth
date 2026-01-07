@@ -1,30 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeProofOfFunds } from '@/ai/flows/analyze-proof-of-funds';
-import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const body = await request.json();
     
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Validate required fields
+    if (!body.userProfile || !body.financialData) {
+      return NextResponse.json(
+        { success: false, error: 'userProfile and financialData are required' },
+        { status: 400 }
+      );
     }
 
-    const body = await request.json();
-    console.log('📊 POF Analysis request for:', body.destinationCountry, body.visaType);
-
-    const result = await analyzeProofOfFunds(body);
-    
-    return NextResponse.json({ 
-      success: true, 
-      analysis: result 
+    // Call your AI flow
+    const result = await analyzeProofOfFunds({
+      userProfile: body.userProfile,
+      financialData: body.financialData,
+      familyMembers: body.familyMembers || 1
     });
 
+    return NextResponse.json(result);
+
   } catch (error: any) {
-    console.error('❌ POF API error:', error);
+    console.error('❌ POF analysis API error:', error);
     return NextResponse.json(
-      { error: 'Analysis failed', details: error.message },
+      { success: false, error: error.message },
       { status: 500 }
     );
   }
