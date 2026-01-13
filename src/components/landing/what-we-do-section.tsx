@@ -22,7 +22,7 @@ const features = [
   {
     icon: Users,
     title: "Rejection-Proof Documents",
-    description: "Use our templates to create embassy-ready documents.",
+    description: "Guaranteed document templates and guidance to minimize refusal risk.",
     details: "From cover letters to financial statements, get ready-to-use templates reviewed by immigration experts.",
     href: "/document-check"
   },

@@ -1,5 +1,7 @@
 'use server';
-import { groq } from '@/lib/groq-client';
+
+const GEMINI_API_KEY = 'AIzaSyDJMlSrIX7rMSV75Hrf0pbsx3XtWmuyvFw';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 interface DocumentCheckerInput {
   documentDataUri: string;
@@ -34,198 +36,155 @@ interface DocumentAnalysis {
   };
 }
 
-export async function documentChecker(
-  input: DocumentCheckerInput
-): Promise<DocumentAnalysis> {
+export async function documentChecker(input: DocumentCheckerInput): Promise<DocumentAnalysis> {
   try {
-    console.log('👁️ Starting VISION analysis with LLaVA for:', input.visaType, 'visa to', input.targetCountry);
-
-    const embassyRequirements = fetchEmbassyRequirements(
+    console.log('🔍 Analyzing document for:', input.visaType, 'visa to', input.targetCountry);
+    
+    console.log('🌐 Getting embassy requirements...');
+    const embassyRequirements = await getEmbassyRequirements(
       input.targetCountry || 'General',
       input.visaType || 'Tourist'
     );
-
-    console.log('📋 Embassy requirements fetched');
-
-    const visionAnalysis = await analyzeDocumentWithVision(
-      input.documentDataUri,
-      embassyRequirements
-    );
-
-    console.log('✅ LLaVA vision analysis complete');
-    return visionAnalysis;
-
-  } catch (error: any) {
-    console.error('❌ Document checker error:', error);
     
-    return {
-      documentType: 'Unknown',
-      overallStatus: 'critical',
-      criticalIssues: [{
-        issue: 'Document Analysis Failed',
-        impact: error.message || 'Could not analyze document',
-        recommendation: 'Please upload a clear, high-resolution document (minimum 100x100 pixels)'
-      }],
-      warnings: [],
-      passed: [],
-      extractedData: { dates: [], amounts: [], signatures: [], stamps: [] },
-      embassyCompliance: {
-        meetsStandards: false,
-        specificRequirements: [],
-        missingElements: ['Analysis could not be completed']
-      }
-    };
+    console.log('📸 Analyzing with Gemini Vision...');
+    const analysis = await analyzeWithVision(
+      input.documentDataUri,
+      embassyRequirements,
+      input.targetCountry || 'General',
+      input.visaType || 'Tourist'
+    );
+    
+    console.log('✅ Analysis complete');
+    return analysis;
+    
+  } catch (error: any) {
+    console.error('❌ Analysis failed:', error);
+    return createErrorResponse(error.message);
   }
 }
 
-function fetchEmbassyRequirements(country: string, visaType: string): string {
-  const requirements = `
-${country} ${visaType} Visa Requirements (2025):
-
-CRITICAL REQUIREMENTS:
-1. Valid passport (6+ months validity beyond travel dates)
-2. Recent passport photos (specific size requirements)
-3. Bank statements (last 6 months, showing consistent balance)
-4. Official bank letter on letterhead with signature and stamp
-5. Proof of ties to home country
-6. Travel itinerary and accommodation proof
-7. Employment/enrollment letter
-8. All documents dated within last 30 days
-
-COMMON REJECTION REASONS:
-- Missing signatures or stamps on bank documents
-- Insufficient account seasoning (funds recently deposited)
-- Inconsistent information across documents
-- Poor quality scans (unreadable text)
-- Expired or invalid passport
-- Missing required supporting documents
-
-COUNTRY-SPECIFIC FOR ${country}:
-${getCountrySpecificRequirements(country, visaType)}
-  `.trim();
-
-  return requirements;
+async function getEmbassyRequirements(country: string, visaType: string): Promise<string> {
+  try {
+    const prompt = `List ${country} ${visaType} visa requirements for 2025: documents, financial proof, passport validity, rejection reasons. Concise.`;
+    
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+    
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+  } catch (error) {
+    return `${country} ${visaType} visa: Valid passport (6+ months), financial proof, photos, application, supporting documents.`;
+  }
 }
 
-function getCountrySpecificRequirements(country: string, visaType: string): string {
-  const rules: Record<string, string> = {
-    'Canada': '- Bank statements must show 4-6 months history\n- Minimum funds: CAD $20,635 + tuition\n- Account seasoning: 90+ days required\n- GIC certificate required for Student Direct Stream',
-    'United Kingdom': '- 28-day financial rule (funds held for 28 consecutive days)\n- Minimum: £1,483/month (London) or £1,136/month (outside London) for 9 months.\n- Account seasoning: 28+ days before application\n- Bank letter must be dated within 31 days of application',
-    'United States': '- Bank statements for last 3-6 months\n- I-20 form required (students)\n- DS-160 confirmation required\n- Proof of strong ties to home country essential\n- Interview required for most applicants',
-    'Australia': '- Genuine Temporary Entrant (GTE) requirement\n- Financial capacity for 12 months minimum\n- Health insurance (OSHC for students)\n- English language proficiency proof\n- Character requirements and police certificates',
-  };
-  return rules[country] || 'Standard visa requirements apply.';
-}
-
-async function analyzeDocumentWithVision(
-  documentDataUri: string,
-  embassyRequirements: string
+async function analyzeWithVision(
+  imageDataUri: string,
+  requirements: string,
+  country: string,
+  visaType: string
 ): Promise<DocumentAnalysis> {
   
-  const prompt = `You are an expert visa document analyst. Analyze this document image based on the provided embassy requirements.
+  try {
+    const base64Data = imageDataUri.split(',')[1];
+    if (!base64Data) throw new Error('Invalid image data');
+    
+    const mimeMatch = imageDataUri.match(/data:(image\/[^;]+)/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    
+    const prompt = `Analyze this ${country} ${visaType} visa document image.
 
-EMBASSY REQUIREMENTS TO CHECK AGAINST:
-${embassyRequirements}
+REQUIREMENTS: ${requirements}
 
-YOUR ANALYSIS MUST:
-1. Identify the document type (e.g., passport, bank statement).
-2. Extract all visible text, focusing on names, dates, amounts, and official numbers.
-3. Find all signatures and official stamps.
-4. Check for any missing elements required by the embassy rules.
-5. Assess the document's quality (readability, blurriness, authenticity markers).
-6. Flag any inconsistencies or red flags.
+Extract ALL visible text, dates, amounts, signatures, stamps. Identify document type and compliance issues for ${country} ${visaType} visa.
 
-Return your analysis as a JSON object with this EXACT structure:
+Return ONLY valid JSON (no markdown):
 {
-  "documentType": "<type of document identified>",
-  "overallStatus": "<pass|warning|critical>",
+  "documentType": "passport|bank_statement|employment_letter|travel_itinerary|sponsor_letter|other",
+  "overallStatus": "pass|warning|critical",
   "extractedData": {
-    "dates": ["<all dates found>"],
-    "amounts": ["<all monetary amounts found>"],
-    "signatures": ["<signature status: present/missing/unclear>"],
-    "stamps": ["<stamp status: present/missing/unclear>"]
+    "dates": ["all dates with labels"],
+    "amounts": ["all amounts with currency"],
+    "signatures": ["descriptions"],
+    "stamps": ["descriptions"]
   },
   "criticalIssues": [
-    {
-      "issue": "<specific critical problem>",
-      "impact": "<why this will cause rejection>",
-      "recommendation": "<exact fix needed>"
-    }
+    {"issue": "specific problem", "impact": "why rejected", "recommendation": "exact fix"}
   ],
   "warnings": [
-    {
-      "issue": "<potential concern>",
-      "recommendation": "<how to improve>"
-    }
+    {"issue": "concern", "recommendation": "improvement"}
   ],
-  "passed": ["<requirements that are met>"],
+  "passed": ["met requirements"],
   "embassyCompliance": {
-    "meetsStandards": <true/false>,
-    "specificRequirements": ["<embassy requirements checked>"],
-    "missingElements": ["<what's missing or unclear>"]
+    "meetsStandards": true,
+    "specificRequirements": ["checklist"],
+    "missingElements": ["missing items"]
   }
-}
+}`;
 
-CRITICAL: Base your analysis ONLY on what you can actually see in the document. Respond with ONLY the valid JSON object.`;
-
-  try {
-    console.log('🔄 Calling Groq Vision API (LLaVA)...');
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType, data: base64Data }}
+            ]
+          }]
+        })
+      }
+    );
     
-    const completion = await groq.chat.completions.create({
-      model: 'llava-v1.5-7b-hf', // <-- VISION-ENABLED MODEL
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            {
-              type: 'image_url',
-              image_url: { url: documentDataUri }
-            }
-          ]
-        }
-      ],
-      temperature: 0.2,
-      max_tokens: 2048,
-    });
-
-    return await parseGroqResponse(completion);
-
+    const data = await response.json();
+    if (data.error) throw new Error(`Gemini: ${data.error.message}`);
+    
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('No response from Gemini');
+    
+    const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+    
+    if (!jsonMatch) throw new Error('Could not parse JSON');
+    
+    const analysis = JSON.parse(jsonMatch[0]);
+    
+    if (!analysis.documentType || !analysis.overallStatus) {
+      throw new Error('Invalid analysis structure');
+    }
+    
+    return analysis;
+    
   } catch (error: any) {
-    console.error('❌ Vision analysis failed:', error);
-    throw new Error(`Vision API error: ${error.message || 'Unknown error'}`);
+    console.error('❌ Vision failed:', error);
+    throw error;
   }
 }
 
-async function parseGroqResponse(completion: any): Promise<DocumentAnalysis> {
-  console.log('✅ Groq Vision API responded');
-
-  const responseText = completion.choices[0].message.content || '{}';
-  
-  // Clean the response: remove markdown and trim whitespace
-  let cleanedText = responseText.trim()
-    .replace(/```json\n?/g, '')
-    .replace(/```\n?/g, '')
-    .trim();
-
-  let analysis: DocumentAnalysis;
-  try {
-    analysis = JSON.parse(cleanedText);
-    console.log('✅ JSON parsed successfully');
-  } catch (parseError) {
-    console.error('❌ JSON parse failed, attempting extraction from mixed content...');
-    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-      console.log('✅ JSON extracted and parsed');
-    } else {
-      throw new Error('Could not parse AI response as JSON');
-    }
-  }
-
-  if (!analysis.documentType || !analysis.overallStatus) {
-    throw new Error('AI returned incomplete analysis structure');
-  }
-
-  return analysis;
+function createErrorResponse(message: string): DocumentAnalysis {
+  return {
+    documentType: 'Unknown',
+    overallStatus: 'critical',
+    criticalIssues: [{
+      issue: 'Analysis Failed',
+      impact: message,
+      recommendation: 'Upload a clear JPG or PNG image of your document'
+    }],
+    warnings: [],
+    passed: [],
+    extractedData: { dates: [], amounts: [], signatures: [], stamps: [] },
+    embassyCompliance: { meetsStandards: false, specificRequirements: [], missingElements: [] }
+  };
 }

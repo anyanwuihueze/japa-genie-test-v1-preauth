@@ -20,7 +20,7 @@ export function DocumentUpload() {
       <CardContent className="space-y-4">
         <Button asChild className="w-full bg-blue-500 hover:bg-blue-600">
           <Link href="/document-check">
-            Upload Documents
+            Check Documents
           </Link>
         </Button>
       </CardContent>
