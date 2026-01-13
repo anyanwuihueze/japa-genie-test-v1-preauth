@@ -1,11 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Shield, FileWarning, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import DocumentCheckClient from './client';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { CheckCircle, Shield, FileWarning } from 'lucide-react';
 
-export default function DocumentCheckMarketingPage() {
+export default function DocumentCheckPage() {
   return (
     <div className="space-y-8">
       <header className="space-y-2 text-center max-w-3xl mx-auto">
@@ -47,19 +46,7 @@ export default function DocumentCheckMarketingPage() {
         </Card>
       </div>
 
-      <Card className="text-center bg-primary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle>Ready to Verify Your Documents?</CardTitle>
-          <CardDescription className="mb-4">
-            Upload your documents now to get instant feedback from our AI.
-          </CardDescription>
-          <Button asChild>
-            <Link href="/document-check/upload">
-              Try the Document Check Tool <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </Button>
-        </CardHeader>
-      </Card>
+      <DocumentCheckClient />
     </div>
   );
 }
