@@ -1,10 +1,28 @@
 'use client';
-
-import DocumentCheckClient from './client';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { CheckCircle, Shield, FileWarning } from 'lucide-react';
+import DocumentUploadClient from './client'; // Correctly imports the client component
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FileWarning, Shield, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function DocumentCheckPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+    );
+  }
+
+  if (!user) {
+    // Redirect to login but remember to come back here
+    router.push('/pricing?reason=tool_access&returnTo=/document-check');
+    return null;
+  }
+  
   return (
     <div className="space-y-8">
       <header className="space-y-2 text-center max-w-3xl mx-auto">
@@ -45,8 +63,9 @@ export default function DocumentCheckPage() {
           </CardHeader>
         </Card>
       </div>
-
-      <DocumentCheckClient />
+      
+      {/* This now renders the correct, functional client component */}
+      <DocumentUploadClient user={user} />
     </div>
   );
 }

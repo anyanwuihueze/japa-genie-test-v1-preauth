@@ -7,6 +7,7 @@ import { ChatProvider } from '@/context/ChatContext'
 import AppShell from '@/components/pwa/AppShell'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import FloatingChatButton from '@/components/layout/floating-chat-button'
+import RegisterServiceWorker from '@/components/pwa/RegisterServiceWorker'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <FloatingChatButton />
             </div>
             <InstallPrompt />
+            <RegisterServiceWorker />
           </ChatProvider>
           <Toaster />
         </AuthProvider>
