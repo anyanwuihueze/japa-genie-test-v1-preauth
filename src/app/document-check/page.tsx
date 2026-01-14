@@ -1,71 +1,50 @@
 'use client';
-import DocumentUploadClient from './client'; // Correctly imports the client component
+import DocumentCheckClient from './client';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FileWarning, Shield, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/lib/AuthContext';
-import { useRouter } from 'next/navigation';
 
 export default function DocumentCheckPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  if (loading) {
-    return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-    );
-  }
-
-  if (!user) {
-    // Redirect to login but remember to come back here
-    router.push('/pricing?reason=tool_access&returnTo=/document-check');
-    return null;
-  }
-  
   return (
-    <div className="space-y-8">
-      <header className="space-y-2 text-center max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-amber-400 to-primary bg-clip-text text-transparent">
-          Rejection-Proof Your Documents
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          80% of visa rejections stem from document errors. Use our AI to scan, verify, and fortify your application against common red flags before you submit.
-        </p>
-      </header>
+    <div className="min-h-screen bg-background">
+      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,97,255,0.15),transparent_60%)]" />
+        <div className="relative container mx-auto px-6 pt-20 pb-16 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-white to-primary bg-clip-text text-transparent">
+            Rejection-Proof Your Documents
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-300">
+            80% of visa rejections stem from document errors. Let AI scan, verify and fortify your application before submission.
+          </p>
+        </div>
+      </section>
 
-      <div className="grid md:grid-cols-3 gap-6 text-center">
-        <Card>
-          <CardHeader>
-            <div className="p-3 bg-primary/10 rounded-full text-primary w-fit mx-auto mb-2">
-              <FileWarning className="w-7 h-7" />
-            </div>
-            <CardTitle>Error Detection</CardTitle>
-            <CardDescription>Our AI finds missing signatures, incorrect dates, and conflicting information that agents miss.</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="p-3 bg-primary/10 rounded-full text-primary w-fit mx-auto mb-2">
-              <Shield className="w-7 h-7" />
-            </div>
-            <CardTitle>Fraud Prevention</CardTitle>
-            <CardDescription>We help you source verifiable documents to ensure your application withstands embassy scrutiny.</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="p-3 bg-primary/10 rounded-full text-primary w-fit mx-auto mb-2">
-              <CheckCircle className="w-7 h-7" />
-            </div>
-            <CardTitle>Format Compliance</CardTitle>
-            <CardDescription>Ensure every document meets the specific formatting requirements of your target country.</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-      
-      {/* This now renders the correct, functional client component */}
-      <DocumentUploadClient user={user} />
+      <section className="-mt-12 px-6">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {[
+            { icon: FileWarning, title: 'Error Detection', desc: 'Spot missing signatures, wrong dates and conflicts agents miss.' },
+            { icon: Shield,   title: 'Fraud Prevention', desc: 'Source verifiable documents that withstand embassy scrutiny.' },
+            { icon: CheckCircle, title: 'Format Compliance', desc: 'Meet the exact formatting rules of your target country.' }
+          ].map((f) => (
+            <Card key={f.title} className="group backdrop-blur-lg bg-white/60 border-white/20 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              <CardHeader className="items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <f.icon className="w-7 h-7" />
+                </div>
+                <CardTitle className="mt-4 text-lg">{f.title}</CardTitle>
+                <CardDescription className="text-sm text-slate-600">{f.desc}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          <Card className="backdrop-blur-lg bg-white/70 border-white/30 shadow-xl">
+            <DocumentCheckClient />
+          </Card>
+        </div>
+      </section>
     </div>
   );
 }
