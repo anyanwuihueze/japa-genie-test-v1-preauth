@@ -57,3 +57,6 @@ tsconfig.tsbuildinfo
 japa_mobile/build/
 japa_mobile/.dart_tool/
 japa_mobile/flutter-app.zip
+.env*.local
+.env.local
+.env

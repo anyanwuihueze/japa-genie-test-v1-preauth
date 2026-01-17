@@ -1,6 +1,6 @@
 'use server';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDJMlSrIX7rMSV75Hrf0pbsx3XtWmuyvFw';
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export async function generatePersonalizedReport(analysisResult: any, targetCountry: string, visaType: string) {

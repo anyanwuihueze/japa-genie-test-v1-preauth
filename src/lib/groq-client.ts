@@ -5,7 +5,11 @@ function getGroqApiKey(): string {
   const key = 
     process.env.NEXT_PUBLIC_GROQ_API_KEY ||
     process.env.GROQ_API_KEY ||
-    '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';
+    '';
+  
+  if (!key) {
+    throw new Error('❌ GROQ_API_KEY not found in environment variables');
+  }
   
   if (!key.includes('gsk_')) {
     console.error('⚠️ Invalid Groq API key format');
@@ -15,7 +19,4 @@ function getGroqApiKey(): string {
 }
 
 // Create and export the Groq instance
-const groq = new Groq({ apiKey: getGroqApiKey() });
-
-// EXPORT IT!
-export { groq };
+export const groq = new Groq({ apiKey: getGroqApiKey() });
