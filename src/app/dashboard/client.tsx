@@ -1,4 +1,4 @@
-// src/app/dashboard/client.tsx - RESTORED ROBUST VERSION
+// src/app/dashboard/client.tsx - CLEANED VERSION (NO DOC CHECK)
 'use client';
 
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { MessageCircleQuestion, CheckCircle2, Map, Users, TrendingUp, Shield, Clock, Target, ArrowRight, AlertTriangle } from 'lucide-react';
+import { MessageCircleQuestion, Map, Users, TrendingUp, Shield, Clock, Target, ArrowRight, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -16,7 +16,7 @@ interface DashboardClientProps {
   userProfile?: any;
 }
 
-// Tool cards with all features
+// Tool cards - ONLY WORKING TOOLS (3 total)
 const features = [
   {
     icon: MessageCircleQuestion,
@@ -26,15 +26,6 @@ const features = [
     cta: 'Start Practicing',
     expert: true,
     expertText: 'Get human feedback'
-  },
-  {
-    icon: CheckCircle2,
-    title: 'AI Document Check',
-    description: 'Upload documents for AI analysis. Experts available for complex cases or legal review.',
-    href: '/document-check',
-    cta: 'Analyze Document',
-    expert: true,
-    expertText: 'Expert review available'
   },
   {
     icon: Map,
@@ -356,11 +347,6 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
-              <Button asChild className="bg-red-600 hover:bg-red-700">
-                <Link href="/document-check">
-                  Complete Now
-                </Link>
-              </Button>
               <Button variant="outline" asChild>
                 <Link href="/experts">
                   Get Expert Help
