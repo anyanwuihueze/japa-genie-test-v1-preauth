@@ -24,6 +24,17 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Japa Genie',
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#0F172A" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
