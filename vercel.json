@@ -1,1 +1,10 @@
-{}
+{
+  "redirects": [
+    {
+      "source": "/:path((?!www).*)",
+      "destination": "https://www.japagenie.com/:path*",
+      "permanent": true,
+      "statusCode": 308
+    }
+  ]
+}

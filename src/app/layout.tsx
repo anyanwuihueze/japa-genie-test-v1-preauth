@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   title: 'Japa Genie',
   description: 'Your AI-Powered Visa Guide',
   manifest: '/manifest.json',
+  themeColor: '#0F172A',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Japa Genie',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="theme-color" content="#0F172A" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
