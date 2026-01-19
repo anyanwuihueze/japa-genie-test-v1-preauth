@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import SimpleHeader from '@/components/SimpleHeader';
+import { AppFooter } from '@/components/layout/app-footer';
+import { PWANavigation } from '@/components/pwa/PWANavigation';
 import { JapaGenieLogo } from '@/components/icons';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -9,42 +11,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
 
   useEffect(() => {
-    // Check if first visit
     const hasVisited = localStorage.getItem('japa-first-visit');
     if (!hasVisited) {
       setIsFirstVisit(true);
       localStorage.setItem('japa-first-visit', 'true');
     }
 
-    // Simulate loading (you can replace with actual loading logic)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-
+    const timer = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle route changes for progress bar
-  useEffect(() => {
-    const handleRouteChangeStart = () => {
-      setIsLoading(true);
-    };
-
-    const handleRouteChangeComplete = () => {
-      setTimeout(() => setIsLoading(false), 300);
-    };
-
-    window.addEventListener('routeChangeStart', handleRouteChangeStart);
-    window.addEventListener('routeChangeComplete', handleRouteChangeComplete);
-
-    return () => {
-      window.removeEventListener('routeChangeStart', handleRouteChangeStart);
-      window.removeEventListener('routeChangeComplete', handleRouteChangeComplete);
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-white transition-all duration-300">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Launch Animation - Only on first visit */}
       {isFirstVisit && (
         <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50 pwa-launch-logo animate-fade-out">
@@ -64,12 +42,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <SimpleHeader />
       </div>
 
-      {/* Main Content with fade-in effect */}
-      <main className="relative">
-        <div className={`pwa-content-fade ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Main Content - FLEX GROW TO PUSH FOOTER DOWN */}
+      <main className="flex-grow pb-16"> {/* Added padding for bottom nav */}
+        <div className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
           {children}
         </div>
       </main>
+
+      {/* PWA Navigation Bar (Mobile only) */}
+      <PWANavigation />
+
+      {/* App Footer */}
+      <AppFooter />
     </div>
   );
 }

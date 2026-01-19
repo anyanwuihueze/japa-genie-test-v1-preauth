@@ -15,6 +15,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (!hasVisited) {
       setIsFirstVisit(true);
       localStorage.setItem('japa-first-visit', 'true');
+      
+      // FORCE HIDE SPLASH AFTER 3 SECONDS AS BACKUP
+      const forceHideTimer = setTimeout(() => {
+        setIsFirstVisit(false);
+      }, 3000);
+      
+      return () => clearTimeout(forceHideTimer);
     }
 
     const timer = setTimeout(() => setIsLoading(false), 300);

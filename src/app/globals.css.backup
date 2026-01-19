@@ -43,12 +43,6 @@
   }
 }
 
-/* FADE OUT FOR PWA SPLASH - MISSING ANIMATION */
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; visibility: hidden; }
-}
-
 /* Animation classes */
 .animate-ticker {
   animation: ticker 46s linear infinite; /* Restored longer duration */
@@ -64,11 +58,6 @@
 .animate-pointFromLeft {
   animation: pointFromLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
   opacity: 0; /* Start hidden */
-}
-
-.animate-fade-out {
-  animation: fadeOut 1s ease-out forwards;
-  animation-delay: 1.5s;
 }
 
 /* Ticker container */
@@ -163,8 +152,7 @@ input, select, textarea {
 @media (prefers-reduced-motion: reduce) {
   .animate-chevron-pulse,
   .animate-glow,
-  .animate-ticker,
-  .animate-fade-out {
+  .animate-ticker {
     animation: none !important;
   }
 }
@@ -216,14 +204,4 @@ input, select, textarea {
 
 .dark .bg-card {
   background-color: #1e293b !important;
-}
-
-/* PROGRESS BAR ANIMATION */
-@keyframes progress-bar {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-progress-bar {
-  animation: progress-bar 1.5s ease-in-out infinite;
 }
