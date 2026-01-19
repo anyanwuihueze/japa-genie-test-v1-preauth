@@ -1,9 +1,12 @@
-// src/app/dashboard/client.tsx - ENHANCED VERSION (Preserves all existing functionality)
 'use client';
 
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
 import { ConfidenceMeter } from '@/components/dashboard/confidence-meter';
 import { QuickStats } from '@/components/dashboard/quick-stats';
+import { ActionItemsWidgetFixed } from '@/components/dashboard/action-items-widget';
+import { NextBestAction } from '@/components/dashboard/next-best-action';
+import { ApplicationTimeline } from '@/components/dashboard/application-timeline';
+import { StartVisaJourneyCard } from '@/components/dashboard/start-visa-journey-card';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +65,7 @@ interface UserProgress {
   currentStage: string;
 }
 
-export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
+export default function DashboardClientFinal({ user, userProfile }: DashboardClientProps) {
   const [userProgress, setUserProgress] = useState<UserProgress>({
     progressPercentage: 0,
     nextMilestone: "Complete Your Profile",
@@ -189,8 +192,11 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         </p>
       </header>
 
-      {/* QUICK STATS - NEW COMPONENT */}
+      {/* QUICK STATS - Real-time metrics */}
       <QuickStats userId={user.id} className="w-full" />
+
+      {/* NEW: ACTION ITEMS WIDGET - Real-time task extraction */}
+      <ActionItemsWidgetFixed userId={user.id} className="w-full" />
 
       {/* ENHANCED PROGRESS HERO CARD - Responsive */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
@@ -251,45 +257,26 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         </CardContent>
       </Card>
 
+      {/* NEW: NEXT BEST ACTION - AI-powered recommendations */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
-        {/* CONFIDENCE METER - NEW COMPONENT */}
-        <ConfidenceMeter userProfile={userProfile} className="w-full" />
+        <NextBestAction 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage}
+          className="w-full" 
+        />
         
-        {/* SMART INSIGHTS CARDS - Responsive */}
-        <Card className="border-green-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-green-600" />
-              <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>Success Probability</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-green-600 mb-2`}>
-              {userProgress.successProbability}%
-            </div>
-            <p className={`${isMobile ? 'text-sm' : 'text-sm'} text-muted-foreground`}>
-              Based on your profile strength and {userProfile?.destination_country || 'target country'} requirements
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>Estimated Timeline</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-blue-600 mb-2`}>
-              {userProgress.estimatedTimeline}
-            </div>
-            <p className={`${isMobile ? 'text-sm' : 'text-sm'} text-muted-foreground`}>
-              {userProgress.progressPercentage > 50 ? "You're moving faster! ⚡" : "Typical processing timeline"}
-            </p>
-          </CardContent>
-        </Card>
+        {/* CONFIDENCE METER - Visa success prediction */}
+        <ConfidenceMeter userProfile={userProfile} className="w-full" />
       </div>
+
+      {/* NEW: APPLICATION TIMELINE - Visual journey stages */}
+      <ApplicationTimeline 
+        userId={user.id} 
+        userProfile={userProfile} 
+        currentProgress={userProgress.progressPercentage}
+        className="w-full" 
+      />
 
       {/* PROFILE CARD - Responsive */}
       <EnhancedProfileCard 
@@ -298,6 +285,77 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
         onProfileUpdate={() => window.location.reload()} 
       />
 
+
+      {/* TOP SECTION - Core Actions */}
+
+      {/* JOURNEY LOCK-IN - Shows when KYC complete but journey not started */}
+      <StartVisaJourneyCard 
+        userId={user.id} 
+        userProfile={userProfile}
+        userProgressSummary={userProgress}
+        onStartJourney={async () => {
+          const supabase = createClient();
+          await supabase.from('user_progress_summary').upsert({
+            user_id: user.id,
+            journey_started: new Date().toISOString(),
+            current_stage: 'planning',
+            overall_progress: 25
+          });
+        }}
+      />
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6 mb-8`}>
+        <VisaAssistantCard 
+          userId={user.id} 
+          userProfile={userProfile} 
+          userProgress={userProgress} 
+        />
+        <NextBestAction 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage}
+          className="w-full" 
+        />
+      </div>
+
+      {/* MIDDLE SECTION - Progress & Tools */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6 mb-8`}>
+        {/* Journey Progress - Keep existing */}
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <CardHeader>
+            <div className="flex justify-between items-center mb-2">
+              <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Overall Progress</CardTitle>
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  {userProgress.progressPercentage}% Complete
+                </Badge>
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {userProgress.currentStage}
+                </Badge>
+              </div>
+            </div>
+            <CardDescription>
+              {userProgress.progressPercentage === 0 
+                ? "Start your journey by completing your profile and chatting with our AI assistant."
+                : `You're making great progress! ${userProgress.nextMilestone} is your next milestone.`
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Progress value={userProgress.progressPercentage} className="w-full h-3" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Application Start</span>
+              <span>Visa Approval</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Document Checker */}
+        <DocumentCheckerCard 
+          userId={user.id} 
+          userProgress={userProgress} 
+        />
+      </div>
       {/* ENHANCED FEATURES GRID WITH TOOLS - Responsive */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
         {features.map((feature) => (
