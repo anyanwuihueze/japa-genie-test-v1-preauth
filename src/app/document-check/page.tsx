@@ -25,7 +25,7 @@ export default function DocumentCheckPage() {
             { icon: Shield,   title: 'Fraud Prevention', desc: 'Source verifiable documents that withstand embassy scrutiny.' },
             { icon: CheckCircle, title: 'Format Compliance', desc: 'Meet the exact formatting rules of your target country.' }
           ].map((f) => (
-            <Card key={f.title} className="group backdrop-blur-lg bg-white/60 border-white/20 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <Card key={f.title} className="group backdrop-blur-lg bg-white/90 border-white/20 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader className="items-center text-center">
                 <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <f.icon className="w-7 h-7" />
@@ -40,7 +40,7 @@ export default function DocumentCheckPage() {
 
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <Card className="backdrop-blur-lg bg-white/70 border-white/30 shadow-xl">
+          <Card className="backdrop-blur-lg bg-white/90 border-white/30 shadow-xl">
             <DocumentCheckClient />
           </Card>
         </div>

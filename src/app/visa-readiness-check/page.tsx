@@ -132,7 +132,7 @@ export default function VisaReadinessCheck() {
         </div>
 
         {/* Question Card */}
-        <Card className="p-8 md:p-12 bg-white/80 backdrop-blur-sm border-2 border-white/60 shadow-xl">
+        <Card className="p-8 md:p-12 bg-white/95 backdrop-blur-sm border-2 border-white/60 shadow-xl">
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-gray-800">
             {currentQ.question}
           </h2>

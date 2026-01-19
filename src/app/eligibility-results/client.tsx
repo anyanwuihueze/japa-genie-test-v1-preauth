@@ -101,7 +101,7 @@ export default function EligibilityResultsClient() {
     <section className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-20">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Score Display */}
-        <Card className="p-8 md:p-12 text-center mb-8 bg-white/80 backdrop-blur-sm border-2 border-white/60 shadow-xl">
+        <Card className="p-8 md:p-12 text-center mb-8 bg-white/95 backdrop-blur-sm border-2 border-white/60 shadow-xl">
           <h1 className="text-2xl md:text-3xl font-bold mb-6">Your Visa Readiness Score</h1>
           
           <div className={`inline-block ${getScoreBg(results.totalScore)} rounded-full p-8 mb-6`}>
@@ -127,7 +127,7 @@ export default function EligibilityResultsClient() {
         </Card>
 
         {/* Top Weaknesses */}
-        <Card className="p-8 mb-8 bg-white/80 backdrop-blur-sm border-2 border-white/60 shadow-xl">
+        <Card className="p-8 mb-8 bg-white/95 backdrop-blur-sm border-2 border-white/60 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <AlertCircle className="w-8 h-8 text-orange-600" />
             <h2 className="text-2xl font-bold">Your 3 Critical Weaknesses</h2>
@@ -148,7 +148,7 @@ export default function EligibilityResultsClient() {
         </Card>
 
         {/* Detailed Breakdown */}
-        <Card className="p-8 mb-8 bg-white/80 backdrop-blur-sm border-2 border-white/60 shadow-xl">
+        <Card className="p-8 mb-8 bg-white/95 backdrop-blur-sm border-2 border-white/60 shadow-xl">
           <h2 className="text-2xl font-bold mb-6">Detailed Assessment</h2>
           
           <div className="space-y-6">

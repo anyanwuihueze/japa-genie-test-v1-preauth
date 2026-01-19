@@ -22,7 +22,7 @@ export function FloatingChatButton() {
       </Button>
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
         <SheetContent className="w-full max-w-md p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b">
+          <SheetHeader className="p-4 border-b bg-white">
             <SheetTitle>Japa Genie Assistant</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">

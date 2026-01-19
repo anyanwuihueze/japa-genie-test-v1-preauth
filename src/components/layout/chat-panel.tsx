@@ -175,7 +175,7 @@ export default function ChatPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-white">
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
@@ -211,7 +211,7 @@ export default function ChatPanel() {
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t bg-background">
+      <div className="p-4 border-t bg-white">
         <div className="flex space-x-2">
           <Input
             type="text"

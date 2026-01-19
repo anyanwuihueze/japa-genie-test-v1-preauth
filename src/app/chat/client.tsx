@@ -638,7 +638,7 @@ export default function UserChat() {
             )}
           </div>
 
-          <div className="p-3 sm:p-4 border-t bg-white/80 backdrop-blur">
+          <div className="p-3 sm:p-4 border-t bg-white/95 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
               <Badge variant={wishesLeft > 0 ? "default" : "secondary"} className="text-xs">
                 {hasSubscription ? '✨ Unlimited wishes' : wishesLeft > 0 ? `${wishesLeft} wish${wishesLeft !== 1 ? 'es' : ''} left` : 'All wishes used'}
