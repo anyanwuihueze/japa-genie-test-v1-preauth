@@ -1,3 +1,4 @@
+import Link from 'next/link';
 // components/dashboard/document-checker-card.tsx
 'use client';
 

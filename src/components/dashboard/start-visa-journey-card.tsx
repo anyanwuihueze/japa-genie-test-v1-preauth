@@ -1,3 +1,4 @@
+import Link from 'next/link';
 // components/dashboard/start-visa-journey-card.tsx
 'use client';
 

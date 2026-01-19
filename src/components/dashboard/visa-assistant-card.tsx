@@ -1,3 +1,4 @@
+import Link from 'next/link';
 // components/dashboard/visa-assistant-card.tsx
 'use client';
 
