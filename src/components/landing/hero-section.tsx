@@ -15,101 +15,115 @@ export function HeroSection() {
 
   return (
     <>
-      <section className="w-full py-8 sm:py-12 md:py-24 lg:py-32 bg-slate-900 text-slate-50">
-        <div className="container px-4 sm:px-6 md:px-8">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
-            <div className={`flex flex-col justify-center space-y-4 sm:space-y-6 transition-all duration-1000 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="space-y-3 sm:space-y-4">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-900 text-slate-50">
+        <div className="container px-4 md:px-6 mx-auto">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 xl:gap-24 items-center">
+            {/* Left Column - Text Content */}
+            <div className={`flex flex-col justify-center transition-all duration-1000 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              {/* Title and Description */}
+              <div className="space-y-6 mb-8">
                 {user ? (
                   <>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter bg-gradient-to-r from-amber-400 to-primary bg-clip-text text-transparent leading-tight">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-amber-400 to-primary bg-clip-text text-transparent leading-tight">
                       Welcome back!
                     </h1>
-                    <p className="max-w-[600px] text-slate-300 text-base sm:text-lg md:text-xl">
+                    <p className="text-slate-300 text-lg md:text-xl max-w-[600px]">
                       Continue your visa journey. Check your progress or ask AI for guidance.
                     </p>
                   </>
                 ) : (
                   <>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
-                      <span className="text-slate-50">STOP Getting </span><span className="text-red-500">Scammed</span><span className="text-slate-50"> by </span><span className="text-red-500">Fake</span><span className="text-slate-50"> Visa Agents. START Getting </span><span className="text-yellow-400">Real Results.</span>
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight">
+                      <span className="text-slate-50">STOP Getting </span>
+                      <span className="text-red-500">Scammed</span>
+                      <span className="text-slate-50"> by </span>
+                      <span className="text-red-500">Fake</span>
+                      <span className="text-slate-50"> Visa Agents. </span>
+                      <br className="hidden sm:block" />
+                      <span className="text-slate-50">START Getting </span>
+                      <span className="text-yellow-400">Real Results.</span>
                     </h1>
-                    <p className="max-w-[600px] text-slate-300 text-base sm:text-lg md:text-xl">
+                    <p className="text-slate-300 text-lg md:text-xl max-w-[600px]">
                       Japa Genie is your AI-powered guide for navigating the complex world of visas. Get personalized recommendations and a clear roadmap to your destination.
                     </p>
                   </>
                 )}
               </div>
-              <div className="flex flex-col gap-3 sm:gap-4 min-[400px]:flex-row items-center">
-                <div className="relative w-full min-[400px]:w-auto flex items-center">
-                  
-                  <div className="flex items-center mr-2">
-                    <ChevronRight className="w-6 h-6 text-primary animate-chevron-pulse" style={{ animationDelay: '0s' }} />
-                    <ChevronRight className="w-6 h-6 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.2s' }} />
-                    <ChevronRight className="w-6 h-6 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.4s' }} />
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start lg:items-center gap-4">
+                {/* Primary Button with Chevrons */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="hidden sm:flex items-center flex-shrink-0">
+                    <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse" style={{ animationDelay: '0s' }} />
+                    <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.2s' }} />
+                    <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.4s' }} />
                   </div>
                   
                   {user ? (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full w-full sm:w-auto"
                       asChild
                     >
-                      <Link href="/dashboard" className="flex items-center justify-center gap-2">
-                        <Sparkles className="h-4 w-4 sm:h-5 sm:h-5 group-hover:rotate-12 transition-transform" />
-                        <span>Go to Dashboard</span>
+                      <Link href="/dashboard" className="flex items-center justify-center gap-2 px-6 lg:px-8 py-6">
+                        <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform flex-shrink-0" />
+                        <span className="text-base lg:text-lg font-bold">Go to Dashboard</span>
                       </Link>
                     </Button>
                   ) : (
                     <Button
                       size="lg"
-                      className="group w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-primary-foreground hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 rounded-full px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold animate-glow"
+                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full w-full sm:w-auto"
                       asChild
                     >
-                      <Link href="/kyc" className="flex items-center justify-center gap-2">
-                        <Sparkles className="h-4 w-4 sm:h-5 sm:h-5 group-hover:rotate-12 transition-transform" />
-                        <span>Start Your Journey</span>
+                      <Link href="/kyc" className="flex items-center justify-center gap-2 px-6 lg:px-8 py-6">
+                        <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform flex-shrink-0" />
+                        <span className="text-base lg:text-lg font-bold">Start Your Journey</span>
                       </Link>
                     </Button>
                   )}
                 </div>
                 
+                {/* Secondary Button */}
                 {user ? (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="lg"
-                    className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
+                    className="w-full sm:w-auto text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full"
                     asChild
                   >
-                    <Link href="/chat">
-                      <span className="text-sm sm:text-base">Ask AI Assistant</span>
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    <Link href="/chat" className="flex items-center justify-center gap-2 px-6 py-6">
+                      <span className="text-base">Ask AI Assistant</span>
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                     </Link>
                   </Button>
                 ) : (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="lg"
-                    className="w-full min-[400px]:w-auto text-slate-300 hover:bg-slate-800 hover:text-slate-50 group flex items-center justify-center gap-1 px-6 py-5"
+                    className="w-full sm:w-auto text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full"
                     asChild
                   >
-                    <Link href="/how-it-works">
-                      <span className="text-sm sm:text-base">Learn How It Works</span>
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    <Link href="/how-it-works" className="flex items-center justify-center gap-2 px-6 py-6">
+                      <span className="text-base">Learn How It Works</span>
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                     </Link>
                   </Button>
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-center mt-6 lg:mt-0">
-              <div className="w-full max-w-[550px] overflow-hidden rounded-lg shadow-xl ring-1 ring-primary/50 ring-offset-4 sm:ring-offset-8 ring-offset-slate-900">
+
+            {/* Right Column - Video */}
+            <div className="flex items-center justify-center">
+              <div className="w-full max-w-[600px] overflow-hidden rounded-xl shadow-2xl ring-2 ring-primary/30 ring-offset-4 ring-offset-slate-900">
                 <video 
                   src="/videos/Welcome-to-Japa-Genie.mp4" 
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="w-full h-auto rounded-lg"
+                  className="w-full h-auto"
                 >
                   Your browser does not support the video tag.
                 </video>

@@ -3,10 +3,15 @@
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
 import { ConfidenceMeter } from '@/components/dashboard/confidence-meter';
 import { QuickStats } from '@/components/dashboard/quick-stats';
-import { ActionItemsWidgetFixed } from '@/components/dashboard/action-items-widget';
+import { ActionItemsWidgetFixed } from '@/components/dashboard/action-items-widget-fixed';
 import { NextBestAction } from '@/components/dashboard/next-best-action';
 import { ApplicationTimeline } from '@/components/dashboard/application-timeline';
 import { StartVisaJourneyCard } from '@/components/dashboard/start-visa-journey-card';
+import { VisaAssistantCard } from '@/components/dashboard/visa-assistant-card';
+import { DocumentCheckerCard } from '@/components/dashboard/document-checker-card';
+import { POFSeasoningTracker } from '@/components/dashboard/pof-seasoning-tracker';
+import { InsightsCard } from "@/components/dashboard/insights-card";
+import { DocumentAIAnalysis } from '@/components/dashboard/document-ai-analysis';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -192,118 +197,28 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
         </p>
       </header>
 
-      {/* QUICK STATS - Real-time metrics */}
+      {/* 🍎 APPLE HEALTH RINGS - Hero Component */}
+
+      {/* 🔮 INSIGHTS CARD - AI Predictions based on real data */}
+      <InsightsCard 
+        userId={user.id} 
+        userProfile={userProfile} 
+        className="w-full" 
+      />
+
+      {/* 🔮 INSIGHTS CARD - AI Predictions based on real data */}
+      <InsightsCard 
+        userId={user.id} 
+        userProfile={userProfile} 
+        className="w-full" 
+      />
       <QuickStats userId={user.id} className="w-full" />
 
       {/* NEW: ACTION ITEMS WIDGET - Real-time task extraction */}
       <ActionItemsWidgetFixed userId={user.id} className="w-full" />
 
-      {/* ENHANCED PROGRESS HERO CARD - Responsive */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-        <CardHeader>
-          <div className="flex justify-between items-center mb-2">
-            <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Overall Progress</CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {userProgress.progressPercentage}% Complete
-              </Badge>
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {userProgress.currentStage}
-              </Badge>
-            </div>
-          </div>
-          <CardDescription>
-            {userProgress.progressPercentage === 0 
-              ? "Start your journey by completing your profile and chatting with our AI assistant."
-              : `You're making great progress! ${userProgress.nextMilestone} is your next milestone.`
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Progress value={userProgress.progressPercentage} className="w-full h-3" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Application Start</span>
-            <span>Visa Approval</span>
-          </div>
-          
-          {/* QUICK STATS GRID - Responsive */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4'} gap-4 mt-4`}>
-            <div className="text-center">
-              <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-blue-600`}>
-                {userProgress.documentsCompleted}/{userProgress.totalDocuments}
-              </div>
-              <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Documents</div>
-            </div>
-            <div className="text-center">
-              <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-600`}>
-                {userProgress.daysToDeadline}d
-              </div>
-              <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Days Left</div>
-            </div>
-            <div className="text-center">
-              <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-600`}>
-                ₦{(userProgress.moneySaved / 1000).toFixed(0)}K
-              </div>
-              <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Saved vs Agents</div>
-            </div>
-            <div className="text-center">
-              <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-orange-600`}>
-                {userProgress.aheadOfPercentage}%
-              </div>
-              <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Faster Peers</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* NEW: NEXT BEST ACTION - AI-powered recommendations */}
+      {/* 🎯 SMART TOOLS GRID - Apple-style layout */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
-        <NextBestAction 
-          userId={user.id} 
-          userProfile={userProfile} 
-          currentProgress={userProgress.progressPercentage}
-          className="w-full" 
-        />
-        
-        {/* CONFIDENCE METER - Visa success prediction */}
-        <ConfidenceMeter userProfile={userProfile} className="w-full" />
-      </div>
-
-      {/* NEW: APPLICATION TIMELINE - Visual journey stages */}
-      <ApplicationTimeline 
-        userId={user.id} 
-        userProfile={userProfile} 
-        currentProgress={userProgress.progressPercentage}
-        className="w-full" 
-      />
-
-      {/* PROFILE CARD - Responsive */}
-      <EnhancedProfileCard 
-        userProfile={userProfile} 
-        userId={user.id} 
-        onProfileUpdate={() => window.location.reload()} 
-      />
-
-
-      {/* TOP SECTION - Core Actions */}
-
-      {/* JOURNEY LOCK-IN - Shows when KYC complete but journey not started */}
-      <StartVisaJourneyCard 
-        userId={user.id} 
-        userProfile={userProfile}
-        userProgressSummary={userProgress}
-        onStartJourney={async () => {
-          const supabase = createClient();
-          await supabase.from('user_progress_summary').upsert({
-            user_id: user.id,
-            journey_started: new Date().toISOString(),
-            current_stage: 'planning',
-            overall_progress: 25
-          });
-        }}
-      />
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6 mb-8`}>
         <VisaAssistantCard 
           userId={user.id} 
           userProfile={userProfile} 
@@ -317,46 +232,73 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
         />
       </div>
 
-      {/* MIDDLE SECTION - Progress & Tools */}
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6 mb-8`}>
-        {/* Journey Progress - Keep existing */}
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-          <CardHeader>
-            <div className="flex justify-between items-center mb-2">
-              <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Overall Progress</CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {userProgress.progressPercentage}% Complete
-                </Badge>
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {userProgress.currentStage}
-                </Badge>
-              </div>
-            </div>
-            <CardDescription>
-              {userProgress.progressPercentage === 0 
-                ? "Start your journey by completing your profile and chatting with our AI assistant."
-                : `You're making great progress! ${userProgress.nextMilestone} is your next milestone.`
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Progress value={userProgress.progressPercentage} className="w-full h-3" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Application Start</span>
-              <span>Visa Approval</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Document Checker */}
+      {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
+      <POFSeasoningTracker 
+        userId={user.id} 
+        userProfile={userProfile} 
+        className="w-full" 
+      />
+
+      {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
+      <DocumentAIAnalysis 
+        userId={user.id} 
+        className="w-full" 
+      />
+
+      {/* NEXT BEST ACTION & CONFIDENCE METER */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <NextBestAction 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage}
+          className="w-full" 
+        />
+        <ConfidenceMeter 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage} 
+          className="w-full" 
+        />
+      </div>
+
+      {/* APPLICATION TIMELINE */}
+      <ApplicationTimeline 
+        userId={user.id} 
+        userProfile={userProfile} 
+        currentProgress={userProgress.progressPercentage}
+        className="w-full" 
+      />
+
+      {/* JOURNEY LOCK-IN & DOCUMENT CHECKER */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <StartVisaJourneyCard 
+          userId={user.id} 
+          userProfile={userProfile}
+          userProgressSummary={userProgress}
+          onStartJourney={async () => {
+            const supabase = createClient();
+            await supabase.from('user_progress_summary').upsert({
+              user_id: user.id,
+              journey_started: new Date().toISOString(),
+              current_stage: 'planning',
+              overall_progress: 25
+            });
+          }}
+        />
         <DocumentCheckerCard 
           userId={user.id} 
           userProgress={userProgress} 
         />
       </div>
-      {/* ENHANCED FEATURES GRID WITH TOOLS - Responsive */}
+
+      {/* PROFILE CARD */}
+      <EnhancedProfileCard 
+        userProfile={userProfile} 
+        userId={user.id} 
+        onProfileUpdate={() => window.location.reload()} 
+      />
+
+      {/* ENHANCED FEATURES GRID - Simplified */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
         {features.map((feature) => (
           <Card 
@@ -385,16 +327,6 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
                     )}
                   </div>
                   <CardDescription className={`${isMobile ? 'text-sm' : 'text-base'}`}>{feature.description}</CardDescription>
-                  
-                  {feature.expertText && (
-                    <div className="mt-2">
-                      <Button variant="link" className="h-auto p-0 text-blue-600" asChild>
-                        <Link href="/experts">
-                          {feature.expertText} <ArrowRight className="ml-1 w-3 h-3" />
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             </CardHeader>
@@ -413,7 +345,7 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
         ))}
       </div>
 
-      {/* URGENT ACTION CARD - Responsive */}
+      {/* URGENT ACTION CARD */}
       {userProgress.daysToDeadline < 7 && (
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
