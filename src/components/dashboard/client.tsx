@@ -15,19 +15,13 @@ import { DocumentAIAnalysis } from '@/components/dashboard/document-ai-analysis'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { MessageCircleQuestion, Map, Users, TrendingUp, Shield, Clock, Target, ArrowRight, AlertTriangle } from 'lucide-react';
+import { MessageCircleQuestion, Map, Users, Shield, ArrowRight, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { createClient } from '@/lib/supabase/client';
 
-interface DashboardClientProps {
-  user: any;
-  userProfile?: any;
-}
-
-// Tool cards - ONLY WORKING TOOLS (3 total)
+// ✅ Tool cards - ONLY WORKING TOOLS (3 total)
 const features = [
   {
     icon: MessageCircleQuestion,
@@ -36,7 +30,8 @@ const features = [
     href: '/interview',
     cta: 'Start Practicing',
     expert: true,
-    expertText: 'Get human feedback'
+    expertText: 'Get human feedback',
+    highlight: false
   },
   {
     icon: Map,
@@ -44,7 +39,8 @@ const features = [
     description: 'See your detailed timeline. Connect with experts if you get stuck at any step.',
     href: '/progress',
     cta: 'View Journey',
-    expert: false
+    expert: false,
+    highlight: false
   },
   {
     icon: Users,
@@ -57,121 +53,11 @@ const features = [
   },
 ];
 
-interface UserProgress {
-  progressPercentage: number;
-  nextMilestone: string;
-  daysToDeadline: number;
-  moneySaved: number;
-  aheadOfPercentage: number;
-  documentsCompleted: number;
-  totalDocuments: number;
-  successProbability: number;
-  estimatedTimeline: string;
-  currentStage: string;
-}
-
-export default function DashboardClientFinal({ user, userProfile }: DashboardClientProps) {
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    progressPercentage: 0,
-    nextMilestone: "Complete Your Profile",
-    daysToDeadline: 30,
-    moneySaved: 0,
-    aheadOfPercentage: 0,
-    documentsCompleted: 0,
-    totalDocuments: 8,
-    successProbability: 65,
-    estimatedTimeline: "6-8 months",
-    currentStage: "Onboarding"
-  });
-  const [loading, setLoading] = useState(true);
+export default function DashboardClientFinal({ user }: { user: any }) {
   const isMobile = useIsMobile();
+  const dashboardData = useDashboardData();
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProgress();
-    }
-  }, [user]);
-
-  const fetchUserProgress = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    const supabase = createClient();
-    
-    try {
-      // Fetch REAL chat message count
-      const { count: messageCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Fetch REAL document count
-      const { count: docCount } = await supabase
-        .from('user_documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Calculate REAL progress
-      const realProgress = calculateRealProgress(userProfile, messageCount || 0, docCount || 0);
-      setUserProgress(realProgress);
-      
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateRealProgress = (profile: any, messageCount: number, docCount: number): UserProgress => {
-    let progressPercentage = 0;
-    let nextMilestone = "Complete Your Profile";
-    let currentStage = "Onboarding";
-
-    // Profile completion (KYC)
-    if (profile?.country && profile?.destination_country && profile?.visa_type) {
-      progressPercentage += 30;
-      nextMilestone = "Upload Documents";
-      currentStage = "Document Preparation";
-    }
-
-    // Chat engagement
-    if (messageCount > 0) {
-      progressPercentage += 20;
-      if (progressPercentage >= 30) nextMilestone = "Complete Document Upload";
-    }
-
-    // Document uploads
-    if (docCount > 0) {
-      progressPercentage += Math.min(docCount * 5, 30);
-      if (progressPercentage >= 50) {
-        nextMilestone = "Schedule Interview Practice";
-        currentStage = "Interview Preparation";
-      }
-    }
-
-    progressPercentage = Math.min(progressPercentage, 100);
-
-    const moneySaved = Math.round(progressPercentage * 24000);
-    const aheadOfPercentage = Math.floor(progressPercentage * 0.8);
-    const successProbability = Math.min(65 + Math.floor(progressPercentage / 2), 95);
-    const estimatedTimeline = progressPercentage > 50 ? "4-5 months" : "6-8 months";
-    const daysToDeadline = Math.max(30 - Math.floor(progressPercentage / 3), 7);
-
-    return {
-      progressPercentage,
-      nextMilestone,
-      daysToDeadline,
-      moneySaved,
-      aheadOfPercentage,
-      documentsCompleted: docCount,
-      totalDocuments: 8,
-      successProbability,
-      estimatedTimeline,
-      currentStage
-    };
-  };
-
-  if (loading) {
+  if (dashboardData.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -182,13 +68,27 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
     );
   }
 
+  if (dashboardData.error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
+          <p>Error loading dashboard: {dashboardData.error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-8 ${isMobile ? 'p-4' : ''}`}>
       {/* Header - Responsive */}
       <header className="space-y-2">
         <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold tracking-tight`}>
-          {userProfile?.destination_country 
-            ? `Your Visa Journey to ${userProfile.destination_country}`
+          {dashboardData.userProfile?.destination_country 
+            ? `Your Visa Journey to ${dashboardData.userProfile.destination_country}`
             : `Welcome back, ${user?.email?.split('@')[0] || 'Traveler'}! 👋`
           }
         </h1>
@@ -198,103 +98,50 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
       </header>
 
       {/* 🍎 APPLE HEALTH RINGS - Hero Component */}
+      <QuickStats />
 
       {/* 🔮 INSIGHTS CARD - AI Predictions based on real data */}
-      <InsightsCard 
-        userId={user.id} 
-        userProfile={userProfile} 
-        className="w-full" 
-      />
-
-      {/* 🔮 INSIGHTS CARD - AI Predictions based on real data */}
-      <InsightsCard 
-        userId={user.id} 
-        userProfile={userProfile} 
-        className="w-full" 
-      />
-      <QuickStats userId={user.id} className="w-full" />
+      <InsightsCard />
 
       {/* NEW: ACTION ITEMS WIDGET - Real-time task extraction */}
-      <ActionItemsWidgetFixed userId={user.id} className="w-full" />
+      <ActionItemsWidgetFixed userId={dashboardData.userId} />
 
       {/* 🎯 SMART TOOLS GRID - Apple-style layout */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
-        <VisaAssistantCard 
-          userId={user.id} 
-          userProfile={userProfile} 
-          userProgress={userProgress} 
-        />
-        <NextBestAction 
-          userId={user.id} 
-          userProfile={userProfile} 
-          currentProgress={userProgress.progressPercentage}
-          className="w-full" 
-        />
+        <VisaAssistantCard userId={dashboardData.userId} />
+        <NextBestAction />
       </div>
 
       {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
-      <POFSeasoningTracker 
-        userId={user.id} 
-        userProfile={userProfile} 
-        className="w-full" 
-      />
+      <POFSeasoningTracker userId={dashboardData.userId} />
 
       {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
-      <DocumentAIAnalysis 
-        userId={user.id} 
-        className="w-full" 
-      />
+      <DocumentAIAnalysis userId={dashboardData.userId} />
 
-      {/* NEXT BEST ACTION & CONFIDENCE METER */}
+      {/* CONFIDENCE METER & APPLICATION TIMELINE */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
-        <NextBestAction 
-          userId={user.id} 
-          userProfile={userProfile} 
-          currentProgress={userProgress.progressPercentage}
-          className="w-full" 
-        />
-        <ConfidenceMeter 
-          userId={user.id} 
-          userProfile={userProfile} 
-          currentProgress={userProgress.progressPercentage} 
-          className="w-full" 
-        />
+        <ConfidenceMeter />
+        <ApplicationTimeline />
       </div>
-
-      {/* APPLICATION TIMELINE */}
-      <ApplicationTimeline 
-        userId={user.id} 
-        userProfile={userProfile} 
-        currentProgress={userProgress.progressPercentage}
-        className="w-full" 
-      />
 
       {/* JOURNEY LOCK-IN & DOCUMENT CHECKER */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
         <StartVisaJourneyCard 
-          userId={user.id} 
-          userProfile={userProfile}
-          userProgressSummary={userProgress}
           onStartJourney={async () => {
             const supabase = createClient();
             await supabase.from('user_progress_summary').upsert({
-              user_id: user.id,
+              user_id: dashboardData.userId,
               journey_started: new Date().toISOString(),
               current_stage: 'planning',
-              overall_progress: 25
+              overall_progress: dashboardData.progressPercentage
             });
           }}
         />
-        <DocumentCheckerCard 
-          userId={user.id} 
-          userProgress={userProgress} 
-        />
+        <DocumentCheckerCard />
       </div>
 
       {/* PROFILE CARD */}
       <EnhancedProfileCard 
-        userProfile={userProfile} 
-        userId={user.id} 
         onProfileUpdate={() => window.location.reload()} 
       />
 
@@ -344,30 +191,6 @@ export default function DashboardClientFinal({ user, userProfile }: DashboardCli
           </Card>
         ))}
       </div>
-
-      {/* URGENT ACTION CARD */}
-      {userProgress.daysToDeadline < 7 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800 flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Urgent Action Needed
-            </CardTitle>
-            <CardDescription className="text-red-700">
-              Your {userProgress.nextMilestone} deadline is in {userProgress.daysToDeadline} days.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <Button variant="outline" asChild>
-                <Link href="/experts">
-                  Get Expert Help
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

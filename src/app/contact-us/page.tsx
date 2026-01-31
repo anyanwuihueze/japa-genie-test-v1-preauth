@@ -10,16 +10,8 @@ export default function ContactUsPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-center">
                 <div>
-                    <h3 className="font-semibold">General Support & Inquiries</h3>
-                    <p className="text-primary">support@japagenie.com</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">Partnerships</h3>
-                    <p className="text-primary">partners@japagenie.com</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">Press & Media</h3>
-                    <p className="text-primary">media@japagenie.com</p>
+                    <h3 className="font-semibold">Official Contact Email</h3>
+                    <p className="text-primary">admin@japagenie.com</p>
                 </div>
                 <p className="text-sm text-muted-foreground pt-4">
                     Our team will get back to you within 24-48 business hours.

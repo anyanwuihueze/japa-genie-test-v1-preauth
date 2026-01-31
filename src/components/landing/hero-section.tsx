@@ -51,10 +51,10 @@ export function HeroSection() {
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start lg:items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {/* Primary Button with Chevrons */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <div className="hidden sm:flex items-center flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center">
                     <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse" style={{ animationDelay: '0s' }} />
                     <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.2s' }} />
                     <ChevronRight className="w-5 h-5 text-primary animate-chevron-pulse -ml-2" style={{ animationDelay: '0.4s' }} />
@@ -63,23 +63,23 @@ export function HeroSection() {
                   {user ? (
                     <Button
                       size="lg"
-                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full w-full sm:w-auto"
+                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full"
                       asChild
                     >
-                      <Link href="/dashboard" className="flex items-center justify-center gap-2 px-6 lg:px-8 py-6">
+                      <Link href="/dashboard" className="flex items-center justify-center gap-2 px-8 py-6 whitespace-nowrap">
                         <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform flex-shrink-0" />
-                        <span className="text-base lg:text-lg font-bold">Go to Dashboard</span>
+                        <span className="text-lg font-bold">Go to Dashboard</span>
                       </Link>
                     </Button>
                   ) : (
                     <Button
                       size="lg"
-                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full w-full sm:w-auto"
+                      className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 rounded-full"
                       asChild
                     >
-                      <Link href="/kyc" className="flex items-center justify-center gap-2 px-6 lg:px-8 py-6">
+                      <Link href="/kyc" className="flex items-center justify-center gap-2 px-8 py-6 whitespace-nowrap">
                         <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform flex-shrink-0" />
-                        <span className="text-base lg:text-lg font-bold">Start Your Journey</span>
+                        <span className="text-lg font-bold">Start Your Journey</span>
                       </Link>
                     </Button>
                   )}
@@ -90,11 +90,11 @@ export function HeroSection() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full sm:w-auto text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full"
+                    className="text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full flex-shrink-0"
                     asChild
                   >
-                    <Link href="/chat" className="flex items-center justify-center gap-2 px-6 py-6">
-                      <span className="text-base">Ask AI Assistant</span>
+                    <Link href="/chat" className="flex items-center justify-center gap-2 px-6 py-6 whitespace-nowrap">
+                      <span className="text-base">Ask AI</span>
                       <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                     </Link>
                   </Button>
@@ -102,11 +102,11 @@ export function HeroSection() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full sm:w-auto text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full"
+                    className="text-slate-300 bg-transparent hover:bg-slate-800 hover:text-white border-2 border-slate-600 hover:border-slate-500 group rounded-full flex-shrink-0"
                     asChild
                   >
-                    <Link href="/how-it-works" className="flex items-center justify-center gap-2 px-6 py-6">
-                      <span className="text-base">Learn How It Works</span>
+                    <Link href="/how-it-works" className="flex items-center justify-center gap-2 px-6 py-6 whitespace-nowrap">
+                      <span className="text-base">Learn More</span>
                       <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                     </Link>
                   </Button>
