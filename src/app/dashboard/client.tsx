@@ -1,20 +1,25 @@
-// src/app/dashboard/client.tsx - CLEANED VERSION (NO DOC CHECK)
 'use client';
 
 import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
+import { ConfidenceMeter } from '@/components/dashboard/confidence-meter';
+import { QuickStats } from '@/components/dashboard/quick-stats';
+import { ActionItemsWidgetFixed } from '@/components/dashboard/action-items-widget-fixed';
+import { NextBestAction } from '@/components/dashboard/next-best-action';
+import { ApplicationTimeline } from '@/components/dashboard/application-timeline';
+import { StartVisaJourneyCard } from '@/components/dashboard/start-visa-journey-card';
+import { VisaAssistantCard } from '@/components/dashboard/visa-assistant-card';
+import { DocumentCheckerCard } from '@/components/dashboard/document-checker-card';
+import { POFSeasoningTracker } from '@/components/dashboard/pof-seasoning-tracker';
+import { InsightsCard } from "@/components/dashboard/insights-card";
+import { DocumentAIAnalysis } from '@/components/dashboard/document-ai-analysis';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { MessageCircleQuestion, Map, Users, TrendingUp, Shield, Clock, Target, ArrowRight, AlertTriangle } from 'lucide-react';
+import { MessageCircleQuestion, Map, Users, Shield, ArrowRight, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { createClient } from '@/lib/supabase/client';
-
-interface DashboardClientProps {
-  user: any;
-  userProfile?: any;
-}
 
 // Tool cards - ONLY WORKING TOOLS (3 total)
 const features = [
@@ -25,7 +30,8 @@ const features = [
     href: '/interview',
     cta: 'Start Practicing',
     expert: true,
-    expertText: 'Get human feedback'
+    expertText: 'Get human feedback',
+    highlight: false
   },
   {
     icon: Map,
@@ -33,7 +39,8 @@ const features = [
     description: 'See your detailed timeline. Connect with experts if you get stuck at any step.',
     href: '/progress',
     cta: 'View Journey',
-    expert: false
+    expert: false,
+    highlight: false
   },
   {
     icon: Users,
@@ -46,120 +53,11 @@ const features = [
   },
 ];
 
-interface UserProgress {
-  progressPercentage: number;
-  nextMilestone: string;
-  daysToDeadline: number;
-  moneySaved: number;
-  aheadOfPercentage: number;
-  documentsCompleted: number;
-  totalDocuments: number;
-  successProbability: number;
-  estimatedTimeline: string;
-  currentStage: string;
-}
+export default function DashboardClientFinal({ user }: { user: any }) {
+  const isMobile = useIsMobile();
+  const dashboardData = useDashboardData();
 
-export default function DashboardClient({ user, userProfile }: DashboardClientProps) {
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    progressPercentage: 0,
-    nextMilestone: "Complete Your Profile",
-    daysToDeadline: 30,
-    moneySaved: 0,
-    aheadOfPercentage: 0,
-    documentsCompleted: 0,
-    totalDocuments: 8,
-    successProbability: 65,
-    estimatedTimeline: "6-8 months",
-    currentStage: "Onboarding"
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserProgress();
-    }
-  }, [user]);
-
-  const fetchUserProgress = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    const supabase = createClient();
-    
-    try {
-      // Fetch REAL chat message count
-      const { count: messageCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Fetch REAL document count
-      const { count: docCount } = await supabase
-        .from('user_documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Calculate REAL progress
-      const realProgress = calculateRealProgress(userProfile, messageCount || 0, docCount || 0);
-      setUserProgress(realProgress);
-      
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateRealProgress = (profile: any, messageCount: number, docCount: number): UserProgress => {
-    let progressPercentage = 0;
-    let nextMilestone = "Complete Your Profile";
-    let currentStage = "Onboarding";
-
-    // Profile completion (KYC)
-    if (profile?.country && profile?.destination_country && profile?.visa_type) {
-      progressPercentage += 30;
-      nextMilestone = "Upload Documents";
-      currentStage = "Document Preparation";
-    }
-
-    // Chat engagement
-    if (messageCount > 0) {
-      progressPercentage += 20;
-      if (progressPercentage >= 30) nextMilestone = "Complete Document Upload";
-    }
-
-    // Document uploads
-    if (docCount > 0) {
-      progressPercentage += Math.min(docCount * 5, 30);
-      if (progressPercentage >= 50) {
-        nextMilestone = "Schedule Interview Practice";
-        currentStage = "Interview Preparation";
-      }
-    }
-
-    progressPercentage = Math.min(progressPercentage, 100);
-
-    const moneySaved = Math.round(progressPercentage * 24000);
-    const aheadOfPercentage = Math.floor(progressPercentage * 0.8);
-    const successProbability = Math.min(65 + Math.floor(progressPercentage / 2), 95);
-    const estimatedTimeline = progressPercentage > 50 ? "4-5 months" : "6-8 months";
-    const daysToDeadline = Math.max(30 - Math.floor(progressPercentage / 3), 7);
-
-    return {
-      progressPercentage,
-      nextMilestone,
-      daysToDeadline,
-      moneySaved,
-      aheadOfPercentage,
-      documentsCompleted: docCount,
-      totalDocuments: 8,
-      successProbability,
-      estimatedTimeline,
-      currentStage
-    };
-  };
-
-  if (loading) {
+  if (dashboardData.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -170,114 +68,88 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
     );
   }
 
+  if (dashboardData.error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
+          <p>Error loading dashboard: {dashboardData.error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className={`space-y-8 ${isMobile ? 'p-4' : ''}`}>
+      {/* Header - Responsive */}
       <header className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">
-          {userProfile?.destination_country 
-            ? `Your Visa Journey to ${userProfile.destination_country}`
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold tracking-tight`}>
+          {dashboardData.userProfile?.destination_country 
+            ? `Your Visa Journey to ${dashboardData.userProfile.destination_country}`
             : `Welcome back, ${user?.email?.split('@')[0] || 'Traveler'}! 👋`
           }
         </h1>
-        <p className="text-lg text-muted-foreground">
+        <p className={`${isMobile ? 'text-base' : 'text-lg'} text-muted-foreground`}>
           Your personalized AI guide to visa success. Here's your journey at a glance.
         </p>
       </header>
 
-      {/* ENHANCED PROGRESS HERO CARD */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-        <CardHeader>
-          <div className="flex justify-between items-center mb-2">
-            <CardTitle className="text-xl">Overall Progress</CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {userProgress.progressPercentage}% Complete
-              </Badge>
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {userProgress.currentStage}
-              </Badge>
-            </div>
-          </div>
-          <CardDescription>
-            {userProgress.progressPercentage === 0 
-              ? "Start your journey by completing your profile and chatting with our AI assistant."
-              : `You're making great progress! ${userProgress.nextMilestone} is your next milestone.`
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Progress value={userProgress.progressPercentage} className="w-full h-3" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Application Start</span>
-            <span>Visa Approval</span>
-          </div>
-          
-          {/* QUICK STATS GRID */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{userProgress.documentsCompleted}/{userProgress.totalDocuments}</div>
-              <div className="text-xs text-muted-foreground">Documents</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{userProgress.daysToDeadline}d</div>
-              <div className="text-xs text-muted-foreground">Next Deadline</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">₦{(userProgress.moneySaved / 1000).toFixed(0)}K</div>
-              <div className="text-xs text-muted-foreground">Saved vs Agents</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{userProgress.aheadOfPercentage}%</div>
-              <div className="text-xs text-muted-foreground">Faster Peers</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 🍎 APPLE HEALTH RINGS - Hero Component */}
+      <QuickStats />
 
-      {/* SMART INSIGHTS CARDS */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="border-green-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-green-600" />
-              <CardTitle className="text-lg">Success Probability</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600 mb-2">{userProgress.successProbability}%</div>
-            <p className="text-sm text-muted-foreground">
-              Based on your profile strength and {userProfile?.destination_country || 'target country'} requirements
-            </p>
-          </CardContent>
-        </Card>
+      {/* 🔮 INSIGHTS CARD - AI Predictions based on real data */}
+      <InsightsCard />
 
-        <Card className="border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              <CardTitle className="text-lg">Estimated Timeline</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600 mb-2">{userProgress.estimatedTimeline}</div>
-            <p className="text-sm text-muted-foreground">
-              {userProgress.progressPercentage > 50 ? "You're moving faster! ⚡" : "Typical processing timeline"}
-            </p>
-          </CardContent>
-        </Card>
+      {/* NEW: ACTION ITEMS WIDGET - Real-time task extraction */}
+      <ActionItemsWidgetFixed userId={dashboardData.userId} />
+
+      {/* 🎯 SMART TOOLS GRID - Apple-style layout */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <VisaAssistantCard userId={dashboardData.userId} />
+        <NextBestAction />
+      </div>
+
+      {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
+      <POFSeasoningTracker userId={dashboardData.userId} userProfile={dashboardData.userProfile} />
+
+      {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
+      <DocumentAIAnalysis userId={dashboardData.userId} />
+
+      {/* CONFIDENCE METER & APPLICATION TIMELINE */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <ConfidenceMeter />
+        <ApplicationTimeline />
+      </div>
+
+      {/* JOURNEY LOCK-IN & DOCUMENT CHECKER */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <StartVisaJourneyCard 
+          userProfile={dashboardData.userProfile} 
+          userProgress={dashboardData.userProgress} 
+          documentsCount={dashboardData.documentCount} 
+          onStartJourney={async () => {
+            const supabase = createClient();
+            await supabase.from('user_progress_summary').upsert({
+              user_id: dashboardData.userId,
+              journey_started: new Date().toISOString(),
+              current_stage: 'planning',
+              overall_progress: dashboardData.progressPercentage
+            });
+          }}
+        />
+        <DocumentCheckerCard userProfile={dashboardData.userProfile} />
       </div>
 
       {/* PROFILE CARD */}
       <EnhancedProfileCard 
-        userProfile={userProfile} 
-        userId={user.id} 
         onProfileUpdate={() => window.location.reload()} 
       />
 
-      {/* ENHANCED FEATURES GRID WITH TOOLS */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* ENHANCED FEATURES GRID - Simplified */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
         {features.map((feature) => (
           <Card 
             key={feature.title} 
@@ -296,66 +168,32 @@ export default function DashboardClient({ user, userProfile }: DashboardClientPr
                 </div>
                 <div className='flex-1'>
                   <div className="flex items-center gap-2 mb-1">
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className={`${isMobile ? 'text-base' : 'text-xl'}`}>{feature.title}</CardTitle>
                     {feature.expert && (
-                      <Badge variant="outline" className="text-xs bg-blue-50">
+                      <Badge variant="outline" className={`${isMobile ? 'text-xs' : 'text-xs'} bg-blue-50`}>
                         <Shield className="w-3 h-3 mr-1" />
                         Expert Available
                       </Badge>
                     )}
                   </div>
-                  <CardDescription>{feature.description}</CardDescription>
-                  
-                  {feature.expertText && (
-                    <div className="mt-2">
-                      <Button variant="link" className="h-auto p-0 text-blue-600" asChild>
-                        <Link href="/experts">
-                          {feature.expertText} <ArrowRight className="ml-1 w-3 h-3" />
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
+                  <CardDescription className={`${isMobile ? 'text-sm' : 'text-base'}`}>{feature.description}</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <div className="p-6 pt-0">
+            <div className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
               <Button asChild className={`w-full transition-colors ${
                 feature.highlight 
                   ? 'bg-orange-500 hover:bg-orange-600' 
                   : 'group-hover:bg-amber-400'
               }`}>
-                <Link href={feature.href}>
-                  {feature.cta} <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <Link href={feature.href} className="flex items-center justify-center gap-2">
+                  {feature.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
             </div>
           </Card>
         ))}
       </div>
-
-      {/* URGENT ACTION CARD */}
-      {userProgress.daysToDeadline < 7 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800 flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Urgent Action Needed
-            </CardTitle>
-            <CardDescription className="text-red-700">
-              Your {userProgress.nextMilestone} deadline is in {userProgress.daysToDeadline} days.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <Button variant="outline" asChild>
-                <Link href="/experts">
-                  Get Expert Help
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

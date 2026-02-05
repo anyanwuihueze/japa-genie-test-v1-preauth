@@ -167,6 +167,12 @@ const withPWA = require('next-pwa')({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [
+    "9000-firebase-studio-1754586494517.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
+    "localhost:9002",
+    "localhost:9003"
+  ],
+
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -88,6 +88,15 @@ function PricingContent() {
           subtitle: "Access your progress tracking, saved conversations, and personalized roadmap."
         };
       case 'tool_access':
+          case 'cost_calculator':
+            return {
+              icon: <Zap className="w-6 h-6 text-orange-500" />,
+              title: 'Complete Your Visa Cost Calculation',
+              message: 'Unlock full cost breakdown for your visa',
+              bgColor: 'bg-orange-500/10',
+              borderColor: 'border-orange-500/30',
+              textColor: 'text-orange-400'
+            };
         return {
           title: "Access Premium Tools",
           subtitle: "Upgrade to use document verification, visa matchmaker, and other advanced features."
@@ -171,6 +180,15 @@ function PricingContent() {
       case 'dashboard_access':
         return `Access Dashboard • ${plan.cta}`;
       case 'tool_access':
+          case 'cost_calculator':
+            return {
+              icon: <Zap className="w-6 h-6 text-orange-500" />,
+              title: 'Complete Your Visa Cost Calculation',
+              message: 'Unlock full cost breakdown for your visa',
+              bgColor: 'bg-orange-500/10',
+              borderColor: 'border-orange-500/30',
+              textColor: 'text-orange-400'
+            };
         return `Unlock Tools • ${plan.cta}`;
       default:
         return plan.cta;

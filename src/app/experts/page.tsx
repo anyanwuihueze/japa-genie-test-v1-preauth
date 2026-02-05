@@ -151,9 +151,39 @@ export default function ExpertsPage() {
             ))}
           </div>
         </div>
+        
+        {/* WhatsApp & Community Support Card */}
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold text-center mb-12">Community & Quick Support</h2>
+          <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 shadow-lg">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-green-200 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.433-9.89-9.889-9.89-5.452 0-9.887 4.434-9.889 9.89.001 2.23.654 4.288 1.902 5.941l-1.226 4.485 4.588-1.204z" />
+                </svg>
+              </div>
+              <CardTitle className="text-2xl">Join the Japa Genie Community</CardTitle>
+              <CardDescription className="max-w-md mx-auto">
+                Have a quick question? Want to connect with others on the same journey? Join our WhatsApp community.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
+                <a href="https://wa.me/2349031627095" target="_blank" rel="noopener noreferrer">
+                  WhatsApp (Nigeria)
+                </a>
+              </Button>
+              <Button asChild size="lg" variant="secondary">
+                <a href="https://wa.me/12042901895" target="_blank" rel="noopener noreferrer">
+                  WhatsApp (International)
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Services */}
-        <div className="mb-16">
+        <div className="mb-16 mt-16">
           <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, index) => (

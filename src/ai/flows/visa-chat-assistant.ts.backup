@@ -1,0 +1,126 @@
+'use server';
+import { groq } from '@/lib/groq-client';
+import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
+
+/* ---------- TYPES ---------- */
+interface VisaAssistantInput {
+  question: string;
+  wishCount: number;
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  userContext?: {
+    name?: string;
+    country?: string;
+    destination?: string;
+    profession?: string;
+    visaType?: string;
+    age?: number;
+    userType?: string;
+    timelineUrgency?: string;
+  };
+  isSignedIn?: boolean;
+}
+
+interface VisaAssistantOutput {
+  answer: string;
+  insights?: {
+    suggestedCountries?: Array<{
+      name: string;
+      visaType: string;
+      estimatedCost: number;
+      processingTimeMonths: number;
+      pros: string[];
+      cons: string[];
+    }>;
+    timeline?: Array<{ step: string; durationWeeks: number }>;
+    alternativeStrategies?: string[];
+    difficulty?: string;
+    recommendations?: string[];
+  };
+}
+
+/* ---------- SYSTEM PROMPT ---------- */
+const SYSTEM_PROMPT = `You are Japa Genie, a world-class visa strategist with 8+ years analyzing African → Global migration patterns.
+Speak in Markdown, cite real stats, never guarantee approval.
+Use the EXACT user details (age, country, destination, etc.) provided in the prompt below.
+
+CRITICAL: You MUST return valid JSON with this EXACT structure:
+{
+  "chatResponse": "Your detailed markdown answer with [citation links] and specific stats",
+  "suggestedCountries": [
+    {
+      "name": "Country Name",
+      "visaType": "Specific Visa Type",
+      "estimatedCost": 1500,
+      "processingTimeMonths": 6,
+      "pros": ["pro 1", "pro 2"],
+      "cons": ["con 1", "con 2"]
+    }
+  ],
+  "timeline": [
+    {"step": "Step description", "durationWeeks": 4}
+  ],
+  "alternativeStrategies": ["Strategy 1", "Strategy 2"]
+}`;
+
+function buildPrompt(input: VisaAssistantInput): string {
+  const { question, conversationHistory = [], userContext } = input;
+  const ctx = userContext
+    ? `${userContext.name || 'User'} (${userContext.age || 'unknown'} years) from ${userContext.country || 'unknown'} → ${userContext.destination || 'unknown'} (${userContext.visaType || 'unknown'}), works as ${userContext.profession || 'unknown'}, timeline: ${userContext.timelineUrgency || 'unknown'}`
+    : 'Profile not yet collected';
+  const history = conversationHistory.length
+    ? `History:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n`
+    : '';
+  return `${SYSTEM_PROMPT}\n\n${history}Context: ${ctx}\nQuestion: ${question}`;
+}
+
+/* ---------- EXPORTED ACTION ---------- */
+export async function visaChatAssistant(input: VisaAssistantInput): Promise<VisaAssistantOutput> {
+  const { wishCount, isSignedIn } = input;
+
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: buildPrompt(input) }
+      ],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+      max_tokens: 2000,
+      response_format: { type: 'json_object' }
+    });
+
+    const content = completion.choices[0]?.message?.content || '{"chatResponse": "Error processing response"}';
+    const data = JSON.parse(content);
+
+    let answer = data.chatResponse?.replace(/\(?\d+\s*wishes?\s*remaining\)?/gi, '').trim() || '';
+
+    if (!isSignedIn) {
+      const left = Math.max(0, 3 - wishCount);
+      answer += `\n\n_(${left} ${left === 1 ? 'wish' : 'wishes'} remaining)_`;
+    }
+
+    const hasInsights =
+      (data.suggestedCountries?.length > 0) ||
+      (data.timeline?.length > 0) ||
+      (data.alternativeStrategies?.length > 0);
+
+    return {
+      answer,
+      insights: hasInsights
+        ? {
+            suggestedCountries: data.suggestedCountries || [],
+            timeline: data.timeline || [],
+            alternativeStrategies: data.alternativeStrategies || [],
+            difficulty: data.suggestedCountries?.length ? 'Medium' : undefined,
+            recommendations: data.alternativeStrategies || [],
+          }
+        : undefined,
+    };
+
+  } catch (error) {
+    console.error('Visa assistant error:', error);
+    return {
+      answer: `I encountered an issue while researching. Based on general patterns, consider skilled worker or express entry programs with 6-12 month timelines. Please try again or ask a more specific question.`
+    };
+  }
+}

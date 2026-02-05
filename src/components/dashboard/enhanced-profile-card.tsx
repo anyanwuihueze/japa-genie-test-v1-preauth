@@ -1,253 +1,254 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-  User,
-  MapPin,
-  Calendar,
-  Briefcase,
-  GraduationCap,
-  Clock,
-  Edit,
-  Target,
-  AlertCircle,
-  CheckCircle2,
+import { 
+  User, MapPin, Flag, FileText, CheckCircle, 
+  AlertCircle, RefreshCw, Clock 
 } from 'lucide-react';
 import Link from 'next/link';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface EnhancedProfileCardProps {
-  userProfile: any;
-  userId: string;
+  className?: string;
   onProfileUpdate?: () => void;
 }
 
-export function EnhancedProfileCard({ userProfile, userId, onProfileUpdate }: EnhancedProfileCardProps) {
-  const [mounted, setMounted] = useState(false);
-
+export function EnhancedProfileCard({ className, onProfileUpdate }: EnhancedProfileCardProps) {
+  const isMobile = useIsMobile();
+  const dashboardData = useDashboardData();
+  const [localProfile, setLocalProfile] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // CRITICAL FIELDS ONLY
+  const requiredFields = ['destination_country', 'visa_type'];
+  
+  // Check for session storage data first (for immediate updates after KYC)
   useEffect(() => {
-    setMounted(true);
+    const kycData = sessionStorage.getItem('kycData');
+    const kycJustCompleted = sessionStorage.getItem('kycJustCompleted');
+    
+    if (kycData) {
+      const parsed = JSON.parse(kycData);
+      setLocalProfile({
+        country: parsed.country,
+        destination_country: parsed.destination,
+        visa_type: parsed.visaType,
+        alternative_countries: parsed.alternativeCountries,
+        kyc_completed: true
+      });
+      
+      // Clear the flag after reading
+      console.log('Using sessionStorage profile data:', parsed);
+    }
   }, []);
 
-  if (!mounted) return null;
+  // Merge local data with dashboard data
+  const profile = localProfile || dashboardData.userProfile;
+  
+  // Calculate completion based on merged data
+  const filledFields = requiredFields.filter(field => profile?.[field]).length;
+  const profileComplete = (filledFields / requiredFields.length) * 100;
+  const isComplete = profileComplete === 100;
 
-  console.log("🎯 ENHANCED PROFILE CARD - userProfile:", userProfile);
-
-  const requiredFields = [
-    { key: 'country', label: 'Country', icon: MapPin },
-    { key: 'destination_country', label: 'Destination', icon: Target },
-    { key: 'age', label: 'Age', icon: Calendar },
-    { key: 'visa_type', label: 'Visa Type', icon: GraduationCap },
-    { key: 'user_type', label: 'Profile Type', icon: User },
-    { key: 'timeline_urgency', label: 'Timeline', icon: Clock },
-  ];
-
-  // FIXED: More lenient field checking
-  const isFieldFilled = (value: any) => {
-    if (value === null || value === undefined) return false;
-    if (typeof value === 'string') return value.trim().length > 0;
-    if (typeof value === 'number') return true; // Numbers (including 0) count as filled
-    if (Array.isArray(value)) return value.length > 0;
-    return true; // Other truthy values count as filled
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Force re-fetch
+    window.location.reload();
   };
 
-  const filledFields = requiredFields.filter(field => 
-    isFieldFilled(userProfile?.[field.key])
-  ).length;
-
-  const totalFields = requiredFields.length;
-  const completion = Math.round((filledFields / totalFields) * 100);
-  
-  console.log("📊 COMPLETION BREAKDOWN:");
-  requiredFields.forEach(field => {
-    const value = userProfile?.[field.key];
-    const filled = isFieldFilled(value);
-    console.log(`  ${field.label}: ${filled ? '✅' : '❌'} (value: ${JSON.stringify(value)})`);
-  });
-  console.log(`📊 TOTAL: ${filledFields}/${totalFields} = ${completion}%`);
-
-  // Incomplete profile state (< 50%)
-  if (completion < 50) {
+  if (dashboardData.loading && !localProfile) {
     return (
-      <Card className="border-2 border-dashed border-orange-300 bg-gradient-to-br from-orange-50 to-red-50">
-        <CardHeader className="text-center pb-3">
-          <CardTitle className="text-xl flex items-center justify-center gap-2">
-            <AlertCircle className="w-6 h-6 text-orange-600" />
-            Complete Your Profile
-          </CardTitle>
-          <CardDescription className="text-lg">
-            {filledFields === 0 ? 'Get started with your visa journey' : `${filledFields}/${totalFields} fields completed`}
-          </CardDescription>
+      <Card className={`${className} ${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardHeader>
+          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse" />
         </CardHeader>
-        <CardContent className="text-center">
-          <div className="mb-4">
-            <div className="text-3xl mb-2">📝</div>
-            <p className="text-sm text-muted-foreground mb-2">
-              Complete your profile for personalized visa guidance
-            </p>
-            <Progress value={completion} className="w-full h-2 mb-3" />
+        <CardContent>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+              </div>
+            ))}
           </div>
-          <Button asChild className="w-full bg-orange-600 hover:bg-orange-700">
-            <Link href="/kyc-profile">
-              <Target className="w-4 h-4 mr-2" />
-              Complete Profile
-            </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (dashboardData.error && !localProfile) {
+    return (
+      <Card className={`${className} ${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardContent className="text-center py-8 text-red-500">
+          <AlertCircle className="w-12 h-12 mx-auto mb-2" />
+          <p>Error loading profile data</p>
+          <Button onClick={handleRefresh} variant="outline" className="mt-4">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
           </Button>
         </CardContent>
       </Card>
     );
   }
 
-  // Partially complete state (50-99%)
-  if (completion < 100) {
-    return (
-      <Card className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 border-blue-200">
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Your Profile Progress
-              </CardTitle>
-              <CardDescription className="flex items-center gap-2 mt-1">
-                <Progress value={completion} className="w-20 h-2" />
-                <span>{completion}% complete</span>
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="bg-orange-100 text-orange-800">
-              {filledFields}/{totalFields}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">From</div>
-                <div className="font-medium">{userProfile?.country || 'Not set'}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-              <Target className="w-4 h-4 text-green-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Destination</div>
-                <div className="font-medium">{userProfile?.destination_country || 'Not set'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-              <Calendar className="w-4 h-4 text-purple-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Age</div>
-                <div className="font-medium">{userProfile?.age ? `${userProfile.age} years` : 'Not set'}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-              <GraduationCap className="w-4 h-4 text-purple-600" />
-              <div>
-                <div className="text-xs text-muted-foreground">Visa Type</div>
-                <div className="font-medium">{userProfile?.visa_type || 'Not set'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button asChild className="flex-1" variant="outline">
-              <Link href="/kyc-profile">Complete Missing Fields</Link>
-            </Button>
-            <Button asChild variant="outline" size="icon">
-              <Link href="/kyc-profile">
-                <Edit className="w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Complete profile state (100%)
   return (
-    <Card className="bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 border-green-200">
-      <CardHeader className="pb-3">
+    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'} ${isComplete ? 'border-green-200 ring-2 ring-green-50' : 'border-yellow-200 ring-2 ring-yellow-50'}`}>
+      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              Profile Complete
-            </CardTitle>
-            <CardDescription className="flex items-center gap-2 mt-1">
-              <Badge className="bg-green-100 text-green-800 border-green-300">
-                ✅ All fields complete
-              </Badge>
-            </CardDescription>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/kyc-profile">
-              <Edit className="w-3 h-3 mr-1" />
-              Edit
-            </Link>
-          </Button>
+          <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} flex items-center gap-2`}>
+            <div className={`p-2 rounded-lg ${isComplete ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
+              <User className="w-5 h-5" />
+            </div>
+            Your Profile
+          </CardTitle>
+          {isComplete ? (
+            <Badge className="bg-green-100 text-green-700 border-green-200">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Complete
+            </Badge>
+          ) : (
+            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
+              <Clock className="w-3 h-3 mr-1" />
+              {Math.round(profileComplete)}%
+            </Badge>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <MapPin className="w-4 h-4 text-blue-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">From</div>
-              <div className="font-medium">{userProfile?.country || 'N/A'}</div>
-            </div>
+      
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
+        <div className="space-y-4">
+          <div className="relative">
+            <Progress 
+              value={profileComplete} 
+              className="w-full h-2" 
+            />
+            {isComplete && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+            )}
           </div>
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <Target className="w-4 h-4 text-green-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Destination</div>
-              <div className="font-medium">{userProfile?.destination_country || 'N/A'}</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <Calendar className="w-4 h-4 text-purple-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Age</div>
-              <div className="font-medium">{userProfile?.age ? `${userProfile.age} years` : 'N/A'}</div>
-            </div>
+          <div className="space-y-3">
+            <ProfileItem
+              icon={<MapPin className="w-4 h-4" />}
+              label="From"
+              value={profile?.country || 'Not set'}
+              isComplete={!!profile?.country}
+              isMobile={isMobile}
+            />
+            <ProfileItem
+              icon={<Flag className="w-4 h-4" />}
+              label="Destination"
+              value={profile?.destination_country || 'Not set'}
+              isComplete={!!profile?.destination_country}
+              isMobile={isMobile}
+              isRequired
+            />
+            <ProfileItem
+              icon={<FileText className="w-4 h-4" />}
+              label="Visa Type"
+              value={profile?.visa_type ? formatVisaType(profile.visa_type) : 'Not set'}
+              isComplete={!!profile?.visa_type}
+              isMobile={isMobile}
+              isRequired
+            />
           </div>
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <GraduationCap className="w-4 h-4 text-purple-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Visa Type</div>
-              <div className="font-medium">{userProfile?.visa_type || 'N/A'}</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <User className="w-4 h-4 text-blue-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Profile Type</div>
-              <div className="font-medium">{userProfile?.user_type || 'N/A'}</div>
+          {isComplete ? (
+            <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-full">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-green-900">Profile Complete!</p>
+                  <p className="text-green-700 text-sm mt-0.5">
+                    All required information provided. POF tracker unlocked.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 bg-white/80 rounded-lg p-3">
-            <Clock className="w-4 h-4 text-orange-600" />
-            <div>
-              <div className="text-xs text-muted-foreground">Timeline</div>
-              <div className="font-medium">{userProfile?.timeline_urgency || 'N/A'}</div>
+          ) : (
+            <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-yellow-100 rounded-full mt-0.5">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-yellow-900">
+                    {requiredFields.length - filledFields} required field{requiredFields.length - filledFields === 1 ? '' : 's'} remaining
+                  </p>
+                  <p className="text-yellow-700 text-sm mt-1">
+                    Complete to unlock Proof of Funds tracker and personalized guidance
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          <Button asChild className={`w-full ${isComplete ? 'bg-green-600 hover:bg-green-700' : ''}`}>
+            <Link href="/kyc-profile" onClick={onProfileUpdate}>
+              {isComplete ? 'Update Profile' : 'Complete Profile Now'}
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function ProfileItem({ 
+  icon, 
+  label, 
+  value, 
+  isComplete,
+  isMobile,
+  isRequired = false
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  value: string;
+  isComplete: boolean;
+  isMobile: boolean;
+  isRequired?: boolean;
+}) {
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-lg ${isComplete ? 'bg-green-50/50' : 'bg-gray-50'} transition-colors`}>
+      <div className="flex items-center gap-3">
+        <div className={isComplete ? 'text-green-600' : 'text-gray-400'}>
+          {icon}
+        </div>
+        <span className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
+          {label}
+          {isRequired && <span className="text-red-500 ml-1">*</span>}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className={`${isMobile ? 'text-sm' : 'text-base'} ${!isComplete ? 'text-muted-foreground' : 'text-gray-900 font-medium'}`}>
+          {value}
+        </span>
+        {isComplete ? (
+          <CheckCircle className="w-4 h-4 text-green-500" />
+        ) : (
+          <AlertCircle className="w-4 h-4 text-yellow-400" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatVisaType(type: string): string {
+  const types: Record<string, string> = {
+    'student': 'Student Visa',
+    'work': 'Work Visa',
+    'tourist': 'Tourist Visa',
+    'business': 'Business Visa',
+    'family': 'Family Visa'
+  };
+  return types[type] || type.charAt(0).toUpperCase() + type.slice(1);
 }

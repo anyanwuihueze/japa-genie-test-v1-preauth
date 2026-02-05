@@ -1,0 +1,1903 @@
+🎯 DASHBOARD AUDIT EXTRACTION - Thu Jan 22 11:32:10 AM UTC 2026
+============================================================
+
+
+============================================================
+📁 FILE: src/components/dashboard/application-timeline.tsx
+📝 DESCRIPTION: Main timeline component - generates stages based on progress
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  CheckCircle2, 
+  Circle, 
+  Clock, 
+  AlertTriangle,
+  Calendar,
+  MapPin,
+  FileText,
+  Users,
+  TrendingUp,
+  ArrowRight,
+  Star,
+  MessageSquare
+} from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface TimelineStage {
+  id: string;
+  title: string;
+  description: string;
+  status: 'completed' | 'in-progress' | 'pending' | 'blocked';
+  order: number;
+  estimatedDuration: string;
+  actualDuration?: string;
+  completedAt?: string;
+  startedAt?: string;
+  dueDate?: string;
+  prerequisites: string[];
+  deliverables: string[];
+  expertTip?: string;
+  commonMistakes?: string[];
+  resources?: {
+    title: string;
+    url: string;
+    type: 'guide' | 'tool' | 'expert' | 'checklist';
+  }[];
+  progress: number; // 0-100
+  subtasks: {
+    id: string;
+    title: string;
+    completed: boolean;
+    required: boolean;
+  }[];
+}
+
+interface ApplicationTimelineProps {
+  userId: string;
+  userProfile?: any;
+  currentProgress?: number;
+  className?: string;
+}
+
+export function ApplicationTimeline({ userId, userProfile, currentProgress, className }: ApplicationTimelineProps) {
+  const [stages, setStages] = useState<TimelineStage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedStage, setExpandedStage] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const fetchTimelineData = async () => {
+      try {
+        const supabase = createClient();
+        
+        // Fetch user's timeline progress
+        const { data: timelineData } = await supabase
+          .from('user_timeline')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        // Fetch user progress to calculate current stage
+        const { data: progressData } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        // Generate timeline based on user data
+        const generatedStages = generateTimelineStages(userProfile, progressData, currentProgress || 0);
+        
+        setStages(generatedStages);
+        
+      } catch (error) {
+        console.error('Error fetching timeline data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTimelineData();
+  }, [userId, userProfile, currentProgress]);
+
+  const generateTimelineStages = (profile: any, progress: any, overallProgress: number): TimelineStage[] => {
+    const stages: TimelineStage[] = [
+      {
+        id: 'onboarding',
+        title: 'Getting Started',
+        description: 'Complete your profile and understand your visa requirements',
+        status: overallProgress >= 20 ? 'completed' : overallProgress >= 5 ? 'in-progress' : 'pending',
+        order: 1,
+        estimatedDuration: '1-2 days',
+        prerequisites: [],
+        deliverables: ['Completed profile', 'Visa type selected', 'Basic requirements understood'],
+        expertTip: 'Take your time to understand the requirements - rushing here causes 40% of rejections',
+        commonMistakes: ['Choosing wrong visa type', 'Incomplete profile information'],
+        resources: [
+          { title: 'Visa Type Guide', url: '/guides/visa-types', type: 'guide' },
+          { title: 'Eligibility Checker', url: '/eligibility', type: 'tool' }
+        ],
+        progress: Math.min(overallProgress, 100),
+        subtasks: [
+          { id: 'profile-complete', title: 'Complete personal profile', completed: !!profile?.country, required: true },
+          { id: 'visa-selected', title: 'Select visa type', completed: !!profile?.visa_type, required: true },
+          { id: 'destination-set', title: 'Set destination country', completed: !!profile?.destination_country, required: true },
+          { id: 'requirements-reviewed', title: 'Review visa requirements', completed: overallProgress >= 10, required: true }
+        ]
+      },
+      {
+        id: 'document-preparation',
+        title: 'Document Preparation',
+        description: 'Gather and prepare all required documents for your application',
+        status: overallProgress >= 50 ? 'completed' : overallProgress >= 25 ? 'in-progress' : 'pending',
+        order: 2,
+        estimatedDuration: '2-3 weeks',
+        prerequisites: ['Completed profile', 'Visa type selected'],
+        deliverables: ['Passport ready', 'Photos taken', 'Financial documents prepared', 'Supporting documents collected'],
+        expertTip: 'Start with financial documents - they take the longest to prepare properly',
+        commonMistakes: ['Expired passport', 'Wrong photo specifications', 'Insufficient bank balance'],
+        resources: [
+          { title: 'Document Checklist', url: '/documents/checklist', type: 'checklist' },
+          { title: 'Photo Requirements', url: '/guides/photos', type: 'guide' },
+          { title: 'AI Document Checker', url: '/document-check', type: 'tool' }
+        ],
+        progress: overallProgress >= 20 ? Math.min((overallProgress - 20) * 2, 100) : 0,
+        subtasks: [
+          { id: 'passport-ready', title: 'Ensure passport validity', completed: progress?.documents_completed >= 1, required: true },
+          { id: 'photos-done', title: 'Get visa photos', completed: progress?.documents_completed >= 2, required: true },
+          { id: 'bank-statements', title: 'Prepare bank statements', completed: progress?.documents_completed >= 3, required: true },
+          { id: 'support-docs', title: 'Collect supporting documents', completed: progress?.documents_completed >= 4, required: false }
+        ]
+      },
+      {
+        id: 'application-submission',
+        title: 'Application Submission',
+        description: 'Complete and submit your visa application with professional review',
+        status: overallProgress >= 70 ? 'completed' : overallProgress >= 55 ? 'in-progress' : 'pending',
+        order: 3,
+        estimatedDuration: '1 week',
+        prerequisites: ['All documents ready', 'Application forms completed'],
+        deliverables: ['Completed application form', 'All documents uploaded', 'Professional review completed', 'Application submitted'],
+        expertTip: 'Have an expert review your application before submission - 30% of applications have errors',
+        commonMistakes: ['Incomplete forms', 'Wrong fee payment', 'Missing signatures'],
+        resources: [
+          { title: 'Application Review Service', url: '/experts/application-review', type: 'expert' },
+          { title: 'Fee Calculator', url: '/tools/fee-calculator', type: 'tool' },
+          { title: 'Submission Guide', url: '/guides/submission', type: 'guide' }
+        ],
+        progress: overallProgress >= 55 ? Math.min((overallProgress - 55) * 3, 100) : 0,
+        subtasks: [
+          { id: 'forms-completed', title: 'Complete application forms', completed: overallProgress >= 60, required: true },
+          { id: 'documents-uploaded', title: 'Upload all documents', completed: progress?.documents_completed >= 6, required: true },
+          { id: 'expert-review', title: 'Get expert review', completed: progress?.expert_sessions >= 1, required: false },
+          { id: 'fees-paid', title: 'Pay application fees', completed: overallProgress >= 65, required: true }
+        ]
+      },
+      {
+        id: 'interview-preparation',
+        title: 'Interview Preparation',
+        description: 'Prepare for your visa interview with mock sessions and expert guidance',
+        status: overallProgress >= 85 ? 'completed' : overallProgress >= 75 ? 'in-progress' : 'pending',
+        order: 4,
+        estimatedDuration: '1-2 weeks',
+        prerequisites: ['Application submitted', 'Interview scheduled'],
+        deliverables: ['Mock interview completed', 'Common questions practiced', 'Confidence built', 'Expert feedback received'],
+        expertTip: 'Practice makes perfect - do at least 3 mock interviews before the real one',
+        commonMistakes: ['Not preparing for common questions', 'Inconsistent answers', 'Nervous body language'],
+        resources: [
+          { title: 'Mock Interview Tool', url: '/interview', type: 'tool' },
+          { title: 'Common Questions', url: '/guides/interview-questions', type: 'guide' },
+          { title: 'Interview Coach', url: '/experts/interview-coach', type: 'expert' }
+        ],
+        progress: overallProgress >= 75 ? Math.min((overallProgress - 75) * 4, 100) : 0,
+        subtasks: [
+          { id: 'interview-scheduled', title: 'Schedule interview', completed: overallProgress >= 80, required: true },
+          { id: 'mock-interview', title: 'Complete mock interview', completed: progress?.expert_sessions >= 2, required: true },
+          { id: 'questions-practiced', title: 'Practice common questions', completed: overallProgress >= 82, required: true },
+          { id: 'expert-feedback', title: 'Get expert feedback', completed: progress?.expert_sessions >= 3, required: false }
+        ]
+      },
+      {
+        id: 'final-preparation',
+        title: 'Final Preparation',
+        description: 'Last steps before your interview and travel preparation',
+        status: overallProgress >= 95 ? 'completed' : overallProgress >= 90 ? 'in-progress' : 'pending',
+        order: 5,
+        estimatedDuration: '3-5 days',
+        prerequisites: ['Interview preparation complete', 'All documents ready'],
+        deliverables: ['Final document check', 'Interview confirmation', 'Travel arrangements', 'Backup plan ready'],
+        expertTip: 'Have a backup plan and arrive early - unexpected issues happen 20% of the time',
+        commonMistakes: ['Last-minute changes', 'Not checking document validity', 'Poor travel planning'],
+        resources: [
+          { title: 'Final Checklist', url: '/guides/final-checklist', type: 'checklist' },
+          { title: 'Travel Guide', url: '/guides/travel-preparation', type: 'guide' },
+          { title: 'Emergency Support', url: '/support/emergency', type: 'expert' }
+        ],
+        progress: overallProgress >= 90 ? Math.min((overallProgress - 90) * 5, 100) : 0,
+        subtasks: [
+          { id: 'final-check', title: 'Final document check', completed: overallProgress >= 92, required: true },
+          { id: 'travel-ready', title: 'Prepare for travel', completed: overallProgress >= 94, required: false },
+          { id: 'backup-plan', title: 'Have backup plan', completed: overallProgress >= 95, required: false }
+        ]
+      },
+      {
+        id: 'visa-approval',
+        title: 'Visa Approval & Travel',
+        description: 'Celebrate your approval and prepare for your journey',
+        status: overallProgress >= 100 ? 'completed' : 'pending',
+        order: 6,
+        estimatedDuration: '1-2 weeks',
+        prerequisites: ['Successful interview', 'Visa approved'],
+        deliverables: ['Visa received', 'Travel plans confirmed', 'Accommodation booked', 'Ready to travel'],
+        expertTip: 'Start preparing for your move immediately after approval - there\'s a lot to organize!',
+        commonMistakes: ['Waiting too long to travel', 'Not understanding visa conditions'],
+        resources: [
+          { title: 'Relocation Guide', url: '/guides/relocation', type: 'guide' },
+          { title: 'Settling In Support', url: '/support/settling-in', type: 'expert' }
+        ],
+        progress: overallProgress >= 100 ? 100 : 0,
+        subtasks: [
+          { id: 'visa-received', title: 'Receive your visa', completed: overallProgress >= 100, required: true },
+          { id: 'travel-plans', title: 'Confirm travel plans', completed: overallProgress >= 100, required: true }
+        ]
+      }
+    ];
+
+    return stages;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500';
+      case 'in-progress': return 'bg-blue-500';
+      case 'blocked': return 'bg-red-500';
+      default: return 'bg-gray-300';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+      case 'in-progress': return <Clock className="w-5 h-5 text-blue-600" />;
+      case 'blocked': return <AlertTriangle className="w-5 h-5 text-red-600" />;
+      default: return <Circle className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const currentStage = stages.find(stage => stage.status === 'in-progress');
+  const completedStages = stages.filter(stage => stage.status === 'completed').length;
+  const totalStages = stages.length;
+
+  if (loading) {
+    return (
+      <Card className={`${className} ${isMobile ? 'p-4' : 'p-6'}`}>
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-32"></div>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-20 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
+      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'} pb-4`}>
+        <div className="flex items-center justify-between mb-4">
+          <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+            <Calendar className="w-5 h-5" />
+            Application Timeline
+          </CardTitle>
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            {completedStages}/{totalStages} Complete
+          </Badge>
+        </div>
+        
+        {/* Overall Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Overall Progress</span>
+            <span className="font-medium">{Math.round((completedStages / totalStages) * 100)}%</span>
+          </div>
+          <Progress value={(completedStages / totalStages) * 100} className="h-2" />
+        </div>
+
+        {currentStage && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-600" />
+              <span className={`text-blue-800 ${isMobile ? 'text-sm' : 'text-base'} font-medium`}>
+                Current Stage: {currentStage.title}
+              </span>
+            </div>
+            <p className={`text-blue-700 mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+              {currentStage.description}
+            </p>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
+        
+        {/* Timeline Visualization */}
+        <div className="space-y-6">
+          {stages.map((stage, index) => (
+            <div key={stage.id} className="relative">
+              
+              {/* Connection Line */}
+              {index < stages.length - 1 && (
+                <div className={`absolute left-6 top-12 w-0.5 h-16 ${isMobile ? 'left-5' : ''} ${stage.status === 'completed' ? 'bg-green-300' : 'bg-gray-300'}`}></div>
+              )}
+
+              <div className="flex gap-4">
+                {/* Stage Icon */}
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                  stage.status === 'completed' ? 'bg-green-100' : 
+                  stage.status === 'in-progress' ? 'bg-blue-100' : 'bg-gray-100'
+                }`}>
+                  {getStatusIcon(stage.status)}
+                </div>
+
+                {/* Stage Content */}
+                <div className="flex-1 min-w-0">
+                  <div 
+                    className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${
+                      stage.status === 'in-progress' ? 'bg-blue-50 border-blue-200' : 
+                      stage.status === 'completed' ? 'bg-green-50 border-green-200' : 
+                      'bg-gray-50 border-gray-200'
+                    }`}
+                    onClick={() => setExpandedStage(expandedStage === stage.id ? null : stage.id)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
+                            {stage.title}
+                          </h4>
+                          <Badge variant="outline" className={`${isMobile ? 'text-xs' : 'text-sm'}`}>
+                            {stage.estimatedDuration}
+                          </Badge>
+                        </div>
+                        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+                          {stage.description}
+                        </p>
+                      </div>
+                      <ArrowRight className={`w-5 h-5 text-gray-400 transition-transform ${
+                        expandedStage === stage.id ? 'rotate-90' : ''
+                      }`} />
+                    </div>
+
+                    {/* Progress Bar for In-Progress Stages */}
+                    {stage.status === 'in-progress' && (
+                      <div className="mt-3">
+                        <Progress value={stage.progress} className="h-2" />
+                        <p className={`text-xs text-muted-foreground mt-1`}>
+                          {stage.progress}% Complete
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expanded Details */}
+                  {expandedStage === stage.id && (
+                    <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg space-y-4">
+                      
+                      {/* Subtasks */}
+                      <div>
+                        <h5 className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`}>Tasks:</h5>
+                        <div className="space-y-2">
+                          {stage.subtasks.map((task) => (
+                            <div key={task.id} className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                task.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                              }`}>
+                                {task.completed && <CheckCircle2 className="w-3 h-3 text-white" />}
+                              </div>
+                              <span className={`${task.completed ? 'text-gray-500 line-through' : ''} ${isMobile ? 'text-sm' : 'text-base'}`}>
+                                {task.title}
+                                {task.required && <span className="text-red-500 ml-1">*</span>}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Expert Tip */}
+                      {stage.expertTip && (
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                          <div className="flex items-start gap-2">
+                            <Star className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                            <p className={`text-yellow-800 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                              <span className="font-medium">Expert Tip:</span> {stage.expertTip}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Resources */}
+                      {stage.resources && stage.resources.length > 0 && (
+                        <div>
+                          <h5 className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`}>Helpful Resources:</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {stage.resources.map((resource, index) => (
+                              <Button
+                                key={index}
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className={`${isMobile ? 'text-xs' : 'text-sm'}`}
+                              >
+                                <a href={resource.url}>
+                                  {resource.title}
+                                </a>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Summary Stats */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{completedStages}</div>
+              <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>Completed</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stages.filter(s => s.status === 'in-progress').length}
+              </div>
+              <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>In Progress</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-600">
+                {stages.filter(s => s.status === 'pending').length}
+              </div>
+              <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>Pending</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-purple-600">
+                {Math.round((completedStages / stages.length) * 100)}%
+              </div>
+              <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>Complete</div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/app/dashboard/client.tsx
+📝 DESCRIPTION: Dashboard data flow - how timeline gets currentProgress
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { EnhancedProfileCard } from '@/components/dashboard/enhanced-profile-card';
+import { ConfidenceMeter } from '@/components/dashboard/confidence-meter';
+import { QuickStats } from '@/components/dashboard/quick-stats';
+import { ActionItemsWidgetFixed } from '@/components/dashboard/action-items-widget-fixed';
+import { NextBestAction } from '@/components/dashboard/next-best-action';
+import { ApplicationTimeline } from '@/components/dashboard/application-timeline';
+import { StartVisaJourneyCard } from '@/components/dashboard/start-visa-journey-card';
+import { VisaAssistantCard } from '@/components/dashboard/visa-assistant-card';
+import { DocumentCheckerCard } from '@/components/dashboard/document-checker-card';
+import { POFSeasoningTracker } from '@/components/dashboard/pof-seasoning-tracker';
+import { DocumentAIAnalysis } from '@/components/dashboard/document-ai-analysis';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { MessageCircleQuestion, Map, Users, TrendingUp, Shield, Clock, Target, ArrowRight, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface DashboardClientProps {
+  user: any;
+  userProfile?: any;
+}
+
+// Tool cards - ONLY WORKING TOOLS (3 total)
+const features = [
+  {
+    icon: MessageCircleQuestion,
+    title: 'AI Mock Interview',
+    description: 'Practice with realistic questions. Upgrade to human expert feedback for personalized coaching.',
+    href: '/interview',
+    cta: 'Start Practicing',
+    expert: true,
+    expertText: 'Get human feedback'
+  },
+  {
+    icon: Map,
+    title: 'Visa Journey Tracker',
+    description: 'See your detailed timeline. Connect with experts if you get stuck at any step.',
+    href: '/progress',
+    cta: 'View Journey',
+    expert: false
+  },
+  {
+    icon: Users,
+    title: 'Human Expert Help',
+    description: 'Stuck? Get 1-on-1 guidance from verified visa consultants with proven success records.',
+    href: '/experts',
+    cta: 'Find Experts',
+    expert: true,
+    highlight: true
+  },
+];
+
+interface UserProgress {
+  progressPercentage: number;
+  nextMilestone: string;
+  daysToDeadline: number;
+  moneySaved: number;
+  aheadOfPercentage: number;
+  documentsCompleted: number;
+  totalDocuments: number;
+  successProbability: number;
+  estimatedTimeline: string;
+  currentStage: string;
+}
+
+export default function DashboardClientFinal({ user, userProfile }: DashboardClientProps) {
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    progressPercentage: 0,
+    nextMilestone: "Complete Your Profile",
+    daysToDeadline: 30,
+    moneySaved: 0,
+    aheadOfPercentage: 0,
+    documentsCompleted: 0,
+    totalDocuments: 8,
+    successProbability: 65,
+    estimatedTimeline: "6-8 months",
+    currentStage: "Onboarding"
+  });
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProgress();
+    }
+  }, [user]);
+
+  const fetchUserProgress = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    const supabase = createClient();
+    
+    try {
+      // Fetch REAL chat message count
+      const { count: messageCount } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Fetch REAL document count
+      const { count: docCount } = await supabase
+        .from('user_documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Calculate REAL progress
+      const realProgress = calculateRealProgress(userProfile, messageCount || 0, docCount || 0);
+      setUserProgress(realProgress);
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateRealProgress = (profile: any, messageCount: number, docCount: number): UserProgress => {
+    let progressPercentage = 0;
+    let nextMilestone = "Complete Your Profile";
+    let currentStage = "Onboarding";
+
+    // Profile completion (KYC)
+    if (profile?.country && profile?.destination_country && profile?.visa_type) {
+      progressPercentage += 30;
+      nextMilestone = "Upload Documents";
+      currentStage = "Document Preparation";
+    }
+
+    // Chat engagement
+    if (messageCount > 0) {
+      progressPercentage += 20;
+      if (progressPercentage >= 30) nextMilestone = "Complete Document Upload";
+    }
+
+    // Document uploads
+    if (docCount > 0) {
+      progressPercentage += Math.min(docCount * 5, 30);
+      if (progressPercentage >= 50) {
+        nextMilestone = "Schedule Interview Practice";
+        currentStage = "Interview Preparation";
+      }
+    }
+
+    progressPercentage = Math.min(progressPercentage, 100);
+
+    const moneySaved = Math.round(progressPercentage * 24000);
+    const aheadOfPercentage = Math.floor(progressPercentage * 0.8);
+    const successProbability = Math.min(65 + Math.floor(progressPercentage / 2), 95);
+    const estimatedTimeline = progressPercentage > 50 ? "4-5 months" : "6-8 months";
+    const daysToDeadline = Math.max(30 - Math.floor(progressPercentage / 3), 7);
+
+    return {
+      progressPercentage,
+      nextMilestone,
+      daysToDeadline,
+      moneySaved,
+      aheadOfPercentage,
+      documentsCompleted: docCount,
+      totalDocuments: 8,
+      successProbability,
+      estimatedTimeline,
+      currentStage
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`space-y-8 ${isMobile ? 'p-4' : ''}`}>
+      {/* Header - Responsive */}
+      <header className="space-y-2">
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold tracking-tight`}>
+          {userProfile?.destination_country 
+            ? `Your Visa Journey to ${userProfile.destination_country}`
+            : `Welcome back, ${user?.email?.split('@')[0] || 'Traveler'}! 👋`
+          }
+        </h1>
+        <p className={`${isMobile ? 'text-base' : 'text-lg'} text-muted-foreground`}>
+          Your personalized AI guide to visa success. Here's your journey at a glance.
+        </p>
+      </header>
+
+      {/* 🍎 APPLE HEALTH RINGS - Hero Component */}
+      <QuickStats userId={user.id} className="w-full" />
+
+      {/* NEW: ACTION ITEMS WIDGET - Real-time task extraction */}
+      <ActionItemsWidgetFixed userId={user.id} className="w-full" />
+
+      {/* 🎯 SMART TOOLS GRID - Apple-style layout */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <VisaAssistantCard 
+          userId={user.id} 
+          userProfile={userProfile} 
+          userProgress={userProgress} 
+        />
+        <NextBestAction 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage}
+          className="w-full" 
+        />
+      </div>
+
+      {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
+      <POFSeasoningTracker 
+        userId={user.id} 
+        userProfile={userProfile} 
+        className="w-full" 
+      />
+
+      {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
+      <DocumentAIAnalysis 
+        userId={user.id} 
+        className="w-full" 
+      />
+
+      {/* NEXT BEST ACTION & CONFIDENCE METER */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <NextBestAction 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage}
+          className="w-full" 
+        />
+        <ConfidenceMeter 
+          userId={user.id} 
+          userProfile={userProfile} 
+          currentProgress={userProgress.progressPercentage} 
+          className="w-full" 
+        />
+      </div>
+
+      {/* APPLICATION TIMELINE */}
+      <ApplicationTimeline 
+        userId={user.id} 
+        userProfile={userProfile} 
+        currentProgress={userProgress.progressPercentage}
+        className="w-full" 
+      />
+
+      {/* JOURNEY LOCK-IN & DOCUMENT CHECKER */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        <StartVisaJourneyCard 
+          userId={user.id} 
+          userProfile={userProfile}
+          userProgressSummary={userProgress}
+          onStartJourney={async () => {
+            const supabase = createClient();
+            await supabase.from('user_progress_summary').upsert({
+              user_id: user.id,
+              journey_started: new Date().toISOString(),
+              current_stage: 'planning',
+              overall_progress: 25
+            });
+          }}
+        />
+        <DocumentCheckerCard 
+          userId={user.id} 
+          userProgress={userProgress} 
+        />
+      </div>
+
+      {/* PROFILE CARD */}
+      <EnhancedProfileCard 
+        userProfile={userProfile} 
+        userId={user.id} 
+        onProfileUpdate={() => window.location.reload()} 
+      />
+
+      {/* ENHANCED FEATURES GRID - Simplified */}
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
+        {features.map((feature) => (
+          <Card 
+            key={feature.title} 
+            className={`flex flex-col group hover:border-primary transition-all ${
+              feature.highlight ? 'border-2 border-orange-300 bg-orange-50' : ''
+            }`}
+          >
+            <CardHeader className="flex-1">
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-full transition-colors ${
+                  feature.highlight 
+                    ? 'bg-orange-100 text-orange-600' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <feature.icon className="w-7 h-7" />
+                </div>
+                <div className='flex-1'>
+                  <div className="flex items-center gap-2 mb-1">
+                    <CardTitle className={`${isMobile ? 'text-base' : 'text-xl'}`}>{feature.title}</CardTitle>
+                    {feature.expert && (
+                      <Badge variant="outline" className={`${isMobile ? 'text-xs' : 'text-xs'} bg-blue-50`}>
+                        <Shield className="w-3 h-3 mr-1" />
+                        Expert Available
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className={`${isMobile ? 'text-sm' : 'text-base'}`}>{feature.description}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <div className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
+              <Button asChild className={`w-full transition-colors ${
+                feature.highlight 
+                  ? 'bg-orange-500 hover:bg-orange-600' 
+                  : 'group-hover:bg-amber-400'
+              }`}>
+                <Link href={feature.href} className="flex items-center justify-center gap-2">
+                  {feature.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* URGENT ACTION CARD */}
+      {userProgress.daysToDeadline < 7 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Urgent Action Needed
+            </CardTitle>
+            <CardDescription className="text-red-700">
+              Your {userProgress.nextMilestone} deadline is in {userProgress.daysToDeadline} days.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Button variant="outline" asChild>
+                <Link href="/experts">
+                  Get Expert Help
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/types/database.types.ts
+📝 DESCRIPTION: Database schema definitions
+============================================================
+❌ FILE NOT FOUND: src/types/database.types.ts
+
+============================================================
+📁 FILE: src/lib/supabase/user-progress.ts
+📝 DESCRIPTION: User progress queries (if exists)
+============================================================
+❌ FILE NOT FOUND: src/lib/supabase/user-progress.ts
+
+============================================================
+📁 FILE: src/components/dashboard/confidence-meter.tsx
+📝 DESCRIPTION: Current confidence meter - uses REAL data from multiple tables
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { TrendingUp, AlertTriangle, CheckCircle, Target, FileText, MessageSquare, Clock } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { createClient } from '@/lib/supabase/client';
+
+interface ConfidenceMeterProps {
+  userId: string;
+  userProfile?: any;
+  currentProgress?: number;
+  className?: string;
+}
+
+export function ConfidenceMeter({ userId, userProfile, currentProgress, className }: ConfidenceMeterProps) {
+  const [confidenceScore, setConfidenceScore] = useState(0);
+  const [confidenceLevel, setConfidenceLevel] = useState<'low' | 'medium' | 'high'>('low');
+  const [confidenceFactors, setConfidenceFactors] = useState<any[]>([]);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const calculateRealConfidence = async () => {
+      try {
+        const supabase = createClient();
+        
+        // Fetch real user data
+        const [
+          { data: messages },
+          { data: documents },
+          { data: progress },
+          { data: expertSessions }
+        ] = await Promise.all([
+          supabase.from('messages').select('count').eq('user_id', userId).single(),
+          supabase.from('user_documents').select('status').eq('user_id', userId),
+          supabase.from('user_progress').select('*').eq('user_id', userId).single(),
+          supabase.from('expert_sessions').select('count').eq('user_id', userId).single()
+        ]);
+
+        let score = 0;
+        const factors: any[] = [];
+
+        // 1. Profile Completeness (25% weight)
+        let profileScore = 0;
+        if (userProfile?.country) profileScore += 20;
+        if (userProfile?.destination_country) profileScore += 20;
+        if (userProfile?.visa_type) profileScore += 15;
+        if (userProfile?.age) profileScore += 10;
+        if (userProfile?.profession) profileScore += 15;
+        if (userProfile?.timeline_urgency) profileScore += 20;
+        
+        const profileWeight = 0.25;
+        score += (profileScore / 100) * 25;
+        factors.push({
+          name: 'Profile Complete',
+          score: profileScore,
+          weight: profileWeight,
+          status: profileScore >= 80 ? 'excellent' : profileScore >= 60 ? 'good' : 'needs_work',
+          tip: profileScore < 100 ? 'Complete your profile for better recommendations' : 'Profile complete!'
+        });
+
+        // 2. Document Readiness (30% weight)
+        let docScore = 0;
+        const totalDocs = 8; // Target
+        const approvedDocs = documents?.filter(d => d.status === 'approved').length || 0;
+        const pendingDocs = documents?.filter(d => d.status === 'pending_review').length || 0;
+        
+        docScore += (approvedDocs / totalDocs) * 70; // 70% for approved docs
+        docScore += (pendingDocs / totalDocs) * 30; // 30% for pending docs
+        
+        const docWeight = 0.30;
+        score += (docScore / 100) * 30;
+        factors.push({
+          name: 'Documents Ready',
+          score: docScore,
+          weight: docWeight,
+          status: docScore >= 80 ? 'excellent' : docScore >= 50 ? 'good' : 'needs_work',
+          tip: approvedDocs === 0 ? 'Start uploading your documents' : 
+               approvedDocs < totalDocs ? `${totalDocs - approvedDocs} more documents needed` :
+               'All documents approved!'
+        });
+
+        // 3. AI Engagement (20% weight)
+        let aiScore = 0;
+        const messageCount = messages?.count || 0;
+        if (messageCount >= 10) aiScore = 100;
+        else if (messageCount >= 5) aiScore = 75;
+        else if (messageCount >= 1) aiScore = 50;
+        
+        const aiWeight = 0.20;
+        score += (aiScore / 100) * 20;
+        factors.push({
+          name: 'AI Guidance',
+          score: aiScore,
+          weight: aiWeight,
+          status: aiScore >= 75 ? 'excellent' : aiScore >= 50 ? 'good' : 'needs_work',
+          tip: messageCount === 0 ? 'Chat with our AI assistant' :
+               messageCount < 5 ? 'Ask more questions for better guidance' :
+               'Great engagement with AI!'
+        });
+
+        // 4. Progress Momentum (15% weight)
+        let progressScore = 0;
+        const progressPercentage = currentProgress || progress?.progress_percentage || 0;
+        
+        if (progressPercentage >= 80) progressScore = 100;
+        else if (progressPercentage >= 60) progressScore = 80;
+        else if (progressPercentage >= 40) progressScore = 60;
+        else if (progressPercentage >= 20) progressScore = 40;
+        else if (progressPercentage > 0) progressScore = 20;
+        
+        const progressWeight = 0.15;
+        score += (progressScore / 100) * 15;
+        factors.push({
+          name: 'Journey Progress',
+          score: progressScore,
+          weight: progressWeight,
+          status: progressScore >= 80 ? 'excellent' : progressScore >= 40 ? 'good' : 'needs_work',
+          tip: progressPercentage === 0 ? 'Start your visa journey' :
+               progressPercentage < 40 ? 'Keep building momentum' :
+               progressPercentage < 80 ? 'Great progress, almost there!' :
+               'Final steps ahead!'
+        });
+
+        // 5. Expert Support (10% weight)
+        let expertScore = 0;
+        const expertCount = expertSessions?.count || 0;
+        if (expertCount >= 3) expertScore = 100;
+        else if (expertCount >= 2) expertScore = 75;
+        else if (expertCount >= 1) expertScore = 50;
+        
+        const expertWeight = 0.10;
+        score += (expertScore / 100) * 10;
+        factors.push({
+          name: 'Expert Support',
+          score: expertScore,
+          weight: expertWeight,
+          status: expertScore >= 75 ? 'excellent' : expertScore >= 50 ? 'good' : 'needs_work',
+          tip: expertCount === 0 ? 'Consider expert consultation' :
+               expertCount < 3 ? 'More expert sessions recommended' :
+               'Excellent expert support!'
+        });
+
+        setConfidenceScore(Math.round(score));
+        setConfidenceFactors(factors);
+
+        // Determine confidence level
+        if (score >= 80) setConfidenceLevel('high');
+        else if (score >= 60) setConfidenceLevel('medium');
+        else setConfidenceLevel('low');
+
+      } catch (error) {
+        console.error('Error calculating confidence:', error);
+        // Fallback to basic calculation
+        fallbackCalculation();
+      }
+    };
+
+    const fallbackCalculation = () => {
+      let score = 0;
+      
+      // Profile completeness (40%)
+      if (userProfile?.country) score += 15;
+      if (userProfile?.destination_country) score += 15;
+      if (userProfile?.visa_type) score += 10;
+
+      // Financial readiness (30%)
+      if (userProfile?.funds_available) score += 20;
+      if (userProfile?.employment_status) score += 10;
+
+      // Document status (30%)
+      if (userProfile?.documents_ready) score += 15;
+      if (userProfile?.timeline_clarity) score += 15;
+
+      setConfidenceScore(score);
+      setConfidenceFactors([]);
+
+      if (score >= 70) setConfidenceLevel('high');
+      else if (score >= 40) setConfidenceLevel('medium');
+      else setConfidenceLevel('low');
+    };
+
+    if (userId) {
+      calculateRealConfidence();
+    } else {
+      fallbackCalculation();
+    }
+  }, [userId, userProfile, currentProgress]);
+
+  const getConfidenceColor = () => {
+    switch (confidenceLevel) {
+      case 'high': return 'text-green-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-red-600';
+    }
+  };
+
+  const getConfidenceIcon = () => {
+    switch (confidenceLevel) {
+      case 'high': return CheckCircle;
+      case 'medium': return AlertTriangle;
+      case 'low': return Target;
+    }
+  };
+
+  const ConfidenceIcon = getConfidenceIcon();
+
+  return (
+    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
+      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+          <TrendingUp className="w-5 h-5" />
+          Visa Success Confidence
+        </CardTitle>
+        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+          Based on your real progress and data
+        </p>
+      </CardHeader>
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'} space-y-4`}>
+        <div className="flex items-center justify-between">
+          <span className={`text-2xl font-bold ${getConfidenceColor()}`}>
+            {confidenceScore}%
+          </span>
+          <ConfidenceIcon className={`w-8 h-8 ${getConfidenceColor()}`} />
+        </div>
+        
+        <Progress value={confidenceScore} className="h-3" />
+        
+        <div className="space-y-2">
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-muted-foreground`}>
+            {confidenceLevel === 'high' && '🎉 Excellent! You\'re well-prepared for your visa journey.'}
+            {confidenceLevel === 'medium' && '👍 Good progress! Focus on completing missing documents.'}
+            {confidenceLevel === 'low' && '💪 Let\'s work together to strengthen your application.'}
+          </p>
+          
+          {/* Confidence Factors Breakdown */}
+          {confidenceFactors.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h4 className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>Confidence Breakdown:</h4>
+              {confidenceFactors.map((factor, index) => (
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-2">
+                    {factor.status === 'excellent' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                    {factor.status === 'good' && <Clock className="w-3 h-3 text-yellow-500" />}
+                    {factor.status === 'needs_work' && <Target className="w-3 h-3 text-red-500" />}
+                    {factor.name}
+                  </span>
+                  <span className="text-gray-500">{Math.round(factor.score)}%</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap gap-2 mt-3">
+            {confidenceLevel === 'low' && (
+              <>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  Complete Profile
+                </span>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  Add Documents
+                </span>
+              </>
+            )}
+            {confidenceLevel === 'medium' && (
+              <>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Review Timeline
+                </span>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" />
+                  Chat More
+                </span>
+              </>
+            )}
+            {confidenceLevel === 'high' && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Ready to Apply
+              </span>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/lib/supabase/queries.ts
+📝 DESCRIPTION: All Supabase queries
+============================================================
+❌ FILE NOT FOUND: src/lib/supabase/queries.ts
+
+============================================================
+📁 FILE: src/hooks/use-user-data.ts
+📝 DESCRIPTION: User data hooks (if exists)
+============================================================
+❌ FILE NOT FOUND: src/hooks/use-user-data.ts
+
+============================================================
+📁 FILE: src/components/dashboard/start-visa-journey-card.tsx
+📝 DESCRIPTION: CONFIRMED: Hardcoded 25% progress - main target
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Rocket, CheckCircle, Calendar, FileText, Target } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useState, useEffect } from 'react';
+
+interface StartVisaJourneyCardProps {
+  userId: string;
+  userProfile?: any;
+  userProgressSummary?: any;
+  onStartJourney: () => Promise<void>;
+}
+
+export function StartVisaJourneyCard({ userId, userProfile, userProgressSummary, onStartJourney }: StartVisaJourneyCardProps) {
+  const [isStarting, setIsStarting] = useState(false);
+  const [supabase, setSupabase] = useState(null);
+
+  useEffect(() => {
+    // Initialize Supabase client
+    setSupabase(createClient());
+  }, []);
+
+  // Only show if KYC completed but journey not started
+  const shouldShow = userProfile?.kyc_completed === true && !userProgressSummary?.journey_started;
+
+  if (!shouldShow) return null;
+
+  const handleStartJourney = async () => {
+    if (!supabase) return;
+    
+    setIsStarting(true);
+    try {
+      await onStartJourney();
+      
+      // Create journey record
+      await supabase.from('user_progress_summary').upsert({
+        user_id: userId,
+        journey_started: new Date().toISOString(),
+        current_stage: 'planning',
+        overall_progress: 25
+      });
+
+      // Refresh to show updated state
+      window.location.reload();
+    } catch (error) {
+      console.error('Error starting journey:', error);
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  return (
+    <Card className="border-green-200 bg-green-50/50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-green-600" />
+          Ready to Start Your Visa Journey?
+        </CardTitle>
+        <CardDescription>
+          You've completed the basics - now lock in your visa path
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Completed Items */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span>Basic profile setup</span>
+            </div>
+            {userProfile?.country && userProfile?.destination_country && (
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Country selection: {userProfile.country} → {userProfile.destination_country}</span>
+              </div>
+            )}
+          </div>
+
+          {/* What Unlocks */}
+          <div className="bg-white p-3 rounded-lg border">
+            <h4 className="font-medium text-sm mb-2">Starting your journey unlocks:</h4>
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <FileText className="h-3 w-3" />
+                <span>Proof of funds tracking (3 seasons)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText className="h-3 w-3" />
+                <span>Document requirement seasons</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3 w-3" />
+                <span>Application timeline with deadlines</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="h-3 w-3" />
+                <span>Season-based progress tracking</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Start Button */}
+          <Button 
+            onClick={handleStartJourney}
+            disabled={isStarting}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            <Rocket className="mr-2 h-4 w-4" />
+            {isStarting ? "Starting Journey..." : "Start Visa Journey"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/app/api/start-journey/route.ts
+📝 DESCRIPTION: Start journey API route (if exists)
+============================================================
+❌ FILE NOT FOUND: src/app/api/start-journey/route.ts
+
+============================================================
+📁 FILE: src/lib/supabase/mutations.ts
+📝 DESCRIPTION: Supabase mutations (if exists)
+============================================================
+❌ FILE NOT FOUND: src/lib/supabase/mutations.ts
+
+============================================================
+📁 FILE: src/types/progress.types.ts
+📝 DESCRIPTION: Progress type definitions (if exists)
+============================================================
+❌ FILE NOT FOUND: src/types/progress.types.ts
+
+============================================================
+📁 FILE: src/utils/progress-calculator.ts
+📝 DESCRIPTION: Progress calculation utilities (if exists)
+============================================================
+❌ FILE NOT FOUND: src/utils/progress-calculator.ts
+
+============================================================
+📁 FILE: src/app/api/progress/route.ts
+📝 DESCRIPTION: Progress API endpoint (if exists)
+============================================================
+❌ FILE NOT FOUND: src/app/api/progress/route.ts
+
+============================================================
+📁 FILE: src/app/dashboard/page.tsx
+📝 DESCRIPTION: Main dashboard page structure
+============================================================
+// --- START OF FILE ---
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import DashboardClient from './client';
+
+export default async function DashboardPage() {
+  const supabase = await createClient(); // ← This line is fixed with 'await'
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  // Get user profile
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  console.log('✅ DASHBOARD PAGE - Profile:', profile);
+
+  return <DashboardClient user={user} userProfile={profile} />;
+}
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/components/dashboard/confidence-meter-enhanced.tsx
+📝 DESCRIPTION: Enhanced confidence meter (backup)
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { TrendingUp, AlertTriangle, CheckCircle, Target, FileText, MessageSquare, Clock } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { createClient } from '@/lib/supabase/client';
+
+interface ConfidenceMeterEnhancedProps {
+  userId: string;
+  userProfile?: any;
+  currentProgress?: number;
+  className?: string;
+}
+
+export function ConfidenceMeterEnhanced({ userId, userProfile, currentProgress, className }: ConfidenceMeterEnhancedProps) {
+  const [confidenceScore, setConfidenceScore] = useState(0);
+  const [confidenceLevel, setConfidenceLevel] = useState<'low' | 'medium' | 'high'>('low');
+  const [confidenceFactors, setConfidenceFactors] = useState<any[]>([]);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const calculateRealConfidence = async () => {
+      try {
+        const supabase = createClient();
+        
+        // Fetch real user data
+        const [
+          { data: messages },
+          { data: documents },
+          { data: progress },
+          { data: expertSessions }
+        ] = await Promise.all([
+          supabase.from('messages').select('count').eq('user_id', userId).single(),
+          supabase.from('user_documents').select('status').eq('user_id', userId),
+          supabase.from('user_progress').select('*').eq('user_id', userId).single(),
+          supabase.from('expert_sessions').select('count').eq('user_id', userId).single()
+        ]);
+
+        let score = 0;
+        const factors: any[] = [];
+
+        // 1. Profile Completeness (25% weight)
+        let profileScore = 0;
+        if (userProfile?.country) profileScore += 20;
+        if (userProfile?.destination_country) profileScore += 20;
+        if (userProfile?.visa_type) profileScore += 15;
+        if (userProfile?.age) profileScore += 10;
+        if (userProfile?.profession) profileScore += 15;
+        if (userProfile?.timeline_urgency) profileScore += 20;
+        
+        const profileWeight = 0.25;
+        score += (profileScore / 100) * 25;
+        factors.push({
+          name: 'Profile Complete',
+          score: profileScore,
+          weight: profileWeight,
+          status: profileScore >= 80 ? 'excellent' : profileScore >= 60 ? 'good' : 'needs_work',
+          tip: profileScore < 100 ? 'Complete your profile for better recommendations' : 'Profile complete!'
+        });
+
+        // 2. Document Readiness (30% weight)
+        let docScore = 0;
+        const totalDocs = 8; // Target
+        const approvedDocs = documents?.filter(d => d.status === 'approved').length || 0;
+        const pendingDocs = documents?.filter(d => d.status === 'pending_review').length || 0;
+        
+        docScore += (approvedDocs / totalDocs) * 70; // 70% for approved docs
+        docScore += (pendingDocs / totalDocs) * 30; // 30% for pending docs
+        
+        const docWeight = 0.30;
+        score += (docScore / 100) * 30;
+        factors.push({
+          name: 'Documents Ready',
+          score: docScore,
+          weight: docWeight,
+          status: docScore >= 80 ? 'excellent' : docScore >= 50 ? 'good' : 'needs_work',
+          tip: approvedDocs === 0 ? 'Start uploading your documents' : 
+               approvedDocs < totalDocs ? `${totalDocs - approvedDocs} more documents needed` :
+               'All documents approved!'
+        });
+
+        // 3. AI Engagement (20% weight)
+        let aiScore = 0;
+        const messageCount = messages?.count || 0;
+        if (messageCount >= 10) aiScore = 100;
+        else if (messageCount >= 5) aiScore = 75;
+        else if (messageCount >= 1) aiScore = 50;
+        
+        const aiWeight = 0.20;
+        score += (aiScore / 100) * 20;
+        factors.push({
+          name: 'AI Guidance',
+          score: aiScore,
+          weight: aiWeight,
+          status: aiScore >= 75 ? 'excellent' : aiScore >= 50 ? 'good' : 'needs_work',
+          tip: messageCount === 0 ? 'Chat with our AI assistant' :
+               messageCount < 5 ? 'Ask more questions for better guidance' :
+               'Great engagement with AI!'
+        });
+
+        // 4. Progress Momentum (15% weight)
+        let progressScore = 0;
+        const progressPercentage = currentProgress || progress?.progress_percentage || 0;
+        
+        if (progressPercentage >= 80) progressScore = 100;
+        else if (progressPercentage >= 60) progressScore = 80;
+        else if (progressPercentage >= 40) progressScore = 60;
+        else if (progressPercentage >= 20) progressScore = 40;
+        else if (progressPercentage > 0) progressScore = 20;
+        
+        const progressWeight = 0.15;
+        score += (progressScore / 100) * 15;
+        factors.push({
+          name: 'Journey Progress',
+          score: progressScore,
+          weight: progressWeight,
+          status: progressScore >= 80 ? 'excellent' : progressScore >= 40 ? 'good' : 'needs_work',
+          tip: progressPercentage === 0 ? 'Start your visa journey' :
+               progressPercentage < 40 ? 'Keep building momentum' :
+               progressPercentage < 80 ? 'Great progress, almost there!' :
+               'Final steps ahead!'
+        });
+
+        // 5. Expert Support (10% weight)
+        let expertScore = 0;
+        const expertCount = expertSessions?.count || 0;
+        if (expertCount >= 3) expertScore = 100;
+        else if (expertCount >= 2) expertScore = 75;
+        else if (expertCount >= 1) expertScore = 50;
+        
+        const expertWeight = 0.10;
+        score += (expertScore / 100) * 10;
+        factors.push({
+          name: 'Expert Support',
+          score: expertScore,
+          weight: expertWeight,
+          status: expertScore >= 75 ? 'excellent' : expertScore >= 50 ? 'good' : 'needs_work',
+          tip: expertCount === 0 ? 'Consider expert consultation' :
+               expertCount < 3 ? 'More expert sessions recommended' :
+               'Excellent expert support!'
+        });
+
+        setConfidenceScore(Math.round(score));
+        setConfidenceFactors(factors);
+
+        // Determine confidence level
+        if (score >= 80) setConfidenceLevel('high');
+        else if (score >= 60) setConfidenceLevel('medium');
+        else setConfidenceLevel('low');
+
+      } catch (error) {
+        console.error('Error calculating confidence:', error);
+        // Fallback to basic calculation
+        fallbackCalculation();
+      }
+    };
+
+    const fallbackCalculation = () => {
+      let score = 0;
+      
+      // Profile completeness (40%)
+      if (userProfile?.country) score += 15;
+      if (userProfile?.destination_country) score += 15;
+      if (userProfile?.visa_type) score += 10;
+
+      // Financial readiness (30%)
+      if (userProfile?.funds_available) score += 20;
+      if (userProfile?.employment_status) score += 10;
+
+      // Document status (30%)
+      if (userProfile?.documents_ready) score += 15;
+      if (userProfile?.timeline_clarity) score += 15;
+
+      setConfidenceScore(score);
+      setConfidenceFactors([]);
+
+      if (score >= 70) setConfidenceLevel('high');
+      else if (score >= 40) setConfidenceLevel('medium');
+      else setConfidenceLevel('low');
+    };
+
+    if (userId) {
+      calculateRealConfidence();
+    } else {
+      fallbackCalculation();
+    }
+  }, [userId, userProfile, currentProgress]);
+
+  const getConfidenceColor = () => {
+    switch (confidenceLevel) {
+      case 'high': return 'text-green-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-red-600';
+    }
+  };
+
+  const getConfidenceIcon = () => {
+    switch (confidenceLevel) {
+      case 'high': return CheckCircle;
+      case 'medium': return AlertTriangle;
+      case 'low': return Target;
+    }
+  };
+
+  const ConfidenceIcon = getConfidenceIcon();
+
+  return (
+    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
+      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+          <TrendingUp className="w-5 h-5" />
+          Visa Success Confidence
+        </CardTitle>
+        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+          Based on your real progress and data
+        </p>
+      </CardHeader>
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'} space-y-4`}>
+        <div className="flex items-center justify-between">
+          <span className={`text-2xl font-bold ${getConfidenceColor()}`}>
+            {confidenceScore}%
+          </span>
+          <ConfidenceIcon className={`w-8 h-8 ${getConfidenceColor()}`} />
+        </div>
+        
+        <Progress value={confidenceScore} className="h-3" />
+        
+        <div className="space-y-2">
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-muted-foreground`}>
+            {confidenceLevel === 'high' && '🎉 Excellent! You\'re well-prepared for your visa journey.'}
+            {confidenceLevel === 'medium' && '👍 Good progress! Focus on completing missing documents.'}
+            {confidenceLevel === 'low' && '💪 Let\'s work together to strengthen your application.'}
+          </p>
+          
+          {/* Confidence Factors Breakdown */}
+          {confidenceFactors.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h4 className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>Confidence Breakdown:</h4>
+              {confidenceFactors.map((factor, index) => (
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-2">
+                    {factor.status === 'excellent' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                    {factor.status === 'good' && <Clock className="w-3 h-3 text-yellow-500" />}
+                    {factor.status === 'needs_work' && <Target className="w-3 h-3 text-red-500" />}
+                    {factor.name}
+                  </span>
+                  <span className="text-gray-500">{Math.round(factor.score)}%</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap gap-2 mt-3">
+            {confidenceLevel === 'low' && (
+              <>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  Complete Profile
+                </span>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  Add Documents
+                </span>
+              </>
+            )}
+            {confidenceLevel === 'medium' && (
+              <>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Review Timeline
+                </span>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" />
+                  Chat More
+                </span>
+              </>
+            )}
+            {confidenceLevel === 'high' && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Ready to Apply
+              </span>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- END OF FILE ---
+
+============================================================
+📁 FILE: src/components/dashboard/apple-health-rings.tsx
+📝 DESCRIPTION: Apple health rings component
+============================================================
+// --- START OF FILE ---
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createClient } from '@/lib/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface AppleHealthRingsProps {
+  userId: string;
+  className?: string;
+}
+
+interface RingData {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  bgColor: string;
+  icon?: string;
+}
+
+export function AppleHealthRings({ userId, className }: AppleHealthRingsProps) {
+  const [rings, setRings] = useState<RingData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const fetchRingData = async () => {
+      try {
+        const supabase = createClient();
+        
+        // Fetch comprehensive user data
+        const [
+          { count: messageCount },
+          { count: docCount },
+          { data: progress },
+          { data: userDocs }
+        ] = await Promise.all([
+          supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('user_documents').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('user_progress').select('*').eq('user_id', userId).single(),
+          supabase.from('user_documents').select('status').eq('user_id', userId)
+        ]);
+
+        const approvedDocs = userDocs?.filter(d => d.status === 'approved').length || 0;
+        const totalDocs = 8; // Target document count
+        
+        // Apple Health-style ring data
+        const ringData: RingData[] = [
+          {
+            label: 'Progress',
+            value: progress?.progress_percentage || 0,
+            max: 100,
+            color: getProgressColor(progress?.progress_percentage || 0),
+            bgColor: `${getProgressColor(progress?.progress_percentage || 0)}20`,
+            icon: '🎯'
+          },
+          {
+            label: 'Documents',
+            value: approvedDocs,
+            max: totalDocs,
+            color: '#10B981', // Green
+            bgColor: '#10B98120',
+            icon: '📄'
+          },
+          {
+            label: 'AI Chats',
+            value: messageCount || 0,
+            max: Math.max(10, (messageCount || 0) + 2), // Dynamic target
+            color: '#3B82F6', // Blue
+            bgColor: '#3B82F620',
+            icon: '💬'
+          }
+        ];
+
+        setRings(ringData);
+      } catch (error) {
+        console.error('Error fetching ring data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchRingData();
+    }
+  }, [userId]);
+
+  const getProgressColor = (percentage: number): string => {
+    if (percentage <= 30) return '#F59E0B'; // Orange (Getting Started)
+    if (percentage <= 70) return '#3B82F6'; // Blue (In Progress)
+    return '#10B981'; // Green (Almost There)
+  };
+
+  const Ring = ({ data, size = 120, strokeWidth = 8 }: { data: RingData; size?: number; strokeWidth?: number }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min(data.value / data.max, 1);
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference * (1 - progress);
+
+    return (
+      <div className="relative inline-flex flex-col items-center">
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={data.bgColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            opacity={0.3}
+          />
+          {/* Progress ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={data.color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        
+        {/* Center content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="text-2xl mb-1">{data.icon}</div>
+          <div className="text-2xl font-bold" style={{ color: data.color }}>
+            {Math.round((data.value / data.max) * 100)}%
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {data.value}/{data.max}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <Card className={`${className} ${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardHeader>
+          <CardTitle className={isMobile ? 'text-lg' : 'text-xl'}>Your Journey Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-pulse flex space-x-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-24 h-24 bg-gray-200 rounded-full"></div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
+      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
+        <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'}`}>
+          Your Journey Progress
+        </CardTitle>
+        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+          Track your visa journey across three key areas
+        </p>
+      </CardHeader>
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
+        <div className={`flex ${isMobile ? 'flex-col items-center space-y-6' : 'items-center justify-around'}`}>
+          {rings.map((ring, index) => (
+            <div key={index} className="text-center">
+              <Ring data={ring} size={isMobile ? 100 : 120} />
+              <div className="mt-3">
+                <div className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`}>
+                  {ring.label}
+                </div>
+                <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                  {ring.value} of {ring.max}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Quick stats below rings */}
+        <div className={`grid ${isMobile ? 'grid-cols-2 gap-4 mt-6' : 'grid-cols-4 gap-4 mt-8'}`}>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <div className="text-lg font-bold text-blue-600">{rings[0]?.value || 0}%</div>
+            <div className="text-xs text-gray-600">Overall Progress</div>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <div className="text-lg font-bold text-green-600">{rings[1]?.value || 0}</div>
+            <div className="text-xs text-gray-600">Docs Approved</div>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <div className="text-lg font-bold text-purple-600">{rings[2]?.value || 0}</div>
+            <div className="text-xs text-gray-600">AI Sessions</div>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <div className="text-lg font-bold text-orange-600">
+              ₦{(rings[0]?.value || 0) * 24000 / 1000}K
+            </div>
+            <div className="text-xs text-gray-600">Money Saved</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- END OF FILE ---
+
+============================================================
+📊 DATABASE TABLES REFERENCE
+============================================================
+
+============================================================
+📋 AUDIT SUMMARY
+============================================================
+
+✅ CONFIRMED FINDINGS:
+1. Confidence Meter: Uses REAL data from multiple tables (GOOD)
+2. Timeline: Uses some real data but hardcoded thresholds (NEEDS FIX)
+3. Start Journey: Hardcoded 25% progress (CRITICAL FIX NEEDED)
+
+🎯 NEXT STEPS:
+1. Replace hardcoded 25% with real baseline calculation
+2. Fix timeline stage thresholds (5%, 20% magic numbers)
+3. Connect timeline progress to actual user actions
+4. Use confidence meter approach for all progress calculations
+
+============================================================
+📁 EXTRACTION COMPLETE: dashboard_audit_20260122_113210.txt
+📁 File size: 76426 bytes
+�� Lines: 1901
+============================================================
