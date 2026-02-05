@@ -10,12 +10,21 @@ import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DocumentCheckerCardProps {
+  userProfile?: any; // ✅ ADDED: Accept userProfile prop
   className?: string;
 }
 
-export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
+function getRequiredDocCount(userProfile: any): number {
+  if (!userProfile) return 8;
+  if (userProfile?.visa_type === "student") return 6;
+  if (userProfile?.visa_type === "work") return 9;
+  if (userProfile?.visa_type === "tourist") return 4;
+  return 8;
+}
+
+export function DocumentCheckerCard({ userProfile, className }: DocumentCheckerCardProps) {
   const isMobile = useIsMobile();
-  const dashboardData = useDashboardData('');
+  const dashboardData = useDashboardData(userProfile); // ✅ FIXED: Pass userProfile
 
   if (dashboardData.loading) {
     return (
@@ -44,7 +53,9 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
     );
   }
 
-  const documentPercentage = dashboardData.documentCount > 0 ? (dashboardData.documentCount / 8) * 100 : 0;
+  const requiredDocs = getRequiredDocCount(userProfile || dashboardData.userProfile);
+  const documentPercentage = dashboardData.documentCount > 0 ? 
+    (dashboardData.documentCount / requiredDocs) * 100 : 0;
   const hasDocuments = dashboardData.documentCount > 0;
 
   return (
@@ -60,7 +71,6 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
       </CardHeader>
       <CardContent className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
         <div className="space-y-4">
-          {/* Stats Overview - DYNAMIC VALUES */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>
@@ -80,7 +90,7 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
             </div>
             <div>
               <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>
-                {8 - dashboardData.documentCount}
+                {requiredDocs - dashboardData.documentCount}
               </div>
               <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
                 Remaining
@@ -88,7 +98,6 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
             </div>
           </div>
 
-          {/* Progress Bar - DYNAMIC VALUE */}
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="font-medium">Overall Progress</span>
@@ -97,7 +106,6 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
             <Progress value={documentPercentage} className="w-full h-2" />
           </div>
 
-          {/* Document Status - DYNAMIC VALUES */}
           {hasDocuments ? (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {dashboardData.documents.slice(0, 5).map((doc: any) => (
@@ -143,14 +151,12 @@ export function DocumentCheckerCard({ className }: DocumentCheckerCardProps) {
             </div>
           )}
 
-          {/* Action Button - DYNAMIC LABEL */}
           <Button asChild className="w-full" size={isMobile ? "lg" : "default"}>
             <Link href="/document-check">
               {hasDocuments ? 'Check More Documents' : 'Upload First Document'}
             </Link>
           </Button>
 
-          {/* Last Check Info - DYNAMIC VALUE */}
           {hasDocuments && (
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Clock className="w-4 h-4" />

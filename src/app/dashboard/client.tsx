@@ -113,7 +113,7 @@ export default function DashboardClientFinal({ user }: { user: any }) {
       </div>
 
       {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
-      <POFSeasoningTracker userId={dashboardData.userId} />
+      <POFSeasoningTracker userId={dashboardData.userId} userProfile={dashboardData.userProfile} />
 
       {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
       <DocumentAIAnalysis userId={dashboardData.userId} />
@@ -127,6 +127,9 @@ export default function DashboardClientFinal({ user }: { user: any }) {
       {/* JOURNEY LOCK-IN & DOCUMENT CHECKER */}
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-2'} gap-6`}>
         <StartVisaJourneyCard 
+          userProfile={dashboardData.userProfile} 
+          userProgress={dashboardData.userProgress} 
+          documentsCount={dashboardData.documentCount} 
           onStartJourney={async () => {
             const supabase = createClient();
             await supabase.from('user_progress_summary').upsert({
@@ -137,7 +140,7 @@ export default function DashboardClientFinal({ user }: { user: any }) {
             });
           }}
         />
-        <DocumentCheckerCard />
+        <DocumentCheckerCard userProfile={dashboardData.userProfile} />
       </div>
 
       {/* PROFILE CARD */}

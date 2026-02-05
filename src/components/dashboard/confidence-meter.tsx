@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -13,6 +14,21 @@ interface ConfidenceMeterProps {
 export function ConfidenceMeter({ className }: ConfidenceMeterProps) {
   const isMobile = useIsMobile();
   const { quickStats, userProfile, documentCount, messageCount, pofSeasons, loading, error } = useDashboardData('');
+  const [localProfile, setLocalProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const kycData = sessionStorage.getItem('kycData');
+    if (kycData) {
+      const parsed = JSON.parse(kycData);
+      setLocalProfile({
+        country: parsed.country,
+        destination_country: parsed.destination,
+        visa_type: parsed.visaType
+      });
+    }
+  }, []);
+
+  const mergedProfile = localProfile || userProfile;
 
   if (loading) {
     return (
@@ -44,44 +60,46 @@ export function ConfidenceMeter({ className }: ConfidenceMeterProps) {
     );
   }
 
-  const kycComplete = !!userProfile?.country && !!userProfile?.destination_country && !!userProfile?.visa_type;
+  const kycComplete = !!mergedProfile?.country && !!mergedProfile?.destination_country && !!mergedProfile?.visa_type;
   const documentProgress = calculateDocumentProgress(documentCount);
   const chatProgress = calculateChatProgress(messageCount);
   const pofProgress = calculatePofProgress(pofSeasons);
-  
-  const confidenceScore = Math.round((kycComplete ? 85 : 0 + documentProgress + chatProgress + pofProgress) / 4);
-  const expertProgress = calculateExpertProgress(userProfile);
+  const expertProgress = calculateExpertProgress(mergedProfile);
+
+  const confidenceScore = Math.round(
+    (kycComplete ? 20 : 0) +
+    documentProgress * 0.2 +
+    chatProgress * 0.2 +
+    pofProgress * 0.2 +
+    expertProgress * 0.2
+  );
 
   return (
     <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
       <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
         <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} flex items-center gap-2`}>
-          <Shield className="w-5 h-5" />
+          <Target className="w-5 h-5" />
           Visa Success Confidence
         </CardTitle>
-        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
-          Based on your real progress and data
-        </p>
       </CardHeader>
       <CardContent className={`${isMobile ? 'p-4' : 'p-6'} pt-0`}>
         <div className="space-y-6">
-          {/* Overall Score */}
           <div className="text-center">
-            <div className={`${isMobile ? 'text-4xl' : 'text-5xl'} font-bold mb-2`}>
+            <div className={`${isMobile ? 'text-4xl' : 'text-5xl'} font-bold ${getConfidenceColor(confidenceScore)}`}>
               {confidenceScore}%
             </div>
-            <Progress value={confidenceScore} className="w-full h-3" />
-            <p className={`text-muted-foreground mt-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
-              {getMessage(confidenceScore)}
+            <p className="text-muted-foreground mt-2">
+              {getConfidenceMessage(confidenceScore)}
             </p>
           </div>
 
-          {/* Breakdown */}
+          <Progress value={confidenceScore} className="h-3" />
+
           <div className="space-y-3">
             <ConfidenceItem
-              icon={<Target className="w-4 h-4" />}
+              icon={<Shield className="w-4 h-4" />}
               label="Profile Complete"
-              value={kycComplete ? 85 : 0}
+              value={kycComplete ? 100 : 0}
               isMobile={isMobile}
             />
             <ConfidenceItem
@@ -98,7 +116,7 @@ export function ConfidenceMeter({ className }: ConfidenceMeterProps) {
             />
             <ConfidenceItem
               icon={<TrendingUp className="w-4 h-4" />}
-              label="Journey Progress"
+              label="POF Progress"
               value={pofProgress}
               isMobile={isMobile}
             />
@@ -115,58 +133,50 @@ export function ConfidenceMeter({ className }: ConfidenceMeterProps) {
   );
 }
 
-function ConfidenceItem({ 
-  icon, 
-  label, 
-  value, 
-  isMobile 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: number;
-  isMobile: boolean;
-}) {
+function ConfidenceItem({ icon, label, value, isMobile }: { icon: React.ReactNode; label: string; value: number; isMobile: boolean }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
       <div className="flex items-center gap-3">
         {icon}
         <span className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>{label}</span>
       </div>
-      <div className={`flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
-        <span>{value}%</span>
-        <div className="w-20">
-          <Progress value={value} className="h-2" />
-        </div>
-      </div>
+      <span className={`font-bold ${isMobile ? 'text-sm' : 'text-base'}`}>{Math.round(value)}%</span>
     </div>
   );
 }
 
-function calculateDocumentProgress(documentCount: number): number {
-  return Math.min((documentCount / 8) * 100, 100);
+function getConfidenceColor(score: number): string {
+  if (score >= 80) return 'text-green-600';
+  if (score >= 60) return 'text-blue-600';
+  if (score >= 40) return 'text-yellow-600';
+  return 'text-red-600';
 }
 
-function calculateChatProgress(messageCount: number): number {
-  return Math.min((messageCount / 20) * 100, 100);
+function getConfidenceMessage(score: number): string {
+  if (score >= 80) return 'Excellent! You are well prepared.';
+  if (score >= 60) return 'Good progress. Keep going!';
+  if (score >= 40) return 'Getting there. Complete more tasks.';
+  return 'Let us work together to strengthen your application.';
+}
+
+function calculateDocumentProgress(count: number): number {
+  return Math.min(100, (count / 8) * 100);
+}
+
+function calculateChatProgress(count: number): number {
+  return Math.min(100, (count / 10) * 100);
 }
 
 function calculatePofProgress(seasons: any[]): number {
-  if (!seasons.length) return 0;
-  const totalSeasons = seasons.length;
-  const completedSeasons = seasons.filter((s: any) => s.status === 'completed').length;
-  return Math.round((completedSeasons / totalSeasons) * 100);
+  if (!seasons || seasons.length === 0) return 0;
+  const completed = seasons.filter((s: any) => s.status === 'completed').length;
+  return (completed / seasons.length) * 100;
 }
 
-function getMessage(score: number): string {
-  if (score >= 80) return "Excellent! Your application is very strong.";
-  if (score >= 60) return "Good progress! Let's strengthen a few areas.";
-  if (score >= 40) return "Keep going! Focus on completing your profile.";
-  return "Let's work together to strengthen your application.";
-}
-function calculateExpertProgress(userProfile: any): number {
-  if (!userProfile) return 0;
-  if (userProfile.consultation_booked || userProfile.expert_session_count > 0) return 100;
-  if (userProfile.expert_chat_count > 0) return 75;
-  if (userProfile.expert_section_views > 0) return 50;
-  return 25; // Base for having access to experts
+function calculateExpertProgress(profile: any): number {
+  if (!profile) return 0;
+  if (profile.consultation_booked || profile.expert_session_count > 0) return 100;
+  if (profile.expert_chat_count > 0) return 75;
+  if (profile.expert_section_views > 0) return 50;
+  return 25;
 }

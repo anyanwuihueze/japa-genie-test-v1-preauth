@@ -9,6 +9,9 @@ import { Target, Map, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StartVisaJourneyCardProps {
+  userProfile?: any;
+  userProgress?: any;
+  documentsCount?: number;
   className?: string;
   onStartJourney?: () => Promise<void>;
 }
@@ -132,7 +135,7 @@ export function StartVisaJourneyCard({ className, onStartJourney }: StartVisaJou
             </div>
 
             <Button asChild className="w-full">
-              <a href="/profile">Complete Profile First</a>
+              <a href="/kyc-profile">Complete Profile First</a>
             </Button>
           </div>
         </CardContent>

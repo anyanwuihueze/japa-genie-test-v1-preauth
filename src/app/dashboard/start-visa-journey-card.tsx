@@ -131,7 +131,7 @@ export function StartVisaJourneyCard({ className, onStartJourney }: StartVisaJou
             </div>
 
             <Button asChild className="w-full">
-              <a href="/profile">Complete Profile First</a>
+              <a href="/kyc-profile">Complete Profile First</a>
             </Button>
           </div>
         </CardContent>

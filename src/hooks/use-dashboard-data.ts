@@ -1,9 +1,6 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { calculateProgress } from '@/lib/utils/progress-calculator';
 import { useAuth } from '@/lib/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 
 export interface DashboardData {
   userId: string;
@@ -25,24 +22,15 @@ export interface DashboardData {
   };
   loading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
 }
 
-// Helper: Get required document count based on visa type
-function getRequiredDocCount(userProfile: any): number {
-  if (userProfile?.visa_type === "student") return 6;
-  if (userProfile?.visa_type === "work") return 9;
-  if (userProfile?.visa_type === "tourist") return 4;
-  return 8;
-}
-
-export function useDashboardData(userProfile?: any): DashboardData {
+export function useDashboardData(userProfileParam?: any): DashboardData {
   const { user } = useAuth();
   const userId = user?.id;
   
   const [data, setData] = useState<DashboardData>({
     userId: userId || '',
-    userProfile: userProfile || null,
+    userProfile: userProfileParam || null,
     messageCount: 0,
     recentMessages: [],
     documentCount: 0,
@@ -59,104 +47,71 @@ export function useDashboardData(userProfile?: any): DashboardData {
       overallProgress: 0
     },
     loading: true,
-    error: null,
-    refresh: async () => {}
+    error: null
   });
 
-  const supabase = createClient();
-
   const fetchAllData = async () => {
+    if (!userId) {
+      setData(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
     try {
-      if (!userId) throw new Error('User ID required');
-
-      // Parallel queries (not waterfall)
-      const [
-        messagesData,
-        documentsData,
-        progressData,
-        seasonsData
-      ] = await Promise.all([
-        supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId),
-
-        supabase
-          .from('user_documents')
-          .select('*', { count: 'exact' })
-          .eq('user_id', userId),
-
-        supabase
-          .from('user_progress')
+      const supabase = createClient();
+      
+      // FETCH USER PROFILE if not provided
+      let userProfile = userProfileParam;
+      if (!userProfile) {
+        const { data: profileData } = await supabase
+          .from('user_profiles')
           .select('*')
-          .eq('user_id', userId)
-          .single(),
+          .eq('id', userId)
+          .single();
+        userProfile = profileData;
+      }
 
-        userProfile?.destination_country 
-          ? supabase
-              .from('user_pof_seasons')
-              .select('*')
-              .eq('user_id', userId)
-              .order('season_number')
-          : Promise.resolve({ data: null, error: null })
+      // Fetch other data in parallel
+      const [messagesRes, docsRes, progressRes] = await Promise.all([
+        supabase.from('chat_messages').select('*').eq('user_id', userId),
+        supabase.from('user_documents').select('*').eq('user_id', userId),
+        supabase.from('user_progress_summary').select('*').eq('user_id', userId).single()
       ]);
 
-      const messageCount = messagesData.count || 0;
-      const documents = documentsData.data || [];
-      const documentCount = documents.length;
-      const approvedDocuments = documents.filter((doc: any) => doc.status === 'approved').length;
-      
-      const userProgress = progressData.data || {
-        progress_percentage: 0,
-        current_stage: 'onboarding',
-        journey_started: null
-      };
+      const documentCount = docsRes.data?.length || 0;
+      const approvedDocuments = docsRes.data?.filter((d: any) => d.status === 'approved').length || 0;
+      const messageCount = messagesRes.data?.length || 0;
 
-      const progressResult = calculateProgress(userProfile, messageCount, documentCount);
-      
-      const documentPercentage = documentCount > 0 ? (documentCount / getRequiredDocCount(userProfile)) * 100 : 0;
-      const messagePercentage = messageCount > 0 ? (messageCount / 20) * 100 : 0;
-      const overallProgress = (progressResult.progressPercentage + documentPercentage + messagePercentage) / 3;
-
-      const pofSeasons = seasonsData.data || [];
-      const activeSeason = pofSeasons.find((s: any) => s.status === 'in_progress')?.season_number || 1;
-
-      const { data: recentMessages } = await supabase
-        .from('messages')
-        .select('id, content, role, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Calculate progress
+      const progressPercentage = calculateProgress(userProfile, documentCount, messageCount);
 
       setData({
         userId,
-        userProfile,
+        userProfile: userProfile || null,
         messageCount,
-        recentMessages: recentMessages || [],
+        recentMessages: messagesRes.data?.slice(-5) || [],
         documentCount,
-        documents,
+        documents: docsRes.data || [],
         approvedDocuments,
-        progressPercentage: progressResult.progressPercentage,
-        userProgress,
-        pofSeasons,
-        activeSeason,
+        progressPercentage,
+        userProgress: progressRes.data || null,
+        pofSeasons: [],
+        activeSeason: 1,
         quickStats: {
-          progressPercentage: Math.round(progressResult.progressPercentage),
-          documentPercentage: Math.round(documentPercentage),
-          messagePercentage: Math.round(messagePercentage),
-          overallProgress: Math.round(overallProgress)
+          progressPercentage,
+          documentPercentage: Math.min(100, (documentCount / 10) * 100),
+          messagePercentage: Math.min(100, (messageCount / 20) * 100),
+          overallProgress: progressPercentage
         },
         loading: false,
-        error: null,
-        refresh: fetchAllData
+        error: null
       });
 
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+    } catch (error: any) {
+      console.error('Dashboard data fetch error:', error);
       setData(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error.message || 'Failed to load dashboard data'
       }));
     }
   };
@@ -164,8 +119,27 @@ export function useDashboardData(userProfile?: any): DashboardData {
   useEffect(() => {
     if (userId) {
       fetchAllData();
+    } else {
+      setData(prev => ({ ...prev, loading: false }));
     }
-  }, [userId, userProfile]);
+  }, [userId, userProfileParam]);
 
   return data;
+}
+
+function calculateProgress(userProfile: any, documentCount: number, messageCount: number): number {
+  let progress = 0;
+  
+  // Profile completion (40%)
+  if (userProfile?.destination_country) progress += 20;
+  if (userProfile?.visa_type) progress += 10;
+  if (userProfile?.profession) progress += 10;
+  
+  // Documents (30%)
+  progress += Math.min(documentCount * 5, 30);
+  
+  // Engagement (30%)
+  progress += Math.min(messageCount * 2, 30);
+  
+  return Math.min(progress, 100);
 }

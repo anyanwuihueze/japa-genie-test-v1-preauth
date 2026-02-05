@@ -77,7 +77,7 @@ export function ActionItemsWidgetFixed({ userId, className }: ActionItemsWidgetP
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         
         const { data: messages, error: msgError } = await supabase
-          .from('messages')
+          .from('chat_messages')
           .select('id, content, role, topic, event, payload, created_at')
           .eq('user_id', userId)
           .gte('created_at', twentyFourHoursAgo)

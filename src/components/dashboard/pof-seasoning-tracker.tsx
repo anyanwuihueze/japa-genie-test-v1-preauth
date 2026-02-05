@@ -2,344 +2,355 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Lock, 
-  CheckCircle, 
+  AlertCircle, 
+  CheckCircle2, 
   Clock, 
-  TrendingUp, 
-  FileText, 
-  Upload,
-  AlertCircle,
-  Star,
-  Calendar
+  Banknote, 
+  ShieldAlert,
+  Calendar,
+  RefreshCw,
+  FileText,
+  AlertTriangle
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { analyzeProofOfFunds, ProofOfFundsAnalysis } from '@/ai/flows/analyze-proof-of-funds';
+import Link from 'next/link';
 
 interface POFSeasoningTrackerProps {
   userId: string;
-  userProfile?: any;
-  className?: string;
+  userProfile: any;
 }
 
-interface SeasonData {
-  season_number: number;
-  status: 'locked' | 'available' | 'in_progress' | 'completed';
-  target_average_balance: number;
-  current_average_balance: number;
-  required_statements: number;
-  uploaded_statements: number;
-  approved_statements: number;
-  start_date: string | null;
-  end_date: string | null;
-  unlocked_at: string | null;
-  completed_at: string | null;
-  progress_percentage: number;
+interface AnalysisState {
+  data: ProofOfFundsAnalysis | null;
+  loading: boolean;
+  error: string | null;
+  isCached: boolean;
+  lastUpdated: string | null;
 }
 
-export function POFSeasoningTracker({ userId, userProfile, className }: POFSeasoningTrackerProps) {
-  const [seasons, setSeasons] = useState<SeasonData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentSeason, setCurrentSeason] = useState<number>(1);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const isMobile = useIsMobile();
+export function POFSeasoningTracker({ userId, userProfile }: POFSeasoningTrackerProps) {
+  const [localProfile, setLocalProfile] = useState<any>(null);
 
   useEffect(() => {
-    if (userProfile?.visa_type && userProfile?.destination_country) {
-      initializeSeasons();
+    const kycData = sessionStorage.getItem("kycData");
+    if (kycData) {
+      const parsed = JSON.parse(kycData);
+      setLocalProfile({
+        destination_country: parsed.destination,
+        visa_type: parsed.visaType,
+        nationality: parsed.country,
+        family_size: 1
+      });
     }
-  }, [userProfile]);
+  }, []);
 
-  const initializeSeasons = async () => {
+  const activeProfile = localProfile || userProfile;
+
+  const [analysis, setAnalysis] = useState<AnalysisState>({
+    data: null,
+    loading: false,
+    error: null,
+    isCached: false,
+    lastUpdated: null
+  });
+
+  const isProfileComplete = activeProfile?.destination_country && activeProfile?.visa_type;
+
+  const mockFinancialData = {
+    bankAccounts: [
+      { bank: 'Sample Bank', balance: 25000, currency: 'USD', opened: '2024-01-15' },
+      { bank: 'Savings Account', balance: 15000, currency: 'USD', opened: '2023-11-01' }
+    ],
+    totalAssets: 40000,
+    lastUpdated: new Date().toISOString()
+  };
+
+  const loadAnalysis = async (forceRefresh = false) => {
+    if (!isProfileComplete) {
+      setAnalysis({
+        data: null,
+        loading: false,
+        error: 'Complete your profile first',
+        isCached: false,
+        lastUpdated: null
+      });
+      return;
+    }
+
     try {
-      const supabase = createClient();
+      setAnalysis(prev => ({ ...prev, loading: true, error: null }));
       
-      // Check if user needs seasoning based on visa type
-      const { data: requirements } = await supabase
-        .from('pof_season_requirements')
-        .select('*')
-        .eq('country', userProfile.destination_country)
-        .eq('visa_type', userProfile.visa_type)
-        .order('season_number');
+      const result = await analyzeProofOfFunds({
+        userProfile: {
+          destination_country: activeProfile.destination_country,
+          visa_type: activeProfile.visa_type,
+          nationality: activeProfile.nationality || activeProfile.country,
+          family_size: activeProfile.family_size || 1
+        },
+        financialData: mockFinancialData,
+        familyMembers: activeProfile.family_size || 1
+      });
 
-      if (!requirements || requirements.length === 0) {
-        // No seasoning required for this visa type
-        setLoading(false);
-        return;
+      if (result.success && result.analysis) {
+        setAnalysis({
+          data: result.analysis,
+          loading: false,
+          error: null,
+          isCached: result.isCached || false,
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        throw new Error(result.error || 'Analysis failed');
       }
-
-      // Initialize or update seasons for this user
-      const seasonsData: SeasonData[] = [];
-      
-      for (const req of requirements) {
-        // Check if season already exists
-        const { data: existingSeason } = await supabase
-          .from('user_pof_seasons')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('season_number', req.season_number)
-          .single();
-
-        if (existingSeason) {
-          seasonsData.push(existingSeason);
-        } else {
-          // Create new season
-          const newSeason = {
-            user_id: userId,
-            season_number: req.season_number,
-            status: req.season_number === 1 ? 'available' : 'locked',
-            target_average_balance: req.min_average_balance,
-            current_average_balance: 0,
-            required_statements: req.required_statements,
-            uploaded_statements: 0,
-            approved_statements: 0,
-            start_date: null,
-            end_date: null,
-            unlocked_at: req.season_number === 1 ? new Date().toISOString() : null,
-            completed_at: null,
-            progress_percentage: 0
-          };
-
-          const { data: createdSeason } = await supabase
-            .from('user_pof_seasons')
-            .insert(newSeason)
-            .select()
-            .single();
-
-          seasonsData.push(createdSeason);
-        }
-      }
-
-      setSeasons(seasonsData);
-      
-      // Find current active season
-      const activeSeason = seasonsData.find(s => s.status === 'in_progress') || 
-                          seasonsData.find(s => s.status === 'available');
-      if (activeSeason) {
-        setCurrentSeason(activeSeason.season_number);
-      }
-
-    } catch (error) {
-      console.error('Error initializing seasons:', error);
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error('POF Analysis error:', error);
+      setAnalysis({
+        data: null,
+        loading: false,
+        error: 'AI analysis in progress. Showing estimates.',
+        isCached: false,
+        lastUpdated: null
+      });
     }
   };
 
-  const getSeasonIcon = (seasonNumber: number) => {
-    const icons = ['🌱', '🌿', '🌳'];
-    return icons[seasonNumber - 1] || '🌱';
-  };
-
-  const getSeasonColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-600';
-      case 'in_progress': return 'text-blue-600';
-      case 'available': return 'text-orange-600';
-      case 'locked': return 'text-gray-400';
-      default: return 'text-gray-600';
+  useEffect(() => {
+    if (isProfileComplete) {
+      loadAnalysis();
     }
-  };
+  }, [activeProfile?.destination_country, activeProfile?.visa_type]);
 
-  const getSeasonBgColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-50 border-green-200';
-      case 'in_progress': return 'bg-blue-50 border-blue-200';
-      case 'available': return 'bg-orange-50 border-orange-200';
-      case 'locked': return 'bg-gray-50 border-gray-200';
-      default: return 'bg-white border-gray-200';
-    }
-  };
-
-  const handleUploadStatement = async (seasonNumber: number) => {
-    // Navigate to document upload with POF context
-    window.location.href = `/dashboard/proof-of-funds?season=${seasonNumber}&action=upload`;
-  };
-
-  const handleSeasonAction = async (seasonNumber: number) => {
-    const season = seasons.find(s => s.season_number === seasonNumber);
-    if (!season) return;
-
-    if (season.status === 'locked') {
-      // Show unlock requirements
-      alert(`Complete Season ${seasonNumber - 1} first to unlock this season!`);
-      return;
-    }
-
-    if (season.status === 'in_progress' && season.uploaded_statements < season.required_statements) {
-      handleUploadStatement(seasonNumber);
-      return;
-    }
-
-    if (season.status === 'completed') {
-      // Show completion celebration
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 3000);
-    }
-  };
-
-  if (loading) {
+  // Early return for incomplete profile
+  if (!isProfileComplete) {
     return (
-      <Card className={`${className} ${isMobile ? 'p-4' : 'p-6'}`}>
+      <Card className="h-full border-dashed border-2">
         <CardHeader>
-          <CardTitle className={isMobile ? 'text-lg' : 'text-xl'}>POF Seasoning Tracker</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Banknote className="w-5 h-5" />
+            Proof of Funds Tracker
+          </CardTitle>
+          <CardDescription>Complete profile to enable POF analysis</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-pulse flex space-x-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-20 h-20 bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
+        <CardContent className="space-y-4">
+          <div className="text-center py-6">
+            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <h3 className="font-semibold text-lg mb-2">Profile Incomplete</h3>
+            <p className="text-muted-foreground mb-4">
+              Set destination country and visa type
+            </p>
+            <Button asChild>
+              <Link href="/kyc-profile">Complete Profile</Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (seasons.length === 0) {
-    return null; // No seasoning required for this visa type
+  // Loading state
+  if (analysis.loading) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Banknote className="w-5 h-5" />
+            Proof of Funds Tracker
+          </CardTitle>
+          <CardDescription>Analyzing financial readiness...</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    );
   }
 
-  return (
-    <Card className={`${className} ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
-      {/* Celebration Animation */}
-      {showCelebration && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50 rounded-lg">
-          <div className="text-center">
-            <div className="text-6xl mb-2 animate-bounce">🎉</div>
-            <div className="text-xl font-bold text-green-600">Season Completed!</div>
-            <div className="text-sm text-gray-600">Ready for the next season</div>
-          </div>
-        </div>
-      )}
+  const hasValidData = analysis.data && analysis.data.summary && analysis.data.financialAnalysis;
 
-      <CardHeader className={`${isMobile ? 'p-4' : 'p-6'}`}>
+  return (
+    <Card className="h-full">
+      <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'}`}>
-              Proof of Funds Seasoning
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="w-5 h-5" />
+              Proof of Funds Tracker
+              {analysis.isCached && (
+                <Badge variant="outline" className="text-xs bg-green-50">Cached</Badge>
+              )}
             </CardTitle>
-            <CardDescription className={`${isMobile ? 'text-sm' : 'text-base'}`}>
-              Progressive financial requirement tracking
+            <CardDescription className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {activeProfile.destination_country} {activeProfile.visa_type} Visa
+              {hasValidData && (
+                <Badge 
+                  variant={analysis.data.summary.meetsRequirements ? "default" : "destructive"} 
+                  className="text-xs"
+                >
+                  {analysis.data.summary.meetsRequirements ? 'Meets Requirements' : 'Needs Improvement'}
+                </Badge>
+              )}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="bg-blue-50">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            Season {currentSeason}
-          </Badge>
+          {!analysis.loading && (
+            <Button onClick={() => loadAnalysis(true)} variant="ghost" size="sm">
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </CardHeader>
-
-      <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
-        <div className="space-y-4">
-          {seasons.map((season, index) => (
-            <div
-              key={season.season_number}
-              className={`p-4 rounded-lg border-2 transition-all duration-300 ${getSeasonBgColor(season.status)} ${season.status === 'in_progress' ? 'ring-2 ring-blue-400' : ''}`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{getSeasonIcon(season.season_number)}</div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
-                        Season {season.season_number}
-                      </h4>
-                      {season.status === 'locked' && <Lock className="w-4 h-4 text-gray-400" />}
-                      {season.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                    </div>
-                    <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      {season.status === 'locked' ? 'Complete previous season to unlock' :
-                       season.status === 'available' ? 'Ready to start' :
-                       season.status === 'in_progress' ? 'In progress' :
-                       'Completed'}
-                    </p>
-                  </div>
-                </div>
-                <Badge className={getSeasonColor(season.status)}>
-                  {Math.round(season.progress_percentage)}%
-                </Badge>
-              </div>
-
-              {/* Season Details */}
-              <div className="mt-4 space-y-3">
-                {/* Target Balance */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">Target Average Balance</span>
-                    <span className="text-muted-foreground">
-                      ₦{season.current_average_balance.toLocaleString()} / ₦{season.target_average_balance.toLocaleString()}
-                    </span>
-                  </div>
-                  <Progress value={(season.current_average_balance / season.target_average_balance) * 100} className="w-full h-2" />
-                </div>
-
-                {/* Statements Progress */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium flex items-center gap-1">
-                      <FileText className="w-4 h-4" />
-                      Bank Statements
-                    </span>
-                    <span className="text-muted-foreground">
-                      {season.uploaded_statements} / {season.required_statements}
-                    </span>
-                  </div>
-                  <Progress value={(season.uploaded_statements / season.required_statements) * 100} className="w-full h-2" />
-                </div>
-
-                {/* Action Button */}
-                <Button
-                  onClick={() => handleSeasonAction(season.season_number)}
-                  disabled={season.status === 'locked'}
-                  variant={season.status === 'completed' ? 'outline' : 'default'}
-                  className="w-full"
-                  size={isMobile ? 'sm' : 'default'}
+      <CardContent className="space-y-6">
+        {/* Error State */}
+        {analysis.error && !hasValidData && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-amber-900">Analysis Pending</h4>
+                <p className="text-sm text-amber-800 mt-1">
+                  {analysis.error}
+                </p>
+                <Button 
+                  onClick={() => loadAnalysis(true)} 
+                  variant="outline" 
+                  size="sm"
+                  className="mt-3"
                 >
-                  {season.status === 'locked' ? (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Locked
-                    </>
-                  ) : season.status === 'completed' ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      View Details
-                    </>
-                  ) : season.uploaded_statements < season.required_statements ? (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Statements
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Mark Complete
-                    </>
-                  )}
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry Analysis
                 </Button>
               </div>
             </div>
-          ))}
+          </div>
+        )}
 
-          {/* Smart Tips */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-2">
-              <Star className="w-4 h-4 text-blue-600 mt-0.5" />
-              <div className="flex-1">
-                <div className="font-semibold text-blue-800 text-sm">
-                  Pro Tip: Seasoning Strategy
+        {/* Valid Data Display */}
+        {hasValidData ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {analysis.data.summary.riskLevel === 'high' ? (
+                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                ) : analysis.data.summary.riskLevel === 'medium' ? (
+                  <AlertCircle className="w-5 h-5 text-amber-500" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                )}
+                <span className="font-medium">Risk Level: </span>
+                <Badge 
+                  variant="outline" 
+                  className={`
+                    ${analysis.data.summary.riskLevel === 'high' ? 'bg-red-50 text-red-700 border-red-200' : ''}
+                    ${analysis.data.summary.riskLevel === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' : ''}
+                    ${analysis.data.summary.riskLevel === 'low' ? 'bg-green-50 text-green-700 border-green-200' : ''}
+                  `}
+                >
+                  {analysis.data.summary.riskLevel.toUpperCase()}
+                </Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Confidence: {analysis.data.summary.confidence}%
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium">Account Seasoning</span>
+                  <span>
+                    {analysis.data.financialAnalysis.seasoningDays}/
+                    {analysis.data.financialAnalysis.seasoningRequired} days
+                  </span>
                 </div>
-                <p className="text-xs text-blue-700 mt-1">
-                  Maintain consistent deposits. Sudden large amounts may raise red flags. 
-                  Gradual building shows financial stability.
+                <Progress 
+                  value={Math.min(100, (analysis.data.financialAnalysis.seasoningDays / analysis.data.financialAnalysis.seasoningRequired) * 100)} 
+                  className="h-2" 
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {analysis.data.financialAnalysis.seasoningStatus === 'meets' ? '✓ Meets requirement' : 
+                   analysis.data.financialAnalysis.seasoningStatus === 'risky' ? '⚠️ Needs more time' : 
+                   '❌ Insufficient seasoning'}
+                </p>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium">Minimum Funds</span>
+                  <span>
+                    {analysis.data.financialAnalysis.currency} {analysis.data.financialAnalysis.liquidAssets.toLocaleString()}/
+                    {analysis.data.embassySpecific.minimumFunds.toLocaleString()}
+                  </span>
+                </div>
+                <Progress 
+                  value={Math.min(100, (analysis.data.financialAnalysis.liquidAssets / analysis.data.embassySpecific.minimumFunds) * 100)} 
+                  className="h-2" 
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {analysis.data.financialAnalysis.liquidAssets >= analysis.data.embassySpecific.minimumFunds 
+                    ? '✓ Meets requirement' 
+                    : `❌ ${(analysis.data.embassySpecific.minimumFunds - analysis.data.financialAnalysis.liquidAssets).toLocaleString()} ${analysis.data.financialAnalysis.currency} needed`}
                 </p>
               </div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold">
+                  {analysis.data.financialAnalysis.totalAssets.toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">Total Assets</div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {analysis.data.financialAnalysis.liquidAssets.toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">Liquid Funds</div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {analysis.data.financialAnalysis.stabilityScore}/10
+                </div>
+                <div className="text-xs text-muted-foreground">Stability Score</div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* No Data State */
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+            <h3 className="font-semibold mb-2">Upload Documents for Analysis</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload bank statements to get personalized POF analysis
+            </p>
+          </div>
+        )}
+
+        <div className="pt-4">
+          <Button asChild className="w-full">
+            <Link href="/document-check">
+              {hasValidData ? 'Update Financial Documents' : 'Upload Bank Statements'}
+            </Link>
+          </Button>
+        </div>
+
+        <div className="pt-4 border-t">
+          <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {analysis.lastUpdated 
+                ? `Updated ${new Date(analysis.lastUpdated).toLocaleDateString()}` 
+                : 'Awaiting analysis'}
+            </div>
+            <button onClick={() => loadAnalysis(true)} className="text-blue-600 hover:underline">
+              Refresh
+            </button>
           </div>
         </div>
       </CardContent>

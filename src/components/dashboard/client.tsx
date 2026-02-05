@@ -113,7 +113,7 @@ export default function DashboardClientFinal({ user }: { user: any }) {
       </div>
 
       {/* 🌍 POF SEASONING TRACKER - Progressive unlocking */}
-      <POFSeasoningTracker userId={dashboardData.userId} />
+      <POFSeasoningTracker userId={dashboardData.userId} userProfile={dashboardData.userProfile} />
 
       {/* 📄 DOCUMENT AI ANALYSIS - Intelligent compliance */}
       <DocumentAIAnalysis userId={dashboardData.userId} />

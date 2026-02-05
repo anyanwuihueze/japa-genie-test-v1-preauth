@@ -1,0 +1,386 @@
+'use client';
+import { getVisaCost } from '@/lib/ai/cost-generator';
+import { JapaGenieBadge } from '@/components/ui/japa-genie-badge';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Lock, TrendingUp, AlertCircle, DollarSign, Clock, ArrowRight, CheckCircle, Mail } from 'lucide-react';
+import { VISA_COSTS_DATABASE, getAllCountries, getVisaTypes } from '@/lib/visa-costs-database';
+import { useRouter } from 'next/navigation';
+
+export function TrueVisaCostCalculator() {
+  const router = useRouter();
+  const [country, setCountry] = useState<string>('');
+  const [visaType, setVisaType] = useState<string>('');
+  const [dependents, setDependents] = useState<string>('0');
+  const [showResults, setShowResults] = useState(false);
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestEmail, setRequestEmail] = useState('');
+  const [requestCountry, setRequestCountry] = useState('');
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
+
+  const handleCalculate = async () => {
+    if (!country || !visaType) return;
+    
+    setLoadingCost(true);
+    try {
+      const { data, isEstimated } = await getVisaCost(country, visaType);
+      setCostData({
+        total: data.totalCost,
+        isEstimated
+      });
+    } catch (error) {
+      console.error('Failed to estimate cost:', error);
+    } finally {
+      setLoadingCost(false);
+    }
+    if (country && visaType) {
+      setShowResults(true);
+      setShowRequestForm(false);
+    }
+  };
+
+  const handleUnlock = () => {
+    router.push('/pricing?source=cost_calculator&country=' + encodeURIComponent(country) + '&visa=' + encodeURIComponent(visaType));
+  };
+
+  const handleRequestCountry = async () => {
+    // In production, send to your backend/Supabase
+    console.log('Country requested:', { email: requestEmail, country: requestCountry });
+    setRequestSubmitted(true);
+    setTimeout(() => {
+      setRequestSubmitted(false);
+      setRequestEmail('');
+      setRequestCountry('');
+    }, 3000);
+  };
+
+  const countryData = country ? VISA_COSTS_DATABASE[country] : null;
+  const visaData = countryData && visaType ? countryData.visa_types[visaType as keyof typeof countryData.visa_types] : null;
+  
+  const dependentsCount = parseInt(dependents);
+  const multiplier = 1 + dependentsCount * 0.5;
+
+  const basicTotal = visaData ? Math.round(visaData.costs.total_basic * multiplier) : 0;
+  const hiddenTotal = visaData ? Math.round(visaData.costs.total_hidden * multiplier) : 0;
+  const pofRequired = visaData ? Math.round(visaData.costs.financial_requirement * multiplier) : 0;
+  const grandTotal = visaData ? Math.round(visaData.costs.grand_total_min * multiplier) : 0;
+
+  const availableCountries = getAllCountries();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12">
+      <div className="container mx-auto px-4 max-w-5xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <Badge className="mb-4 bg-orange-500 text-white px-4 py-2">
+            FREE TOOL - No Login Required
+          </Badge>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            True Visa Cost Calculator
+          </h1>
+          <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-6">
+            Stop getting blindsided by hidden costs. See what your visa{' '}
+            <span className="text-red-400 font-bold">REALLY</span> costs—all fees,
+            POF requirements, and 12+ hidden charges most people miss.
+          </p>
+          
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center gap-6 mt-8">
+            <div className="flex items-center gap-2 text-slate-300">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <span className="text-sm">15 countries available</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-300">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <span className="text-sm">Avg hidden cost: $4,850</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-300">
+              <AlertCircle className="w-5 h-5 text-orange-500" />
+              <span className="text-sm">247 people missed seasoning rules</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Calculator Card */}
+        <Card className="shadow-2xl border-2 border-orange-500/30 bg-slate-800/50 backdrop-blur">
+          <CardHeader className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-b border-orange-500/20">
+            <CardTitle className="text-2xl md:text-3xl text-white flex items-center gap-3">
+              <DollarSign className="w-8 h-8 text-orange-400" />
+              Calculate Your True Cost
+            </CardTitle>
+            <CardDescription className="text-slate-300 text-base">
+              Select your destination and visa type to see the complete cost breakdown
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-6 md:p-8">
+            <div className="space-y-6">
+              {/* Country Selection */}
+              <div>
+                <label className="block font-semibold mb-2 text-lg text-white flex items-center gap-2">
+                  🌍 Where do you want to go?
+                </label>
+                <Select value={country} onValueChange={(val) => { setCountry(val); setVisaType(''); setShowResults(false); }}>
+                  <SelectTrigger className="w-full text-lg p-6 bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Select destination country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCountries.map((countryKey) => {
+                      const data = VISA_COSTS_DATABASE[countryKey];
+                      return (
+                        <SelectItem key={countryKey} value={countryKey}>
+                          {data.flag_emoji} {data.country}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                
+                {/* Don't see your country? */}
+                <button
+                  onClick={() => setShowRequestForm(!showRequestForm)}
+                  className="mt-2 text-sm text-blue-400 hover:text-blue-300 underline"
+                >
+                  Don't see your country? Request it here
+                </button>
+              </div>
+
+              {/* Request Country Form */}
+              {showRequestForm && (
+                <Card className="bg-blue-900/20 border-blue-500/30 p-4">
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    Request a Country
+                  </h3>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Which country?"
+                      value={requestCountry}
+                      onChange={(e) => setRequestCountry(e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Your email (we'll notify you when it's ready)"
+                      value={requestEmail}
+                      onChange={(e) => setRequestEmail(e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                    <Button
+                      onClick={handleRequestCountry}
+                      disabled={!requestEmail || !requestCountry || requestSubmitted}
+                      className="w-full bg-blue-500 hover:bg-blue-600"
+                    >
+                      {requestSubmitted ? '✅ Request Submitted!' : 'Submit Request'}
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Visa Type */}
+              {country && (
+                <div>
+                  <label className="block font-semibold mb-2 text-lg text-white flex items-center gap-2">
+                    📋 What type of visa?
+                  </label>
+                  <Select value={visaType} onValueChange={(val) => { setVisaType(val); setShowResults(false); }}>
+                    <SelectTrigger className="w-full text-lg p-6 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select visa type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getVisaTypes(country).map((type) => (
+                        <SelectItem key={type} value={type}>{type} Visa</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Dependents */}
+              {visaType && (
+                <div>
+                  <label className="block font-semibold mb-2 text-lg text-white flex items-center gap-2">
+                    👨‍👩‍👧‍👦 Traveling with family?
+                  </label>
+                  <Select value={dependents} onValueChange={(val) => { setDependents(val); setShowResults(false); }}>
+                    <SelectTrigger className="w-full text-lg p-6 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Just me</SelectItem>
+                      <SelectItem value="1">Me + 1 dependent</SelectItem>
+                      <SelectItem value="2">Me + 2 dependents</SelectItem>
+                      <SelectItem value="3">Me + 3+ dependents</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleCalculate} 
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg py-6 font-bold"
+                disabled={!country || !visaType}
+              >
+                Calculate My True Cost
+              </Button>
+            </div>
+
+            {/* RESULTS */}
+            {showResults && visaData && (
+              <div className="mt-8 space-y-6">
+                {/* Basic Costs */}
+                <div className="bg-blue-900/30 border-2 border-blue-500/30 rounded-lg p-6">
+                  <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-white">
+                    <TrendingUp className="w-5 h-5 text-blue-400" />
+                    Official Costs (What Google Shows)
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-slate-300">
+                      <span>Application Fee:</span>
+                      <span className="font-bold text-lg text-white">
+                        ${Math.round(visaData.costs.application_fee * multiplier)}
+                      </span>
+                    </div>
+                    {visaData.costs.biometrics > 0 && (
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span>Biometrics:</span>
+                        <span className="font-bold text-lg text-white">
+                          ${Math.round(visaData.costs.biometrics * multiplier)}
+                        </span>
+                      </div>
+                    )}
+                    {visaData.costs.health_surcharge && (
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span>Health Surcharge:</span>
+                        <span className="font-bold text-lg text-white">
+                          ${Math.round(visaData.costs.health_surcharge * multiplier)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center border-t-2 border-blue-500/30 pt-3 mt-3">
+                      <span className="font-bold text-lg text-white">Basic Subtotal:</span>
+                      <span className="font-bold text-2xl text-blue-400">
+                        ${basicTotal.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* POF */}
+                {pofRequired > 0 && (
+                  <div className="bg-yellow-900/30 border-2 border-yellow-500/30 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold text-yellow-100">
+                          💰 Proof of Funds Required: ${pofRequired.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-yellow-200 mt-1">
+                          This money must be in your bank for{' '}
+                          <span className="font-semibold">{visaData.pof_seasoning.duration_days} days</span>.
+                          Most applicants don't know this!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hidden Costs (Gated) */}
+                <div className="relative">
+                  <div className="bg-red-900/30 border-2 border-red-500/30 rounded-lg p-6 blur-sm">
+                    <h3 className="font-bold text-xl mb-4 text-white">
+                      Hidden Costs They Don't Tell You
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Flight:</span>
+                        <span>${Math.round(visaData.costs.hidden_costs.flight * multiplier)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Medical:</span>
+                        <span>${Math.round(visaData.costs.hidden_costs.medical_exam * multiplier)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Translation:</span>
+                        <span>${Math.round(visaData.costs.hidden_costs.translation * multiplier)}</span>
+                      </div>
+                      <p className="text-sm text-slate-400 italic">+ 9 more hidden costs...</p>
+                      <div className="flex justify-between border-t-2 border-red-500/30 pt-2">
+                        <span className="font-bold text-white">Hidden Total:</span>
+                        <span className="font-bold text-xl text-red-400">${hiddenTotal.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-lg p-4 border-2 border-red-400/30">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-2xl text-white">REAL TOTAL:</span>
+                        <span className="font-bold text-4xl text-red-400">${grandTotal.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Unlock Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Card className="bg-slate-900/98 backdrop-blur-sm border-4 border-orange-500 shadow-2xl p-8 max-w-md mx-4">
+                      <div className="text-center space-y-4">
+                        <Lock className="w-16 h-16 text-orange-500 mx-auto" />
+                        <h3 className="font-bold text-2xl text-white">🔓 Unlock Full Breakdown</h3>
+                        <p className="text-slate-300">See all 12 hidden costs + savings plan</p>
+                        
+                        <div className="bg-green-900/30 border border-green-500/30 rounded p-3 text-sm">
+                          <p className="font-semibold text-green-400 mb-2">Free account includes:</p>
+                          <ul className="text-left space-y-1 text-green-300 text-xs">
+                            <li>✅ Complete 12-item cost breakdown</li>
+                            <li>✅ POF seasoning timeline</li>
+                            <li>✅ Monthly savings plan</li>
+                            <li>✅ Cost optimization tips</li>
+                          </ul>
+                        </div>
+
+                        <Button 
+                          onClick={handleUnlock}
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg py-6 font-bold"
+                        >
+                          Sign Up Free - See All Costs
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+
+                        <p className="text-xs text-slate-400">No credit card • 30 seconds</p>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Processing Time */}
+                {visaData.processing && (
+                  <div className="bg-slate-700/30 border border-slate-600 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-5 h-5 text-blue-400" />
+                      <span className="font-semibold text-white">Processing Time</span>
+                    </div>
+                    <div className="text-slate-300 text-sm">
+                      <p>Standard: {visaData.processing.standard_days} days</p>
+                      {visaData.processing.expedited_days && (
+                        <p>Expedited: {visaData.processing.expedited_days} days</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bottom Info */}
+        <div className="mt-8 text-center text-slate-400 text-sm">
+          <p>Currently available: {availableCountries.length} countries | More being added weekly</p>
+        </div>
+      </div>
+    </div>
+  );
+}

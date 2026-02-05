@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,23 @@ interface NextBestActionProps {
 export function NextBestAction({ className }: NextBestActionProps) {
   const isMobile = useIsMobile();
   const dashboardData = useDashboardData('');
+  const [localProfile, setLocalProfile] = useState<any>(null);
   const [currentActionIndex, setCurrentActionIndex] = useState(0);
+
+  useEffect(() => {
+    const kycData = sessionStorage.getItem("kycData");
+    if (kycData) {
+      const parsed = JSON.parse(kycData);
+      setLocalProfile({
+        country: parsed.country,
+        destination_country: parsed.destination,
+        visa_type: parsed.visaType
+      });
+    }
+  }, []);
+
+  // Merge local with hook data
+  const mergedProfile = localProfile || dashboardData.userProfile;
 
   if (dashboardData.loading) {
     return (
@@ -42,7 +58,7 @@ export function NextBestAction({ className }: NextBestActionProps) {
   }
 
   const recommendedActions = generateRecommendations({
-    userProfile: dashboardData.userProfile,
+    userProfile: mergedProfile,
     messageCount: dashboardData.messageCount,
     documentCount: dashboardData.documentCount,
     currentProgress: dashboardData.progressPercentage,
