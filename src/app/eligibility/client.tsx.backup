@@ -100,8 +100,7 @@ export default function EligibilityResultsClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: values.email,
-          firstName: values.name,
-          eligibilityData: data
+          firstName: values.name
         })
       });
 
@@ -117,7 +116,7 @@ export default function EligibilityResultsClient() {
       
       toast({
         title: '🎉 Full Report Unlocked!',
-        description: 'Report sent to ' + values.email + ' ✅\nCheck email for full analysis',
+        description: 'Report sent to ' + values.email + ' ✅',
         duration: 5000,
       });
       

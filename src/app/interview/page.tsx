@@ -1,9 +1,5 @@
-import EligibilityCheckClient from './client';
+import InterviewClient from './client';
 
-export default function EligibilityCheckPage() {
-  return (
-    <div className="container py-12 space-y-8">
-      <EligibilityCheckClient />
-    </div>
-  );
+export default function InterviewPage() {
+  return <InterviewClient />;
 }

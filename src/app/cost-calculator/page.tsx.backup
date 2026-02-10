@@ -1,0 +1,5 @@
+import { TrueVisaCostCalculator } from '@/components/landing/true-visa-cost-calculator';
+
+export default function CostCalculatorPage() {
+  return <TrueVisaCostCalculator />;
+}

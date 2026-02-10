@@ -1,1 +1,0 @@
-Bank: Chase\nBalance: 25 000 USD\nAvg 6M: 23 500 USD\nAccount opened: 2022-01-01

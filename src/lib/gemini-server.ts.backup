@@ -1,21 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
+// TEMPORARY: Hardcode your NEW working key
+const apiKey = 'AIzaSyDzwMoYHyv9JYbrYIMdP1S70JArTn5MjhI'; // YOUR NEW KEY
 
-if (!apiKey) {
-  console.warn('GEMINI_API_KEY is not set - server-side AI will not work');
-}
+console.log('Using hardcoded Gemini key:', apiKey.substring(0, 15) + '...');
 
-export const geminiServer = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+export const geminiServer = new GoogleGenerativeAI(apiKey);
 
 export async function callGeminiServer(prompt: string, jsonMode: boolean = true): Promise<string> {
-  if (!geminiServer) {
-    throw new Error('Gemini API not configured on server');
-  }
-
   try {
     const model = geminiServer.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash-latest',
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 2000,
@@ -27,7 +22,7 @@ export async function callGeminiServer(prompt: string, jsonMode: boolean = true)
     return response.text();
     
   } catch (error: any) {
-    console.error('Gemini Server API error:', error);
-    throw error;
+    console.error('Gemini error:', error.message);
+    throw new Error('AI service temporarily unavailable');
   }
 }

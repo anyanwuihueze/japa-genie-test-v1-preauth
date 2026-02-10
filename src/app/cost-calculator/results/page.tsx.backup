@@ -1,0 +1,5 @@
+import CostResultsClient from './client';
+
+export default function CostResultsPage() {
+  return <CostResultsClient />;
+}
