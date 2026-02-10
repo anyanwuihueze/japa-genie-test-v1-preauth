@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
+// ⚠️ CRITICAL FIX: Prevent prerendering during build
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
