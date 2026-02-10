@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
+// ⚠️ CRITICAL FIX: Prevent prerendering during build
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-
 export async function POST(request: NextRequest) {
   try {
-    // Initialize Resend inside the function
-    const resend = new Resend(process.env.RESEND_API_KEY!);
+    // Lazy initialization - prevents build-time evaluation
+    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY!) : null;
+    
+    if (!resend) {
+      console.error('RESEND_API_KEY not configured');
+      return NextResponse.json(
+        { success: false, error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
+    
     console.log('🔵 EMAIL API: Processing request');
     
     const body = await request.json();
     const { to, firstName, eligibilityData } = body;
-
-    if (!to || !firstName) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    console.log('🔵 EMAIL API: Sending to', to, 'for', eligibilityData?.destination);
 
     // Create HTML email
     const score = eligibilityData?.aiResults?.score || 0;
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const visaType = eligibilityData?.visaType || 'visa';
     const summary = eligibilityData?.aiResults?.summary || 'Your AI analysis is complete.';
     
-        const htmlContent = `
+    const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -441,7 +441,7 @@ export async function POST(request: NextRequest) {
       message: 'Eligibility report sent successfully' 
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('🔴 EMAIL API ERROR:', error);
     // Return actual error but still unlock report
     return NextResponse.json({ 

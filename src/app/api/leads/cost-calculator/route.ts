@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+
 // ⚠️ CRITICAL FIX: Prevent prerendering during build
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-
-    // Initialize Resend inside the function, not at module level
-    const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: Request) {
   try {
+    // Lazy initialization - prevents build-time evaluation
+    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+    
+    if (!resend) {
+      console.error('RESEND_API_KEY not configured');
+      return NextResponse.json(
+        { success: false, error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
+    
     const body = await request.json();
     const { name, email, phone, originCountry, destinationCountry, visaType, dependents, costData } = body;
 
@@ -481,7 +490,7 @@ export async function POST(request: Request) {
         <div class="section">
           <h2 class="section-title">💰 Your Month-by-Month Savings Plan</h2>
           <div class="savings-chart">
-            ${costData.pofProfile.savingsRoadmap.monthlyBreakdown.slice(0, 4).map((month, index) => `
+            ${costData.pofProfile.savingsRoadmap.monthlyBreakdown.slice(0, 4).map((month: any, index: number) => `
               <div class="savings-month">
                 <div>
                   <div class="savings-month-name">${month.month}</div>
@@ -507,7 +516,7 @@ export async function POST(request: Request) {
         
         <div class="hidden-costs">
           ${costData.preGatePreview?.top3HiddenCosts ? 
-            costData.preGatePreview.top3HiddenCosts.map(cost => `
+            costData.preGatePreview.top3HiddenCosts.map((cost: any) => `
               <div class="cost-item">
                 <div class="cost-item-content">
                   <div class="cost-item-title">${cost.item}</div>
