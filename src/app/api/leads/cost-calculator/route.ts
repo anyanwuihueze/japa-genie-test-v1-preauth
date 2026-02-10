@@ -21,6 +21,24 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, phone, originCountry, destinationCountry, visaType, dependents, costData } = body;
 
+    // Default values if costData is missing
+    const safeCostData = costData || {
+      totalCost: 0,
+      pofRequirement: {
+        amount: 0,
+        currency: "USD",
+        deadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        monthlySavingsNeeded: 0,
+        accountType: "Bank Account",
+        seasoningPeriod: 3
+      },
+      visibleCostsTotal: 0,
+      hiddenCostsTotal: 0,
+      aiAnalysis: {
+        shockingFact: "Most applicants miss hidden costs"
+      }
+    };
+
     const formatCurrency = (amount: number, currency = 'USD') => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -37,13 +55,13 @@ export async function POST(request: Request) {
       });
     };
 
-    const daysRemaining = costData.pofProfile?.timeline?.daysRemaining || 
-      Math.ceil((new Date(costData.pofRequirement.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const daysRemaining = safeCostData.pofProfile?.timeline?.daysRemaining || 
+      Math.ceil((new Date(safeCostData.pofRequirement.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
     await resend.emails.send({
       from: 'Japa Genie <admin@japagenie.com>',
       to: email,
-      subject: `🎯 Your ${destinationCountry} ${visaType} Visa Blueprint - ${formatCurrency(costData.totalCost)} Total Cost`,
+      subject: `🎯 Your ${destinationCountry} ${visaType} Visa Blueprint - ${formatCurrency(safeCostData.totalCost)} Total Cost`,
       html: `
 <!DOCTYPE html>
 <html>
@@ -380,7 +398,7 @@ export async function POST(request: Request) {
       <p>${originCountry} → ${destinationCountry} | ${visaType} Visa</p>
       <div class="hero-cost">
         <div class="hero-cost-label">Complete Relocation Cost</div>
-        <div class="hero-cost-amount">${formatCurrency(costData.totalCost)}</div>
+        <div class="hero-cost-amount">${formatCurrency(safeCostData.totalCost)}</div>
       </div>
     </div>
 
@@ -396,8 +414,8 @@ export async function POST(request: Request) {
         <div class="pof-stats">
           <div class="pof-stat">
             <div class="pof-stat-label">Required Amount</div>
-            <div class="pof-stat-value">${formatCurrency(costData.pofRequirement.amount, costData.pofRequirement.currency)}</div>
-            <div style="font-size: 14px; margin-top: 4px; opacity: 0.9;">${costData.pofRequirement.currency}</div>
+            <div class="pof-stat-value">${formatCurrency(safeCostData.pofRequirement.amount, safeCostData.pofRequirement.currency)}</div>
+            <div style="font-size: 14px; margin-top: 4px; opacity: 0.9;">${safeCostData.pofRequirement.currency}</div>
           </div>
           <div class="pof-stat">
             <div class="pof-stat-label">Days Remaining</div>
@@ -409,17 +427,17 @@ export async function POST(request: Request) {
         <div class="pof-stats">
           <div class="pof-stat">
             <div class="pof-stat-label">Save Per Month</div>
-            <div class="pof-stat-value" style="color: #86efac;">${formatCurrency(costData.pofRequirement.monthlySavingsNeeded)}</div>
+            <div class="pof-stat-value" style="color: #86efac;">${formatCurrency(safeCostData.pofRequirement.monthlySavingsNeeded)}</div>
             <div style="font-size: 14px; margin-top: 4px; opacity: 0.9;">Starting Now</div>
           </div>
           <div class="pof-stat">
             <div class="pof-stat-label">Account Type</div>
-            <div class="pof-stat-value" style="font-size: 18px;">${costData.pofRequirement.accountType}</div>
+            <div class="pof-stat-value" style="font-size: 18px;">${safeCostData.pofRequirement.accountType}</div>
           </div>
         </div>
 
         <div class="warning-box">
-          ⚠️ <strong>CRITICAL:</strong> Money must stay UNTOUCHED for ${costData.pofRequirement.seasoningPeriod} months. Any withdrawal = automatic visa rejection.
+          ⚠️ <strong>CRITICAL:</strong> Money must stay UNTOUCHED for ${safeCostData.pofRequirement.seasoningPeriod} months. Any withdrawal = automatic visa rejection.
         </div>
       </div>
 
@@ -427,12 +445,12 @@ export async function POST(request: Request) {
       <div class="section">
         <h2 class="section-title">📅 Your POF Timeline</h2>
         <div class="timeline">
-          ${costData.pofProfile?.timeline ? `
+          ${safeCostData.pofProfile?.timeline ? `
             <div class="timeline-item">
               <div class="timeline-dot green">1</div>
               <div class="timeline-content">
-                <div class="timeline-date">${formatDate(costData.pofProfile.timeline.accountOpenDate)}</div>
-                <div class="timeline-title">Open ${costData.pofRequirement.accountType}</div>
+                <div class="timeline-date">${formatDate(safeCostData.pofProfile.timeline.accountOpenDate)}</div>
+                <div class="timeline-title">Open ${safeCostData.pofRequirement.accountType}</div>
                 <div class="timeline-desc">Choose provider: Fintiba (fastest), Deutsche Bank (traditional), or Expatrio (budget-friendly)</div>
               </div>
             </div>
@@ -440,25 +458,25 @@ export async function POST(request: Request) {
             <div class="timeline-item">
               <div class="timeline-dot blue">2</div>
               <div class="timeline-content">
-                <div class="timeline-date">${formatDate(costData.pofProfile.timeline.depositDeadline)}</div>
+                <div class="timeline-date">${formatDate(safeCostData.pofProfile.timeline.depositDeadline)}</div>
                 <div class="timeline-title">Deposit Full Amount</div>
-                <div class="timeline-desc">Transfer ${formatCurrency(costData.pofRequirement.amount, costData.pofRequirement.currency)} ${costData.pofRequirement.currency} + exchange rate buffer (${formatCurrency(costData.pofProfile.savingsRoadmap?.exchangeRateBuffer || 0)})</div>
+                <div class="timeline-desc">Transfer ${formatCurrency(safeCostData.pofRequirement.amount, safeCostData.pofRequirement.currency)} ${safeCostData.pofRequirement.currency} + exchange rate buffer (${formatCurrency(safeCostData.pofProfile.savingsRoadmap?.exchangeRateBuffer || 0)})</div>
               </div>
             </div>
 
             <div class="timeline-item">
               <div class="timeline-dot orange">3</div>
               <div class="timeline-content">
-                <div class="timeline-date">${formatDate(costData.pofProfile.timeline.seasoningStartDate)} - ${formatDate(costData.pofProfile.timeline.seasoningEndDate)}</div>
+                <div class="timeline-date">${formatDate(safeCostData.pofProfile.timeline.seasoningStartDate)} - ${formatDate(safeCostData.pofProfile.timeline.seasoningEndDate)}</div>
                 <div class="timeline-title">Seasoning Period (DO NOT TOUCH!)</div>
-                <div class="timeline-desc">${costData.pofRequirement.seasoningPeriod} months - Money must remain untouched. Set calendar reminders!</div>
+                <div class="timeline-desc">${safeCostData.pofRequirement.seasoningPeriod} months - Money must remain untouched. Set calendar reminders!</div>
               </div>
             </div>
 
             <div class="timeline-item">
               <div class="timeline-dot purple">4</div>
               <div class="timeline-content">
-                <div class="timeline-date">${formatDate(costData.pofProfile.timeline.visaApplicationDate)}</div>
+                <div class="timeline-date">${formatDate(safeCostData.pofProfile.timeline.visaApplicationDate)}</div>
                 <div class="timeline-title">POF Ready - Apply for Visa!</div>
                 <div class="timeline-desc">Download blocked account certificate and submit with visa application</div>
               </div>
@@ -468,7 +486,7 @@ export async function POST(request: Request) {
               <div class="timeline-dot green">1</div>
               <div class="timeline-content">
                 <div class="timeline-date">This Week</div>
-                <div class="timeline-title">Open ${costData.pofRequirement.accountType}</div>
+                <div class="timeline-title">Open ${safeCostData.pofRequirement.accountType}</div>
                 <div class="timeline-desc">Start the account opening process immediately</div>
               </div>
             </div>
@@ -476,7 +494,7 @@ export async function POST(request: Request) {
             <div class="timeline-item">
               <div class="timeline-dot blue">2</div>
               <div class="timeline-content">
-                <div class="timeline-date">${formatDate(costData.pofRequirement.deadline)}</div>
+                <div class="timeline-date">${formatDate(safeCostData.pofRequirement.deadline)}</div>
                 <div class="timeline-title">Complete POF Seasoning</div>
                 <div class="timeline-desc">Funds must be ready for visa application</div>
               </div>
@@ -486,11 +504,11 @@ export async function POST(request: Request) {
       </div>
 
       <!-- Monthly Savings Plan -->
-      ${costData.pofProfile?.savingsRoadmap?.monthlyBreakdown ? `
+      ${safeCostData.pofProfile?.savingsRoadmap?.monthlyBreakdown ? `
         <div class="section">
           <h2 class="section-title">💰 Your Month-by-Month Savings Plan</h2>
           <div class="savings-chart">
-            ${costData.pofProfile.savingsRoadmap.monthlyBreakdown.slice(0, 4).map((month: any, index: number) => `
+            ${safeCostData.pofProfile.savingsRoadmap.monthlyBreakdown.slice(0, 4).map((month: any, index: number) => `
               <div class="savings-month">
                 <div>
                   <div class="savings-month-name">${month.month}</div>
@@ -503,7 +521,7 @@ export async function POST(request: Request) {
               </div>
             `).join('')}
             <div style="text-align: center; margin-top: 16px; font-size: 14px; color: #065f46;">
-              💡 <strong>Exchange Rate Buffer:</strong> We added ${formatCurrency(costData.pofProfile.savingsRoadmap.exchangeRateBuffer)} to protect against currency fluctuation
+              💡 <strong>Exchange Rate Buffer:</strong> We added ${formatCurrency(safeCostData.pofProfile.savingsRoadmap.exchangeRateBuffer)} to protect against currency fluctuation
             </div>
           </div>
         </div>
@@ -512,11 +530,11 @@ export async function POST(request: Request) {
       <!-- Hidden Costs Alert -->
       <div class="section">
         <h2 class="section-title">🚨 Hidden Costs You're Missing</h2>
-        <p style="margin-bottom: 16px; color: #6b7280;">${costData.preGatePreview?.shockStatistic || costData.aiAnalysis.shockingFact}</p>
+        <p style="margin-bottom: 16px; color: #6b7280;">${safeCostData.preGatePreview?.shockStatistic || safeCostData.aiAnalysis.shockingFact}</p>
         
         <div class="hidden-costs">
-          ${costData.preGatePreview?.top3HiddenCosts ? 
-            costData.preGatePreview.top3HiddenCosts.map((cost: any) => `
+          ${safeCostData.preGatePreview?.top3HiddenCosts ? 
+            safeCostData.preGatePreview.top3HiddenCosts.map((cost: any) => `
               <div class="cost-item">
                 <div class="cost-item-content">
                   <div class="cost-item-title">${cost.item}</div>
@@ -546,7 +564,7 @@ export async function POST(request: Request) {
         </div>
 
         <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px; margin-top: 16px;">
-          <p style="color: #6b7280; margin-bottom: 12px;">+ ${(costData.breakdown?.length || 15) - 3} more hidden costs in your full interactive report</p>
+          <p style="color: #6b7280; margin-bottom: 12px;">+ ${(safeCostData.breakdown?.length || 15) - 3} more hidden costs in your full interactive report</p>
         </div>
       </div>
 
@@ -557,15 +575,15 @@ export async function POST(request: Request) {
           <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
             <div style="flex: 1; text-align: center;">
               <div style="font-size: 14px; color: #92400e; margin-bottom: 8px; font-weight: 600;">What Most Budget</div>
-              <div style="font-size: 32px; font-weight: 800; color: #059669;">${formatCurrency(costData.preGatePreview?.comparisonData?.whatMostBudget || costData.visibleCostsTotal)}</div>
+              <div style="font-size: 32px; font-weight: 800; color: #059669;">${formatCurrency(safeCostData.preGatePreview?.comparisonData?.whatMostBudget || safeCostData.visibleCostsTotal)}</div>
             </div>
             <div style="flex: 1; text-align: center; border-left: 2px solid #f59e0b; border-right: 2px solid #f59e0b;">
               <div style="font-size: 14px; color: #92400e; margin-bottom: 8px; font-weight: 600;">Actual Total Cost</div>
-              <div style="font-size: 32px; font-weight: 800; color: #dc2626;">${formatCurrency(costData.totalCost)}</div>
+              <div style="font-size: 32px; font-weight: 800; color: #dc2626;">${formatCurrency(safeCostData.totalCost)}</div>
             </div>
             <div style="flex: 1; text-align: center;">
               <div style="font-size: 14px; color: #92400e; margin-bottom: 8px; font-weight: 600;">You're Missing</div>
-              <div style="font-size: 32px; font-weight: 800; color: #dc2626;">${formatCurrency(costData.preGatePreview?.comparisonData?.missedAmount || costData.hiddenCostsTotal)}</div>
+              <div style="font-size: 32px; font-weight: 800; color: #dc2626;">${formatCurrency(safeCostData.preGatePreview?.comparisonData?.missedAmount || safeCostData.hiddenCostsTotal)}</div>
             </div>
           </div>
         </div>
