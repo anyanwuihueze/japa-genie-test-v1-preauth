@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signInWithGoogle: (redirectPath?: string) => Promise<void>
+  signInWithEmail: (email: string, password: string, isSignUp?: boolean) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -14,9 +15,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider')
   return context
 }
 
@@ -28,13 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // FORCE refresh session from cookies
         const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error('Error getting session:', error)
-        }
-        
+        if (error) console.error('Error getting session:', error)
         console.log('🔐 Session check:', session ? 'Logged in' : 'Not logged in')
         setUser(session?.user ?? null)
         setLoading(false)
@@ -43,72 +37,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       }
     }
-
     initAuth()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event)
       setUser(session?.user ?? null)
-      
-      // Force reload on sign in to ensure UI updates
-      if (event === 'SIGNED_IN') {
-        console.log('✅ User signed in, forcing UI update')
-      }
+      if (event === 'SIGNED_IN') console.log('✅ User signed in, forcing UI update')
     })
-
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const signInWithGoogle = async (redirectPath?: string): Promise<void> => {
     try {
       console.log('🚀 Starting Google sign in...')
-      
-      // Get kyc_session_id from sessionStorage if exists
       const kycSessionId = sessionStorage.getItem('kyc_session_id')
       console.log('📋 KYC Session ID found:', kycSessionId)
-      
-      // Build state parameter: contains both next path and kyc_session_id
       let stateParams = ''
-      if (redirectPath) {
-        stateParams += `next=${encodeURIComponent(redirectPath)}`
-      }
+      if (redirectPath) stateParams += `next=${encodeURIComponent(redirectPath)}`
       if (kycSessionId) {
         if (stateParams) stateParams += '&'
         stateParams += `kyc_session_id=${encodeURIComponent(kycSessionId)}`
       }
-      
       let callbackUrl = `${window.location.origin}/auth/callback`
-      if (redirectPath) {
-        callbackUrl += `?next=${encodeURIComponent(redirectPath)}`
-      }
-      
+      if (redirectPath) callbackUrl += `?next=${encodeURIComponent(redirectPath)}`
       console.log('🌐 Callback URL:', callbackUrl)
       console.log('🔑 State params:', stateParams)
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          // ✅ CRITICAL FIX: Pass kyc_session_id in state
+          queryParams: { access_type: 'offline', prompt: 'consent' },
           ...(stateParams && { state: stateParams })
         },
       })
-      
       if (error) {
         console.error('❌ Sign in error:', error)
         alert(`Login failed: ${error.message}`)
         throw error
       }
-      
       console.log('✅ OAuth initiated with KYC context')
     } catch (err) {
       console.error('💥 Error:', err)
@@ -117,15 +82,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInWithEmail = async (email: string, password: string, isSignUp = false): Promise<void> => {
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        })
+        if (error) throw error
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+      }
+    } catch (err: any) {
+      alert(`Email login failed: ${err.message}`)
+      throw err
+    }
+  }
+
   const signOut = async () => {
     console.log('👋 Signing out...')
     await supabase.auth.signOut()
     setUser(null)
-    window.location.href = '/' // Force redirect to home
+    window.location.href = '/'
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signOut }}>
       {children}
     </AuthContext.Provider>
   )

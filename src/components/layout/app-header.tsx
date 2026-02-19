@@ -8,13 +8,15 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/lib/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
 import HelpButtonWrapper from './help-button-wrapper';
 
 export function AppHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const pathname = usePathname();
-  const { user, signInWithGoogle, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
@@ -85,11 +87,7 @@ export function AppHeader() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
           {!mounted ? (
-            // Show static content during SSR to prevent hydration mismatch
-            <Button 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground" 
-              asChild
-            >
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
               <Link href="/kyc">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           ) : user ? (
@@ -97,29 +95,19 @@ export function AppHeader() {
               <Button variant="ghost" asChild>
                 <Link href="/dashboard">My Dashboard</Link>
               </Button>
-              <Button onClick={() => signOut()}>
-                Sign Out
-              </Button>
+              <Button onClick={() => signOut()}>Sign Out</Button>
             </div>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => signInWithGoogle()}>
-                Log In
-              </Button>
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground" 
-                asChild
-              >
-                <Link href="/kyc">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Button variant="ghost" onClick={() => setAuthModalOpen(true)}>Log In</Button>
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setAuthModalOpen(true)}>
+                Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </>
           )}
         </div>
 
-        <button
-          className="md:hidden ml-2"
-          onClick={toggleMobileMenu}
-        >
+        <button className="md:hidden ml-2" onClick={toggleMobileMenu}>
           {isMobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
@@ -128,39 +116,27 @@ export function AppHeader() {
         <div className="md:hidden border-t">
           <nav className="container py-4 flex flex-col gap-4">
             <NavLinkItems />
-            
             <div className="flex flex-col gap-2 pt-4 border-t">
               {!mounted ? (
-                // Show static content during SSR
-                <Button asChild className="justify-start">
-                  <Link href="/kyc">Get Started</Link>
-                </Button>
+                <Button asChild className="justify-start"><Link href="/kyc">Get Started</Link></Button>
               ) : user ? (
                 <>
-                  <Button variant="ghost" asChild className="justify-start">
-                    <Link href="/dashboard">My Dashboard</Link>
-                  </Button>
-                  <Button asChild className="justify-start">
-                    <Link href="/kyc">Ask AI</Link>
-                  </Button>
-                  <Button variant="outline" onClick={() => signOut()} className="justify-start">
-                    Sign Out
-                  </Button>
+                  <Button variant="ghost" asChild className="justify-start"><Link href="/dashboard">My Dashboard</Link></Button>
+                  <Button asChild className="justify-start"><Link href="/kyc">Ask AI</Link></Button>
+                  <Button variant="outline" onClick={() => signOut()} className="justify-start">Sign Out</Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" onClick={() => signInWithGoogle()} className="justify-start">
-                    Log In
-                  </Button>
-                  <Button asChild className="justify-start">
-                    <Link href="/kyc">Get Started</Link>
-                  </Button>
+                  <Button variant="ghost" onClick={() => setAuthModalOpen(true)} className="justify-start">Log In</Button>
+                  <Button asChild className="justify-start"><Link href="/kyc">Get Started</Link></Button>
                 </>
               )}
             </div>
           </nav>
         </div>
       )}
+
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>
   );
 }
