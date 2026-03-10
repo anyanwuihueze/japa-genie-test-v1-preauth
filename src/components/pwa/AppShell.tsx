@@ -16,9 +16,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       setIsFirstVisit(true);
       localStorage.setItem('japa-first-visit', 'true');
       
-      // FORCE HIDE SPLASH AFTER 3 SECONDS AS BACKUP
       const forceHideTimer = setTimeout(() => {
         setIsFirstVisit(false);
+        setIsLoading(false); // ← THE FIX
       }, 3000);
       
       return () => clearTimeout(forceHideTimer);
@@ -30,36 +30,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Launch Animation - Only on first visit */}
       {isFirstVisit && (
         <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50 pwa-launch-logo animate-fade-out">
           <JapaGenieLogo className="w-32 h-32 animate-pulse" />
         </div>
       )}
 
-      {/* Loading Progress Bar */}
       {isLoading && (
         <div className="fixed top-0 left-0 right-0 h-1 z-40">
           <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-progress-bar" />
         </div>
       )}
 
-      {/* App Shell Header */}
       <div className="sticky top-0 z-40">
         <SimpleHeader />
       </div>
 
-      {/* Main Content - FLEX GROW TO PUSH FOOTER DOWN */}
-      <main className="flex-grow pb-16"> {/* Added padding for bottom nav */}
+      <main className="flex-grow pb-16">
         <div className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
           {children}
         </div>
       </main>
 
-      {/* PWA Navigation Bar (Mobile only) */}
       <PWANavigation />
-
-      {/* App Footer */}
       <AppFooter />
     </div>
   );

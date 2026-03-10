@@ -1,6 +1,5 @@
 'use server';
 import { groq } from '@/lib/groq-client';
-import { BurnRateTracker } from '@/lib/burnrate-sdk';
 import { 
   type RejectionStrategyInput,
   type RejectionStrategyOutput 
@@ -8,9 +7,6 @@ import {
 
 
 export type { RejectionStrategyInput, RejectionStrategyOutput };
-
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
 
 export async function generateRejectionStrategy(input: RejectionStrategyInput): Promise<RejectionStrategyOutput> {
   try {
@@ -37,7 +33,7 @@ Format:
   "conclusion": "One encouraging conclusion with call to action"
 }`;
 
-    const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
+    const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are an expert immigration consultant specializing in visa rejection analysis.' },
@@ -45,7 +41,7 @@ Format:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-    }));
+    });
 
     const text = completion.choices[0].message.content || '{}';
     

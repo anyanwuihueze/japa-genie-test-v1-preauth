@@ -1,17 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-import { BurnRateTracker } from './lib/burnrate-sdk';
 
 const genAI = new GoogleGenerativeAI('AIzaSyDzwMoYHyv9JYbrYIMdP1S70JArTn5MjhI');
-
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
 
 async function test() {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `Analyze visa for Canada Student visa. Return ONLY JSON with score, summary, strengths, weaknesses, recommendations`;
     
-    const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent(prompt);
+    const result = await model.generateContent(prompt);
     const text = result.response.text();
     console.log('✅ RESPONSE:', text.substring(0, 300));
   } catch (err) {

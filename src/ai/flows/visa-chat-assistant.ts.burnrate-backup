@@ -1,7 +1,6 @@
 'use server';
 import { groq } from '@/lib/groq-client';
 import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
-import { BurnRateTracker } from '@/lib/burnrate-sdk';
 
 /* ---------- TYPES ---------- */
 interface VisaAssistantInput {
@@ -74,9 +73,6 @@ CRITICAL: You MUST return valid JSON with this EXACT structure:
   "alternativeStrategies": ["Strategy 1", "Strategy 2"]
 }`;
 
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
-
 function buildPrompt(input: VisaAssistantInput): string {
   const { question, conversationHistory = [], userContext } = input;
   const ctx = userContext
@@ -93,7 +89,7 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
   const { wishCount, isSignedIn } = input;
 
   try {
-    const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
+    const completion = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildPrompt(input) }
@@ -102,7 +98,7 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
       temperature: 0.7,
       max_tokens: 2000,
       response_format: { type: 'json_object' }
-    }));
+    });
 
     const content = completion.choices[0]?.message?.content || '{"chatResponse": "Error processing response"}';
     const data = JSON.parse(content);

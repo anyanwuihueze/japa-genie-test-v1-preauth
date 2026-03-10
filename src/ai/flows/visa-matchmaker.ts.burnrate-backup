@@ -1,6 +1,5 @@
 'use server';
 import { groq } from '@/lib/groq-client';
-import { BurnRateTracker } from '@/lib/burnrate-sdk';
 
 
 interface UserProfile {
@@ -43,9 +42,6 @@ interface VisaMatchmakerOutput {
   nextSteps: string[];
   warningsAndCautions: string[];
 }
-
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
 
 export async function visaMatchmaker(input: VisaMatchmakerInput): Promise<VisaMatchmakerOutput> {
   const prompt = `ACT AS: Expert immigration consultant specializing in African professionals with 15+ years experience
@@ -90,12 +86,12 @@ Return as JSON matching this EXACT structure:
 }`;
 
   try {
-    const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
+    const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-    }));
+    });
 
     const rawText = completion.choices[0].message.content || '{}';
     const parsed = JSON.parse(rawText);

@@ -1,15 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-api';
-import { BurnRateTracker } from './lib/burnrate-sdk';
 
 const apiKey = 'AIzaSyDzwMoYHyv9JYbrYIMdP1S70JArTn5MjhI';
 const geminiServer = new GoogleGenerativeAI(apiKey);
 
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
-
 async function callGeminiServer(prompt) {
   const model = geminiServer.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent(prompt);
+  const result = await model.generateContent(prompt);
   return result.response.text();
 }
 

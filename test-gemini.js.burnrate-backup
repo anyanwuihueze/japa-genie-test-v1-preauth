@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-import { BurnRateTracker } from './lib/burnrate-sdk';
 
 const apiKey = 'AIzaSyDzwMoYHyv9JYbrYIMdP1S70JArTn5MjhI';
 console.log('Testing with key:', apiKey.substring(0, 15) + '...');
@@ -7,13 +6,10 @@ console.log('Testing with key:', apiKey.substring(0, 15) + '...');
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
-
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
-
 async function test() {
   try {
     console.log('Calling Gemini...');
-    const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent('Say "TEST SUCCESSFUL"');
+    const result = await model.generateContent('Say "TEST SUCCESSFUL"');
     console.log('✅ RESULT:', result.response.text());
     return true;
   } catch (error) {
