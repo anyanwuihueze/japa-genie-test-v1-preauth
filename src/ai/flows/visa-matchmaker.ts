@@ -45,7 +45,7 @@ interface VisaMatchmakerOutput {
 }
 
 
-const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY  });
+const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
 
 export async function visaMatchmaker(input: VisaMatchmakerInput): Promise<VisaMatchmakerOutput> {
   const prompt = `ACT AS: Expert immigration consultant specializing in African professionals with 15+ years experience
