@@ -828,9 +828,9 @@ Get your visa approved: japagenie.com
 
 function WhatsAppButtons({ destinationCountry }: { destinationCountry: string }) {
   const whatsappLinks: Record<string, string> = {
-    'Nigeria': 'https://wa.me/2349031622709?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application',
+    'Nigeria': 'https://wa.me/2347088565317?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application',
     'Canada': 'https://wa.me/12042901895?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20Canada%20visa',
-    'default': 'https://wa.me/2349031622709?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application'
+    'default': 'https://wa.me/2347088565317?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application'
   };
 
   const link = whatsappLinks[destinationCountry] || whatsappLinks.default;

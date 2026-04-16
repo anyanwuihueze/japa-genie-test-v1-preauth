@@ -169,7 +169,7 @@ export default function ExpertsPage() {
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
-                <a href="https://wa.me/2349031627095" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/2347088565317" target="_blank" rel="noopener noreferrer">
                   WhatsApp (Nigeria)
                 </a>
               </Button>

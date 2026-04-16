@@ -13,7 +13,6 @@ import { Loader2, CheckCircle2, MessageCircle, Star, Sparkles, TrendingUp, Users
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ALL_COUNTRIES } from '@/lib/countries';
-import { analyzeQuickEligibility } from '@/ai/flows/quick-eligibility-flow';
 
 const formSchema = z.object({
   destination: z.string().min(2, 'Please select your destination country'),
@@ -87,12 +86,22 @@ export default function EligibilityCheckClient() {
     }
 
     try {
-      const analysis = await analyzeQuickEligibility({
-        destination: values.destination,
-        visaType: values.visaType,
-        background: values.background,
-        currentSituation: values.currentSituation,
+      const res = await fetch('/api/analyze-eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: values.destination,
+          visaType: values.visaType,
+          background: values.background,
+          currentSituation: values.currentSituation,
+        }),
       });
+
+      const analysis = await res.json();
+
+      if (!res.ok) {
+        throw new Error(analysis?.error || 'Eligibility API request failed');
+      }
 
       const eligibilityData = {
         destination: values.destination,
@@ -117,45 +126,15 @@ export default function EligibilityCheckClient() {
       
     } catch (e: any) {
       console.error('AI Analysis error:', e);
-      
-      const eligibilityData = {
-        destination: values.destination,
-        visaType: values.visaType,
-        background: values.background,
-        currentSituation: values.currentSituation,
-        aiResults: {
-          score: 72,
-          summary: "Basic profile analysis completed. Your application shows potential, but several areas need attention before proceeding.",
-          strengths: [
-            "Clear destination goal identified",
-            "Initial profile information provided",
-          ],
-          weaknesses: [
-            "Detailed AI analysis temporarily unavailable",
-            "Recommend completing full assessment for comprehensive insights",
-          ],
-          recommendations: [
-            "Complete the detailed 12-question visa readiness assessment",
-            "Review official embassy requirements for " + values.destination,
-            "Consider consulting with a visa specialist",
-          ],
-          alternativeDestinations: []
-        },
-        timestamp: new Date().toISOString(),
-      };
-      
-      sessionStorage.setItem('eligibilityResults', JSON.stringify(eligibilityData));
-      
-      toast({ 
-        title: 'Analysis Complete',
-        description: 'Showing basic profile assessment',
-        duration: 3000,
+
+      toast({
+        variant: 'destructive',
+        title: 'Eligibility check failed',
+        description: e?.message || 'We could not generate your AI eligibility report. Please try again.',
+        duration: 5000,
       });
-      
-      setTimeout(() => {
-        router.push('/eligibility');
-      }, 500);
-      
+
+      return;
     } finally {
       setIsLoading(false);
       setAnalysisStep(0);
@@ -461,7 +440,7 @@ export default function EligibilityCheckClient() {
                     variant="outline" 
                     className="border-2 border-green-600 text-green-700 hover:bg-green-100"
                   >
-                    <a href="https://wa.me/2349031627095" target="_blank" rel="noopener noreferrer">
+                    <a href="https://wa.me/2347088565317" target="_blank" rel="noopener noreferrer">
                       💬 WhatsApp Nigeria
                     </a>
                   </Button>
