@@ -153,7 +153,8 @@ export async function GET(request: NextRequest) {
     profile.visa_type && 
     profile.visa_type.trim() !== '' &&
     profile.age && 
-    profile.user_type &&  
+    profile.user_type &&
+    String(profile.user_type).trim() !== '' &&
     profile.timeline_urgency;
   
   console.log('✅ Profile complete?', isProfileComplete, {
@@ -217,7 +218,8 @@ export async function GET(request: NextRequest) {
             profile.visa_type && 
             profile.visa_type.trim() !== '' &&
             profile.age && 
-            profile.user_type &&  
+            profile.user_type &&
+            String(profile.user_type).trim() !== '' &&
             profile.timeline_urgency;
           
           console.log('✅ Profile after KYC transfer complete?', isProfileComplete);

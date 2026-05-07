@@ -1,7 +1,8 @@
 'use server';
 
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
+const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+const KIMI_MODEL = 'moonshotai/kimi-k2.5';
 
 export interface QuickEligibilityRequest {
   destination: string;
@@ -30,32 +31,25 @@ APPLICANT PROFILE:
 - Current Situation: ${request.currentSituation}
 
 Analyze this visa application and return ONLY valid JSON:
-{
-  "score": number (0-100),
-  "summary": string,
-  "strengths": string[],
-  "weaknesses": string[],
-  "recommendations": string[],
-  "alternativeDestinations": [{"country": string, "score": number, "reason": string}]
-}
+{"score":number,"summary":"string","strengths":["string"],"weaknesses":["string"],"recommendations":["string"],"alternativeDestinations":[{"country":"string","score":number,"reason":"string"}]}
 
 BE BRUTALLY HONEST but ENCOURAGING.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    );
-    
+    const response = await fetch(`${KIMI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${KIMI_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: KIMI_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 2000,
+        chat_template_kwargs: { thinking: false },
+      }),
+    });
+
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
-    
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.choices?.[0]?.message?.content || '';
     const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const result = JSON.parse(cleanText);
 
@@ -65,9 +59,8 @@ BE BRUTALLY HONEST but ENCOURAGING.`;
       strengths: result.strengths ?? [],
       weaknesses: result.weaknesses ?? [],
       recommendations: result.recommendations ?? [],
-      alternativeDestinations: result.alternativeDestinations ?? []
+      alternativeDestinations: result.alternativeDestinations ?? [],
     };
-    
   } catch (error: any) {
     console.error('Eligibility analysis error:', error);
     throw error;

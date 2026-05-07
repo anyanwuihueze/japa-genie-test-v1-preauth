@@ -100,7 +100,7 @@ export default function KYCPage() {
   };
 
   const nextStep = () => {
-    if (currentStep < 5) setCurrentStep(currentStep + 1);
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -149,10 +149,24 @@ export default function KYCPage() {
       required: true
     },
     {
+      title: "Which visa path fits you best?",
+      icon: Target,
+      field: 'visaType' as keyof KYCData,
+      placeholder: "Select visa type",
+      required: true
+    },
+    {
       title: "What's your profession/field?",
       icon: Briefcase,
       field: 'profession' as keyof KYCData,
       placeholder: "e.g., Software Engineer, Nurse, Teacher",
+      required: true
+    },
+    {
+      title: "Which best describes you?",
+      icon: User,
+      field: 'userType' as keyof KYCData,
+      placeholder: "Select profile type",
       required: true
     },
     {
@@ -240,7 +254,37 @@ export default function KYCPage() {
                     min="18"
                     max="99"
                   />
-                ) : currentStep === 4 ? (
+                ) : currentStep === 3 ? (
+                  <Select 
+                    onValueChange={(v) => updateField(currentStepData.field, v)} 
+                    required={currentStepData.required}
+                    value={formData[currentStepData.field]}
+                  >
+                    <SelectTrigger className="h-12 text-lg">
+                      <SelectValue placeholder={currentStepData.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visaTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : currentStep === 5 ? (
+                  <Select 
+                    onValueChange={(v) => updateField(currentStepData.field, v)} 
+                    required={currentStepData.required}
+                    value={formData[currentStepData.field]}
+                  >
+                    <SelectTrigger className="h-12 text-lg">
+                      <SelectValue placeholder={currentStepData.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : currentStep === 6 ? (
                   <Select 
                     onValueChange={(v) => updateField(currentStepData.field, v)} 
                     required={currentStepData.required}
@@ -255,7 +299,7 @@ export default function KYCPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                ) : currentStep === 5 ? (
+                ) : currentStep === 7 ? (
                   <Select 
                     onValueChange={(v) => updateField(currentStepData.field, v)} 
                     required={currentStepData.required}

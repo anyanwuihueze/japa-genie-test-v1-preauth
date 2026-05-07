@@ -27,7 +27,7 @@ function ChatPageContent() {
     const visaType = searchParams.get('visaType');
     const sessionId = searchParams.get('sessionId');
 
-    if (country && destination && age && visaType) {
+    if (!user && country && destination && age && visaType) {
       console.log('✅ Found KYC data in URL params. Saving to sessionStorage...');
       
       const kycData = {
@@ -53,7 +53,14 @@ function ChatPageContent() {
 
     // This effect should only run once to grab initial URL params.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user, searchParams]);
+
+  useEffect(() => {
+    if (!user) return;
+    sessionStorage.removeItem('kycData');
+    sessionStorage.removeItem('kyc_session_id');
+    setInitialKycData(null);
+  }, [user]);
 
   useEffect(() => {
     async function checkOnboarding() {

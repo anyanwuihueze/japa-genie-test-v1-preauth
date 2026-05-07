@@ -19,7 +19,7 @@ export async function GET() {
     status: 'Gemini API endpoint',
     env: {
       geminiKey: process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET',
-      nextPublicKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY ? 'SET' : 'NOT SET',
+      nextPublicKey: process.env.KIMI_API_KEY ? 'SET' : 'NOT SET',
     }
   });
 }

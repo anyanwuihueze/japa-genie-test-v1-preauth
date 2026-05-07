@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-    }));
+    }), 'proof-of-funds', 'proof-of-funds');
 
     const response = completion.choices[0].message.content;
 

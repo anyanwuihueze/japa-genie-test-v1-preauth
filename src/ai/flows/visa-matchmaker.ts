@@ -95,7 +95,7 @@ Return as JSON matching this EXACT structure:
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-    }));
+    }), 'visa-matchmaker', 'visa-matchmaker');
 
     const rawText = completion.choices[0].message.content || '{}';
     const parsed = JSON.parse(rawText);

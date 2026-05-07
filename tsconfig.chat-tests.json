@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./.tmp-chat-tests",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": [
+    "src/ai/flows/visa-chat-assistant.helpers.ts",
+    "src/ai/flows/visa-chat-assistant.helpers.test.ts",
+    "src/app/chat/send-guard.ts",
+    "src/app/chat/send-guard.test.ts"
+  ]
+}

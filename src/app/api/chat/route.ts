@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     let realUserContext = userContext || {};
-    let isUserSignedIn = isSignedIn;
+    const isUserSignedIn = isSignedIn;
 
     // REAL DATA PIPELINE
     if (!isSignedIn) {
@@ -21,23 +21,37 @@ export async function POST(request: NextRequest) {
     } else {
       const supabase = await createClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (user && !authError) {
-        const { data: profile } = await supabase.from('user_profiles').select('*').eq('id', user.id).single();
-        
-        if (profile) {
-          realUserContext = {
-            name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
-            country: profile.country,
-            destination: profile.destination_country,
-            visaType: profile.visa_type,
-            profession: profile.profession,
-            userType: profile.user_type,
-            timelineUrgency: profile.timeline_urgency,
-            age: profile.age,
-          };
-        }
+
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'We could not verify your signed-in session. Please refresh and try again.' },
+          { status: 401 }
+        );
       }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('preferred_name, country, destination_country, visa_type, profession, user_type, timeline_urgency, age')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        return NextResponse.json(
+          { error: 'Your profile could not be loaded. Please refresh or complete your profile before chatting.' },
+          { status: 409 }
+        );
+      }
+
+      realUserContext = {
+        name: profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0],
+        country: profile.country,
+        destination: profile.destination_country,
+        visaType: profile.visa_type,
+        profession: profile.profession,
+        userType: profile.user_type,
+        timelineUrgency: profile.timeline_urgency,
+        age: profile.age,
+      };
     }
 
     // ADD LOGGING TO SEE WHAT'S BEING SENT

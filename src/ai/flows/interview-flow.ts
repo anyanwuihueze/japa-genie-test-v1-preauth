@@ -31,7 +31,7 @@ Generate ONE new, relevant question that a real officer would ask.`;
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-    }));
+    }), 'interview', 'interview');
     
     const question = completion.choices[0].message.content?.trim() || '';
     return { question };

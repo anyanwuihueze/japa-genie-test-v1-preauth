@@ -1,6 +1,6 @@
 'use server';
 
-import { callGemini } from '@/lib/gemini-client';
+import { callKimi as callGemini } from '@/lib/kimi-client';
 
 export interface FinancialData {
   bankAccounts: Array<{

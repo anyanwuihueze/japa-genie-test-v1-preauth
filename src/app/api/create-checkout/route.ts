@@ -1,7 +1,8 @@
-// src/app/api/create-checkout/route.ts - UPDATE SUCCESS URL ONLY
+// src/app/api/create-checkout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/stripe-server';
 import { createClient } from '@/lib/supabase/server';
+import { findPlanByKeyOrName } from '@/lib/pricing';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,42 +13,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, price, duration } = await request.json();
+    const body = await request.json();
+    const plan = findPlanByKeyOrName({
+      planKey: body.planKey,
+      key: body.key,
+      name: body.name,
+    });
 
-    if (!price) {
-      return NextResponse.json({ error: 'Price required' }, { status: 400 });
+    if (!plan) {
+      return NextResponse.json(
+        { error: 'Invalid plan selected' },
+        { status: 400 }
+      );
     }
+
+    if (!plan.priceId || !plan.priceId.startsWith('price_')) {
+      console.error('Stripe price ID missing/malformed for plan:', {
+        key: plan.key,
+        name: plan.name,
+        hasPriceId: !!plan.priceId,
+      });
+
+      return NextResponse.json(
+        { error: `Stripe price is not configured for ${plan.name}` },
+        { status: 500 }
+      );
+    }
+
+    const origin =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      request.headers.get('origin') ||
+      'https://www.japagenie.com';
+
+    const successUrl = new URL('/api/payment-success', origin);
+    successUrl.searchParams.set('returnTo', '/dashboard');
+    successUrl.searchParams.set('plan', plan.key);
+
+    const cancelUrl = new URL('/pricing', origin);
+    cancelUrl.searchParams.set('canceled', 'true');
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: name,
-              description: duration || 'Premium access',
-            },
-            unit_amount: Math.round(price * 100),
-          },
+          price: plan.priceId,
           quantity: 1,
         },
       ],
-      mode: 'payment',
-      // ✅ UPDATED: Point to our payment-success handler
-      success_url: `${request.headers.get('origin')}/api/payment-success?returnTo=/dashboard&plan=pro`,
-      cancel_url: `${request.headers.get('origin')}/checkout?canceled=true`,
+      mode: plan.checkoutMode,
+      success_url: successUrl.toString(),
+      cancel_url: cancelUrl.toString(),
       client_reference_id: user.id,
-      customer_email: user.email,
+      customer_email: user.email || undefined,
       metadata: {
         userId: user.id,
-        planName: name,
+        planKey: plan.key,
+        planName: plan.name,
+        checkoutMode: plan.checkoutMode,
       },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Stripe error:', error);
+    console.error('Stripe checkout error:', error);
     return NextResponse.json({ error: 'Payment failed' }, { status: 500 });
   }
 }

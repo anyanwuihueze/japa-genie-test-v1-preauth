@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { BurnRateTracker } from '@/lib/burnrate-sdk';
 
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+const apiKey = process.env.KIMI_API_KEY || '';
 
 if (!apiKey) {
-  console.warn('NEXT_PUBLIC_GEMINI_API_KEY is not set');
+  console.warn('KIMI_API_KEY is not set');
 }
 
 export const gemini = apiKey ? new GoogleGenerativeAI(apiKey) : null;
@@ -26,7 +26,10 @@ export async function callGemini(prompt: string, jsonMode: boolean = true): Prom
       }
     });
 
-    const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent(prompt);
+    const result = await __burnrateTracker.trackGoogle(
+      'gemini-2.0-flash',
+      () => model.generateContent(prompt, 'gemini', 'gemini')
+    );
     const response = await result.response;
     
     // FIXED: Proper extraction

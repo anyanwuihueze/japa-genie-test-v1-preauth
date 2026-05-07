@@ -1,6 +1,10 @@
 'use server';
 import { createClient } from '@/lib/supabase/server';
-import { callGeminiServer } from '@/lib/gemini-server';
+
+// Use Kimi instead of Gemini
+const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
+const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+const KIMI_MODEL = 'moonshotai/kimi-k2.5';
 
 export interface ProofOfFundsInput {
   userProfile: {
@@ -76,7 +80,6 @@ export async function analyzeProofOfFunds(
   try {
     console.log('🤖 Starting AI-Powered POF analysis for:', input.userProfile.destination_country);
     
-    // FIXED: Await the async client creation
     const supabase = await createClient();
     const { destination_country, visa_type } = input.userProfile;
     const familyMembers = input.familyMembers || 1;
@@ -104,9 +107,9 @@ export async function analyzeProofOfFunds(
       };
     }
 
-    console.log('🔍 Cache miss, calling Gemini AI...');
+    console.log('🔍 Cache miss, calling Kimi AI...');
 
-    // STEP 2: CALL GEMINI AI FOR REQUIREMENTS
+    // STEP 2: CALL KIMI AI FOR REQUIREMENTS
     const requirements = await getAIPOFRequirements(
       destination_country,
       visa_type,
@@ -127,7 +130,6 @@ export async function analyzeProofOfFunds(
     );
 
     // STEP 4: SAVE TO CACHE FOR FUTURE USE
-    // FIXED: Await the upsert
     await supabase
       .from('pof_requirements_cache')
       .upsert({
@@ -138,7 +140,7 @@ export async function analyzeProofOfFunds(
         seasoning_days: requirements.seasoningDays,
         currency: requirements.currency,
         requirements_json: analysis,
-        source: 'gemini-ai',
+        source: 'kimi-ai',
         confidence_score: 0.85,
         updated_at: new Date().toISOString()
       }, {
@@ -162,7 +164,7 @@ export async function analyzeProofOfFunds(
 }
 
 /**
- * AI FUNCTION: Get POF requirements from Gemini
+ * AI FUNCTION: Get POF requirements from Kimi
  */
 async function getAIPOFRequirements(
   country: string,
@@ -210,7 +212,7 @@ RETURN AS JSON:
 Be accurate and practical. People's visa applications depend on this information.`;
 
   try {
-    const response = await callGeminiServer(prompt, true);
+    const response = await callKimiServer(prompt, true);
     const data = JSON.parse(response);
     
     return {
@@ -220,7 +222,7 @@ Be accurate and practical. People's visa applications depend on this information
       requirementsText: data.requirementsText || 'Standard requirements apply'
     };
   } catch (error) {
-    console.warn('Gemini failed, using fallback values');
+    console.warn('Kimi failed, using fallback values');
     return {
       minimumFunds: 20000,
       seasoningDays: 90,
@@ -315,6 +317,42 @@ RETURN AS JSON with this EXACT structure:
 
 Be realistic and strict. Visa officers are very thorough.`;
 
-  const response = await callGeminiServer(prompt, true);
+  const response = await callKimiServer(prompt, true);
   return JSON.parse(response);
+}
+
+/**
+ * Helper function to call Kimi API
+ */
+async function callKimiServer(prompt: string, jsonResponse: boolean = false): Promise<string> {
+  const response = await fetch(`${KIMI_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${KIMI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: KIMI_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 4000,
+      chat_template_kwargs: { thinking: false }
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Kimi API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  
+  if (jsonResponse) {
+    // Extract JSON if wrapped in markdown
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return jsonMatch ? jsonMatch[0] : text;
+  }
+  
+  return text;
 }

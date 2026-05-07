@@ -55,7 +55,7 @@ Generate 3-5 insights, 2-4 cost estimates, 2-3 alternatives, and chart data with
       ],
       temperature: 0.7,
       max_tokens: 1500
-    }));
+    }), 'insights', 'insights');
 
     let text = completion.choices[0]?.message?.content?.trim() || '';
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

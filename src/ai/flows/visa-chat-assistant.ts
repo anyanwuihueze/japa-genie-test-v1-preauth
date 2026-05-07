@@ -2,22 +2,18 @@
 import { groq } from '@/lib/groq-client';
 import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
 import { BurnRateTracker } from '@/lib/burnrate-sdk';
+import {
+  buildModelMessages,
+  ChatMessage,
+  VisaAssistantUserContext,
+} from './visa-chat-assistant.helpers';
 
 /* ---------- TYPES ---------- */
 interface VisaAssistantInput {
   question: string;
   wishCount: number;
-  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
-  userContext?: {
-    name?: string;
-    country?: string;
-    destination?: string;
-    profession?: string;
-    visaType?: string;
-    age?: number;
-    userType?: string;
-    timelineUrgency?: string;
-  };
+  conversationHistory?: ChatMessage[];
+  userContext?: VisaAssistantUserContext;
   isSignedIn?: boolean;
 }
 
@@ -38,7 +34,6 @@ interface VisaAssistantOutput {
     recommendations?: string[];
   };
 }
-
 /* ---------- SYSTEM PROMPT ---------- */
 const SYSTEM_PROMPT = `You are Japa Genie, a friendly visa strategist who loves helping people navigate their global journey.
 
@@ -54,6 +49,12 @@ CONVERSATION MEMORY:
 - Remember details the user already shared (country, destination, age, etc.)
 - Build on previous advice rather than repeating yourself
 - Acknowledge when they are making progress on their journey
+
+FACT SAFETY RULES:
+- Never invent user profile facts such as age, profession, country, destination, visa type, timeline, documents, dashboard status, or file contents.
+- Only use profile facts that are explicitly present in userContext or clearly stated in conversationHistory.
+- Never claim you accessed the user's dashboard, profile, uploads, files, or application data unless that data is explicitly present in the provided context.
+- If profile context is missing, partial, or inconsistent, say so clearly and ask the user to confirm or update their profile.
 
 CRITICAL: You MUST return valid JSON with this EXACT structure:
 {
@@ -74,19 +75,7 @@ CRITICAL: You MUST return valid JSON with this EXACT structure:
   "alternativeStrategies": ["Strategy 1", "Strategy 2"]
 }`;
 
-
 const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API_KEY || 'br_live_a8fccc8f-13c4-453c-8d10-3ecc77e9fa45_1772718737561_4f8ba36b5b1f' });
-
-function buildPrompt(input: VisaAssistantInput): string {
-  const { question, conversationHistory = [], userContext } = input;
-  const ctx = userContext
-    ? `${userContext.name || 'User'} (${userContext.age || 'unknown'} years) from ${userContext.country || 'unknown'} → ${userContext.destination || 'unknown'} (${userContext.visaType || 'unknown'}), works as ${userContext.profession || 'unknown'}, timeline: ${userContext.timelineUrgency || 'unknown'}`
-    : 'Profile not yet collected';
-  const history = conversationHistory.length
-    ? `History:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n`
-    : '';
-  return `${SYSTEM_PROMPT}\n\n${history}Context: ${ctx}\nQuestion: ${question}`;
-}
 
 /* ---------- EXPORTED ACTION ---------- */
 export async function visaChatAssistant(input: VisaAssistantInput): Promise<VisaAssistantOutput> {
@@ -94,15 +83,12 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
 
   try {
     const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildPrompt(input) }
-      ],
+      messages: buildModelMessages(input, SYSTEM_PROMPT),
       model: 'llama-3.3-70b-versatile',
       temperature: 0.7,
       max_tokens: 2000,
       response_format: { type: 'json_object' }
-    }));
+    }), 'visa-chat');
 
     const content = completion.choices[0]?.message?.content || '{"chatResponse": "Error processing response"}';
     const data = JSON.parse(content);
@@ -134,6 +120,12 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
 
   } catch (error) {
     console.error('Visa assistant error:', error);
+    console.error('Visa assistant error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : undefined,
+      stack: error instanceof Error ? error.stack : undefined,
+      raw: error,
+    });
     return {
       answer: `I encountered an issue while researching. Based on general patterns, consider skilled worker or express entry programs with 6-12 month timelines. Please try again or ask a more specific question.`
     };

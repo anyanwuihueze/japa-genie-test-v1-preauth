@@ -28,7 +28,7 @@ export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssi
         { role: 'user', content: input.question }
       ],
       temperature: 0.3, // Lower for factual consistency
-    }));
+    }), 'site-assistant', 'site-assistant');
     
     const answer = completion.choices[0].message.content || '';
     return { answer };

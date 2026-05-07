@@ -1,17 +1,35 @@
+export type CheckoutMode = 'payment' | 'subscription';
 
-export const oneTimeCredits = [
+export type PricingPlan = {
+  key: 'one_week' | 'two_weeks' | 'three_weeks' | 'pro_monthly' | 'hold_my_hand';
+  name: string;
+  price: number;
+  priceId: string;
+  checkoutMode: CheckoutMode;
+  frequency?: string;
+  duration: string;
+  features: string[];
+  cta: string;
+  popular?: boolean;
+};
+
+export const oneTimeCredits: PricingPlan[] = [
   {
+    key: 'one_week',
     name: '1 Week Access',
-    price: 10,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h', 
+    price: 11.2,
+    priceId: process.env.STRIPE_PRICE_ONE_WEEK || '',
+    checkoutMode: 'payment',
     duration: '7-day access',
     features: ['Unlimited AI chat', 'Document checker', 'Mock interviews'],
     cta: 'Top Up for 1 Week',
   },
   {
+    key: 'two_weeks',
     name: '2 Weeks Access',
-    price: 15,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 16.8,
+    priceId: process.env.STRIPE_PRICE_TWO_WEEKS || '',
+    checkoutMode: 'payment',
     duration: '14-day access',
     features: [
       'Everything in 1 week plan',
@@ -21,9 +39,11 @@ export const oneTimeCredits = [
     cta: 'Top Up for 2 Weeks',
   },
   {
+    key: 'three_weeks',
     name: '3 Weeks Access',
-    price: 25,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 28,
+    priceId: process.env.STRIPE_PRICE_THREE_WEEKS || '',
+    checkoutMode: 'payment',
     duration: '21-day access',
     features: [
       'Everything in 2 weeks plan',
@@ -34,11 +54,13 @@ export const oneTimeCredits = [
   },
 ];
 
-export const subscriptionTiers = [
+export const subscriptionTiers: PricingPlan[] = [
   {
+    key: 'pro_monthly',
     name: 'Pro Plan',
-    price: 20,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h', 
+    price: 22.4,
+    priceId: process.env.STRIPE_PRICE_PRO_MONTHLY || '',
+    checkoutMode: 'subscription',
     frequency: '/month',
     duration: 'Monthly Subscription',
     features: [
@@ -50,9 +72,11 @@ export const subscriptionTiers = [
     popular: true,
   },
   {
+    key: 'hold_my_hand',
     name: 'Hold My Hand Premium',
-    price: 40,
-    priceId: 'price_1PX2hYRxp7zXO3s9o2r5dC0h',
+    price: 44.8,
+    priceId: process.env.STRIPE_PRICE_HOLD_MY_HAND || '',
+    checkoutMode: 'subscription',
     frequency: '/month',
     duration: 'Monthly Subscription',
     features: [
@@ -67,5 +91,22 @@ export const subscriptionTiers = [
   },
 ];
 
-// This is the single source of truth for all plans
-export const allPlans = [...oneTimeCredits, ...subscriptionTiers];
+export const allPlans: PricingPlan[] = [...oneTimeCredits, ...subscriptionTiers];
+
+export function findPlanByKeyOrName(input: {
+  planKey?: string;
+  key?: string;
+  name?: string;
+}): PricingPlan | undefined {
+  const requested = input.planKey || input.key;
+
+  if (requested) {
+    return allPlans.find((plan) => plan.key === requested);
+  }
+
+  if (input.name) {
+    return allPlans.find((plan) => plan.name === input.name);
+  }
+
+  return undefined;
+}

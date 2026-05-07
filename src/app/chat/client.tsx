@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { shouldBlockChatSubmit } from './send-guard';
 
 const MAX_WISHES = 3;
 const SOCIAL_PROOF_COUNT = 1200;
@@ -145,6 +146,7 @@ export default function UserChat() {
 
   // 🚨 READ KYC DATA FROM STORAGE - FIXED
   useEffect(() => {
+    if (user) return;
     const kycData = sessionStorage.getItem("kycData") || localStorage.getItem("userKYC");
     
     if (kycData) {
@@ -156,7 +158,7 @@ export default function UserChat() {
         console.error("❌ Failed to parse KYC data:", error);
       }
     }
-  }, []);
+  }, [user]);
 
   // ========== SUBSCRIPTION CHECK ==========
   useEffect(() => {
@@ -202,6 +204,9 @@ export default function UserChat() {
           
           if (profile) {
             setUserProfile(profile);
+            setKycSession(null);
+            sessionStorage.removeItem('kycData');
+            sessionStorage.removeItem('kyc_session_id');
             setUserName(profile.preferred_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Pathfinder');
             console.log('✅ User profile loaded:', profile);
           }
@@ -248,6 +253,10 @@ export default function UserChat() {
 
   // ========== PERSONALIZED WELCOME WITH SUPABASE DATA ==========
   useEffect(() => {
+    if (user && !userProfile && !isLoadingMessages) {
+      return;
+    }
+
     if (messages.length === 0 && !isLoadingMessages) {
       console.log('🎯 Creating personalized welcome with available data');
       
@@ -448,7 +457,7 @@ export default function UserChat() {
 
   const handleSendMessage = async () => {
     const newMessage = currentInput.trim();
-    if (!newMessage) return;
+    if (shouldBlockChatSubmit(newMessage, isTyping)) return;
 
     // Add user message to chat
     const userMsg: Message = { role: 'user', content: newMessage, timestamp: Date.now() };

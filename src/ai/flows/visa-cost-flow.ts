@@ -1,7 +1,8 @@
 'use server';
 
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
+const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+const KIMI_MODEL = 'moonshotai/kimi-k2.5';
 
 export interface VisaCostRequest {
   originCountry: string;
@@ -61,8 +62,6 @@ export interface VisaCostResponse {
     applicationDeadline: string;
     estimatedDecision: string;
   };
-  
-  // NEW ENHANCED SECTIONS
   pofProfile: {
     timeline: {
       accountOpenDate: string;
@@ -100,7 +99,6 @@ export interface VisaCostResponse {
       commonMistakes: string[];
     };
   };
-  
   hiddenCostsDetailed: Array<{
     category: string;
     item: string;
@@ -112,7 +110,6 @@ export interface VisaCostResponse {
     estimatedTime: string;
     description: string;
   }>;
-  
   preGatePreview: {
     shockStatistic: string;
     top3HiddenCosts: Array<{
@@ -130,6 +127,11 @@ export interface VisaCostResponse {
 }
 
 export async function calculateVisaCost(request: VisaCostRequest): Promise<VisaCostResponse> {
+  console.log('🎯 VISA COST CALCULATION STARTING');
+  console.log('Request:', JSON.stringify(request, null, 2));
+  console.log('KIMI_API_KEY exists:', !!KIMI_API_KEY);
+  console.log('KIMI_API_KEY length:', KIMI_API_KEY.length);
+
   try {
     const travelDateInfo = request.travelDate 
       ? `Planned travel date: ${request.travelDate}` 
@@ -223,11 +225,10 @@ Return ONLY valid JSON (no markdown, no code blocks):
       "description": string (WHY this cost exists - educate them),
       "deadline": string (ISO date if time-sensitive - calculate intelligently)
     }
-    // GENERATE 15-20 ITEMS minimum - be comprehensive!
   ],
   
   "visaSpecificRequirements": [
-    "Detailed requirement 1 specific to ${request.visaType} visa for ${request.destinationCountry} (e.g., 'Acceptance letter from recognized university required 90 days before application')",
+    "Detailed requirement 1 specific to ${request.visaType} visa for ${request.destinationCountry}",
     "Requirement 2 with actionable detail",
     "Requirement 3 with deadline if applicable",
     "Requirement 4",
@@ -250,55 +251,46 @@ Return ONLY valid JSON (no markdown, no code blocks):
       "visaApplicationDate": string (ISO date - when they can apply for visa),
       "daysRemaining": number (days from today until POF deadline),
       "conflicts": [
-        "Any timeline conflicts (e.g., 'Seasoning period overlaps with planned December travel')",
-        "Warning if timeline is tight (e.g., 'Only 67 days to save €11,208 - aggressive savings required')"
+        "Any timeline conflicts",
+        "Warning if timeline is tight"
       ]
     },
     "savingsRoadmap": {
       "monthlyBreakdown": [
         {
-          "month": "February 2026" (start with current month),
+          "month": string (start with current month),
           "amountToSave": number (divide total by months remaining),
           "cumulativeTotal": number (running total),
-          "milestone": "Milestone for this month (e.g., '25% of POF saved', 'Open blocked account', 'Deposit full amount')"
+          "milestone": "Milestone for this month"
         }
-        // Generate for each month until deadline
       ],
       "exchangeRateBuffer": number (5-8% buffer for currency fluctuation in USD),
       "totalWithBuffer": number (POF + buffer in USD),
       "recommendedProviders": [
         {
           "name": "Fintiba" | "Deutsche Bank" | "Expatrio" | "Local Bank",
-          "pros": [
-            "Specific advantage (e.g., 'Fastest setup - 3 days', 'English customer support', 'Lowest annual fee')",
-            "Another pro",
-            "Third pro"
-          ],
-          "cons": [
-            "Specific disadvantage (e.g., 'Higher upfront fee', 'Limited branch access', 'Slower processing')",
-            "Another con"
-          ],
+          "pros": ["Advantage 1", "Advantage 2", "Advantage 3"],
+          "cons": ["Disadvantage 1", "Disadvantage 2"],
           "feeEstimate": number (total fees in USD),
           "setupTime": string (e.g., "3-5 business days")
         }
-        // Provide 3 provider options
       ]
     },
     "risks": {
       "exchangeRateRisk": {
-        "severity": "low" | "medium" | "high" (assess based on ${request.originCountry} currency stability),
-        "currentRate": string (e.g., "1 USD = 1,450 NGN" - use realistic 2024 rate),
-        "mitigation": "Specific advice (e.g., 'Lock exchange rate with forward contract - costs 2% but eliminates risk')"
+        "severity": "low" | "medium" | "high",
+        "currentRate": string (e.g., "1 USD = 1,450 NGN"),
+        "mitigation": "Specific advice"
       },
       "timingRisks": [
-        "Specific timing risk (e.g., 'Peak application season June-August - processing delays up to 8 weeks')",
-        "Another risk (e.g., 'Bank transfers from ${request.originCountry} can take 5-7 days - plan ahead')"
+        "Specific timing risk",
+        "Another risk"
       ],
       "commonMistakes": [
-        "Mistake 1: Specific error applicants make (e.g., 'Withdrawing money during seasoning period = automatic rejection')",
-        "Mistake 2: (e.g., 'Not accounting for exchange rate fluctuation - budget 5-8% buffer')",
-        "Mistake 3: (e.g., 'Opening wrong account type - must be blocked account for Germany student visa')",
-        "Mistake 4: (e.g., 'Depositing in multiple installments instead of lump sum - some embassies reject this')"
+        "Mistake 1",
+        "Mistake 2",
+        "Mistake 3",
+        "Mistake 4"
       ]
     }
   },
@@ -306,25 +298,24 @@ Return ONLY valid JSON (no markdown, no code blocks):
   "hiddenCostsDetailed": [
     {
       "category": string (e.g., "Medical", "Documents", "Travel", "Logistics"),
-      "item": string (e.g., "Tuberculosis Test (for UK visa)", "Document Translation & Notarization"),
+      "item": string (e.g., "Tuberculosis Test"),
       "cost": number (USD - be realistic),
       "urgency": "critical" | "important" | "optional",
       "deadline": string (ISO date - calculate based on visa timeline),
-      "whoNeedsIt": string (e.g., "All UK student visa applicants", "Applicants with dependents"),
-      "whereToGet": string (e.g., "IOM Approved clinic in Lagos", "Certified translator + notary public"),
-      "estimatedTime": string (e.g., "3-5 business days", "Same day if rushed (+$50)"),
-      "description": string (detailed explanation of why this is needed)
+      "whoNeedsIt": string,
+      "whereToGet": string,
+      "estimatedTime": string,
+      "description": string
     }
-    // Generate 12-15 detailed hidden costs
   ],
   
   "preGatePreview": {
-    "shockStatistic": "Compelling stat for pre-payment preview (e.g., '78% of applicants from ${request.originCountry} underbudget by $1,800+ for ${request.destinationCountry} visas')",
+    "shockStatistic": "Compelling stat for pre-payment preview",
     "top3HiddenCosts": [
       {
         "item": "Most expensive hidden cost",
         "cost": number (USD),
-        "why": "Brief explanation why people miss this (e.g., 'Not listed on embassy website - required by immigration at entry')"
+        "why": "Brief explanation"
       },
       {
         "item": "Second most expensive",
@@ -337,18 +328,18 @@ Return ONLY valid JSON (no markdown, no code blocks):
         "why": "Why people overlook it"
       }
     ],
-    "pofUrgency": "Urgent statement about POF (e.g., 'You have only 87 days to save and season €11,208 - start this week!')",
+    "pofUrgency": "Urgent statement about POF",
     "comparisonData": {
-      "whatMostBudget": number (USD - what typical applicant budgets, usually just visa fee + flight),
-      "actualCost": number (USD - your calculated total),
-      "missedAmount": number (USD - the difference, this is the shock value)
+      "whatMostBudget": number (USD),
+      "actualCost": number (USD),
+      "missedAmount": number (USD)
     }
   }
 }
 
 IMPORTANT INSTRUCTIONS:
 1. BE BRUTALLY REALISTIC - Research actual 2024-2025 costs, don't lowball
-2. CALCULATE EXACT DATES - NEVER use example dates from this prompt. Calculate all dates dynamically based on travel date or today + 90 days - Use intelligent date math based on travel date or current date
+2. CALCULATE EXACT DATES - Calculate all dates dynamically based on travel date or today + 90 days
 3. PERSONALIZE TO ROUTE - ${request.originCountry} → ${request.destinationCountry} has unique costs
 4. INCLUDE 15-20 COST ITEMS - Be comprehensive, this is a premium report
 5. MAKE IT ACTIONABLE - Every section should have specific next steps
@@ -357,59 +348,96 @@ IMPORTANT INSTRUCTIONS:
 
 Return ONLY the JSON object, no markdown formatting, no code blocks.`;
 
+    console.log('🌐 CALLING KIMI API...');
+    console.log('URL:', `${KIMI_BASE_URL}/chat/completions`);
+    
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      `${KIMI_BASE_URL}/chat/completions`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Authorization': `Bearer ${KIMI_API_KEY}`, 
+          'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 16000,
-            topP: 0.95,
-          }
+          model: 'moonshotai/kimi-k2.5',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.4,
+          max_tokens: 16000,
+          chat_template_kwargs: { thinking: false }
         })
       }
     );
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response ok:', response.ok);
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const result = JSON.parse(cleanText);
+    const data = await response.json();
+    console.log('📡 Kimi response:', JSON.stringify(data, null, 2).substring(0, 500));
+
+    if (data.error) {
+      console.error('❌ Kimi API error:', data.error);
+      throw new Error(data.error.message || 'Kimi API error');
+    }
+
+    const text = data.choices?.[0]?.message?.content || '';
+    console.log('📝 Raw text length:', text.length);
+    console.log('📝 Raw text preview:', text.substring(0, 200));
+
+    // Extract JSON from response
+    let result: any;
+    try {
+      // Try to find JSON in the response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+        console.log('✅ JSON parsed successfully');
+      } else {
+        throw new Error('No JSON object found in response');
+      }
+    } catch (parseError: any) {
+      console.error('❌ JSON parse error:', parseError.message);
+      console.error('❌ Raw text:', text);
+      throw new Error('Failed to parse Kimi response: ' + parseError.message);
+    }
+
+    // Validate required fields
+    if (!result.totalCost || !result.pofRequirement) {
+      console.error('❌ Missing required fields in response');
+      console.error('Result keys:', Object.keys(result));
+      throw new Error('Kimi response missing required fields');
+    }
 
     // Adjust for dependents
     const dependentMultiplier = 1 + (request.dependents * 0.5);
 
+    console.log('✅ VISA COST CALCULATION COMPLETE');
+    console.log('Total cost:', result.totalCost);
+
     return {
-      totalCost: Math.round((result.totalCost ?? 8000) * dependentMultiplier),
-      totalCostLocal: Math.round((result.totalCostLocal ?? 7500) * dependentMultiplier),
-      localCurrency: result.localCurrency ?? 'EUR',
-      hiddenCostsTotal: Math.round((result.hiddenCostsTotal ?? 2500) * dependentMultiplier),
-      visibleCostsTotal: Math.round((result.visibleCostsTotal ?? 5500) * dependentMultiplier),
-      pofRequirement: result.pofRequirement ?? {
-        amount: 11208,
-        currency: 'EUR',
-        seasoningPeriod: 3,
-        deadline: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
-        accountType: 'Blocked Account',
-        monthlySavingsNeeded: 1868
+      totalCost: Math.round(result.totalCost * dependentMultiplier),
+      totalCostLocal: Math.round((result.totalCostLocal || result.totalCost) * dependentMultiplier),
+      localCurrency: result.localCurrency || 'USD',
+      hiddenCostsTotal: Math.round((result.hiddenCostsTotal || 0) * dependentMultiplier),
+      visibleCostsTotal: Math.round((result.visibleCostsTotal || result.totalCost) * dependentMultiplier),
+      pofRequirement: {
+        ...result.pofRequirement,
+        amount: Math.round(result.pofRequirement.amount * dependentMultiplier),
+        monthlySavingsNeeded: Math.round(result.pofRequirement.monthlySavingsNeeded * dependentMultiplier)
       },
-      flightEstimate: result.flightEstimate ?? {
+      flightEstimate: result.flightEstimate || {
         economy: 850 * (1 + request.dependents),
         business: 2800 * (1 + request.dependents),
         currency: 'USD',
         route: `${request.originCountry} → ${request.destinationCountry}`
       },
-      insuranceEstimate: result.insuranceEstimate ?? {
+      insuranceEstimate: result.insuranceEstimate || {
         health: 1400 * (1 + request.dependents),
         travel: 250 * (1 + request.dependents),
         currency: 'USD',
         duration: '12 months'
       },
-      aiAnalysis: result.aiAnalysis ?? {
+      aiAnalysis: result.aiAnalysis || {
         shockingFact: `73% of ${request.originCountry} applicants miss over $1,500 in hidden costs`,
         criticalInsight: 'Start POF preparation immediately to meet seasoning deadline',
         urgencyFactor: 'Processing times increasing - apply early',
@@ -420,26 +448,24 @@ Return ONLY the JSON object, no markdown formatting, no code blocks.`;
           'Get documents early to avoid rush fees (3x cost)'
         ]
       },
-      breakdown: (result.breakdown ?? []).map((item: any) => ({
+      breakdown: (result.breakdown || []).map((item: any) => ({
         ...item,
         cost: Math.round(item.cost * dependentMultiplier)
       })),
-      visaSpecificRequirements: result.visaSpecificRequirements ?? [
+      visaSpecificRequirements: result.visaSpecificRequirements || [
         `${request.visaType} visa specific requirements for ${request.destinationCountry}`,
         'Valid passport with 6+ months validity',
         'Proof of accommodation',
         'Travel insurance coverage',
         'Financial documentation'
       ],
-      timeline: result.timeline ?? {
+      timeline: result.timeline || {
         startBy: new Date().toISOString(),
         pofDeadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
         applicationDeadline: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
         estimatedDecision: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString()
       },
-      
-      // NEW ENHANCED SECTIONS
-      pofProfile: result.pofProfile ?? {
+      pofProfile: result.pofProfile || {
         timeline: {
           accountOpenDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           depositDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
@@ -484,13 +510,11 @@ Return ONLY the JSON object, no markdown formatting, no code blocks.`;
           ]
         }
       },
-      
-      hiddenCostsDetailed: (result.hiddenCostsDetailed ?? []).map((item: any) => ({
+      hiddenCostsDetailed: (result.hiddenCostsDetailed || []).map((item: any) => ({
         ...item,
         cost: Math.round(item.cost * dependentMultiplier)
       })),
-      
-      preGatePreview: result.preGatePreview ?? {
+      preGatePreview: result.preGatePreview || {
         shockStatistic: `78% of applicants underbudget by $1,800+`,
         top3HiddenCosts: [
           { item: 'Medical examination', cost: 250, why: 'Not listed on embassy checklist' },
@@ -507,7 +531,8 @@ Return ONLY the JSON object, no markdown formatting, no code blocks.`;
     };
 
   } catch (error: any) {
-    console.error('Visa cost calculation error:', error);
+    console.error('❌ VISA COST CALCULATION ERROR:', error);
+    console.error('Error stack:', error.stack);
     throw error;
   }
 }

@@ -61,7 +61,7 @@ Return as JSON in this exact format:
       ],
       temperature: 0.7,
       max_tokens: 1500
-    }));
+    }), 'rejection-reversal-api', 'rejection-reversal-api');
 
     const responseText = completion.choices[0]?.message?.content?.trim() || '';
     const cleanText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
