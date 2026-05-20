@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import SimpleHeader from '@/components/SimpleHeader';
 import { AppFooter } from '@/components/layout/app-footer';
 import { PWANavigation } from '@/components/pwa/PWANavigation';
@@ -9,24 +10,44 @@ import { JapaGenieLogo } from '@/components/icons';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const pathname = usePathname();
+  const isChatPage = pathname === '/chat';
 
   useEffect(() => {
     const hasVisited = localStorage.getItem('japa-first-visit');
     if (!hasVisited) {
       setIsFirstVisit(true);
       localStorage.setItem('japa-first-visit', 'true');
-      
+
       const forceHideTimer = setTimeout(() => {
         setIsFirstVisit(false);
-        setIsLoading(false); // ← THE FIX
+        setIsLoading(false);
       }, 3000);
-      
+
       return () => clearTimeout(forceHideTimer);
     }
 
     const timer = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(timer);
   }, []);
+
+  if (isChatPage) {
+    return (
+      <div className="flex flex-col h-[100dvh] overflow-hidden">
+        {isLoading && (
+          <div className="fixed top-0 left-0 right-0 h-1 z-40">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-progress-bar" />
+          </div>
+        )}
+        <div className="sticky top-0 z-40">
+          <SimpleHeader />
+        </div>
+        <main className="flex-1 min-h-0 overflow-hidden">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

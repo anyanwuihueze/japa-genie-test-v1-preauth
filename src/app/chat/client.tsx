@@ -557,7 +557,7 @@ export default function UserChat() {
 
   if (authLoading || isLoadingMessages || checkingSubscription) {
     return (
-      <div className="flex items-center justify-center h-[100dvh]">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your chat...</p>
@@ -567,7 +567,7 @@ export default function UserChat() {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Mobile Tab Switcher */}
       <div className="md:hidden flex border-b bg-white sticky top-0 z-10">
         <button
