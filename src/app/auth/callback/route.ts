@@ -51,6 +51,8 @@ async function createUserProgress(userId: string) {
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const token_hash = requestUrl.searchParams.get('token_hash');
+  const type = requestUrl.searchParams.get('type');
   const origin = requestUrl.origin;
   
   console.log('🚀 Auth callback started');
