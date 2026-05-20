@@ -33,7 +33,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isChatPage) {
     return (
-      <div className="flex flex-col h-[100dvh] overflow-hidden">
+      <div className="flex flex-col h-[100dvh] ">
         {isLoading && (
           <div className="fixed top-0 left-0 right-0 h-1 z-40">
             <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-progress-bar" />
