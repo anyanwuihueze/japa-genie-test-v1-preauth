@@ -567,7 +567,7 @@ export default function UserChat() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full">
       {/* Mobile Tab Switcher */}
       <div className="md:hidden flex border-b bg-white sticky top-0 z-10">
         <button
