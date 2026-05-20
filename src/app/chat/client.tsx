@@ -567,7 +567,7 @@ export default function UserChat() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Mobile Tab Switcher */}
       <div className="md:hidden flex border-b bg-white sticky top-0 z-10">
         <button
@@ -599,7 +599,7 @@ export default function UserChat() {
 
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Chat Panel */}
-        <div className={`${activeTab === 'chat' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 flex-col border-r border-gray-200 bg-white`}>
+        <div className={`${activeTab === 'chat' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 flex-col flex-1 min-h-0 border-r border-gray-200 bg-white`}>
           {showBanner && !user && messages.length <= 1 && (
             <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
               <div className="max-w-2xl mx-auto">
@@ -688,7 +688,7 @@ export default function UserChat() {
         </div>
 
         {/* Insights Panel */}
-        <div className={`${activeTab === 'insights' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-4 md:p-6 overflow-y-auto flex-col scroll-smooth`}>
+        <div className={`${activeTab === 'insights' ? 'flex' : 'hidden'} md:flex w-full md:w-1/2 flex-1 min-h-0 bg-gradient-to-b from-blue-50 to-purple-50 p-3 sm:p-4 md:p-6 overflow-y-auto flex-col scroll-smooth`}>
           <div className="flex items-center space-x-2 mb-3 sm:mb-4">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">AI Insights</h3>
