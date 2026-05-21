@@ -97,6 +97,15 @@ export default function TrueVisaCostCalculatorForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const loadingMessages = [
+    'Researching visa requirements...',
+    'Calculating hidden costs...',
+    'Building your POF timeline...',
+    'Analyzing route-specific fees...',
+    'Generating savings roadmap...',
+    'Almost ready...',
+  ];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -111,6 +120,13 @@ export default function TrueVisaCostCalculatorForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setLoadingMessage(loadingMessages[0]);
+    let msgIndex = 0;
+    const msgInterval = setInterval(() => {
+      msgIndex = (msgIndex + 1) % loadingMessages.length;
+      setLoadingMessage(loadingMessages[msgIndex]);
+    }, 2000);
+    setTimeout(() => clearInterval(msgInterval), 15000);
     
     try {
       const response = await fetch('/api/cost-calculator', {
@@ -364,7 +380,7 @@ export default function TrueVisaCostCalculatorForm() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                      Analyzing Your Costs...
+                      {loadingMessage || 'Analyzing Your Costs...'}
                     </>
                   ) : (
                     <>

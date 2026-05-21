@@ -363,7 +363,7 @@ Return ONLY the JSON object, no markdown formatting, no code blocks.`;
           model: 'moonshotai/kimi-k2.6',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.4,
-          max_tokens: 16000,
+          max_tokens: 6000,
           chat_template_kwargs: { thinking: false }
         })
       }
