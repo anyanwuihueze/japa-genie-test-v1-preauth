@@ -603,12 +603,12 @@ export async function POST(request: Request) {
       <div class="whatsapp-section">
         <h3>💬 Need Help? Chat on WhatsApp</h3>
         <p style="opacity: 0.9; margin: 8px 0;">Get instant answers from our visa experts</p>
-        <a href="https://wa.me/${phone?.replace(/[^0-9]/g, '') || '2349031622709'}?text=Hi%20Japa%20Genie,%20I%20got%20my%20cost%20analysis%20for%20${destinationCountry}%20${visaType}%20visa.%20I%20have%20questions!" 
+        <a href="https://wa.me/${phone?.replace(/[^0-9]/g, '') || '2347088565417'}?text=Hi%20Japa%20Genie,%20I%20got%20my%20cost%20analysis%20for%20${destinationCountry}%20${visaType}%20visa.%20I%20have%20questions!" 
            class="whatsapp-number">
           ${phone || '+234 903 162 2709'}
         </a>
         <br>
-        <a href="https://wa.me/${phone?.replace(/[^0-9]/g, '') || '2349031622709'}?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application" 
+        <a href="https://wa.me/${phone?.replace(/[^0-9]/g, '') || '2347088565417'}?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20application" 
            class="whatsapp-button">
           Start Chat Now
         </a>

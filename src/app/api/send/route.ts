@@ -385,12 +385,12 @@ export async function POST(request: NextRequest) {
       <div style="background: linear-gradient(135deg, #166534, #15803d); border-radius: 16px; padding: 32px; text-align: center; margin: 40px 0; color: white;">
         <h3 style="font-size: 24px; font-weight: 800; margin-top: 0; margin-bottom: 16px; color: white;">💬 Need Help? Chat on WhatsApp</h3>
         <p style="opacity: 0.95; margin: 8px 0; font-size: 16px;">Get instant answers from our visa experts</p>
-        <a href="https://wa.me/2349031622709?text=Hi%20Japa%20Genie,%20I%20got%20my%20eligibility%20report%20for%20${encodeURIComponent(destination)}%20${encodeURIComponent(visaType)}%20visa.%20Score:%20${score}%25.%20I%20have%20questions!" 
+        <a href="https://wa.me/2347088565417?text=Hi%20Japa%20Genie,%20I%20got%20my%20eligibility%20report%20for%20${encodeURIComponent(destination)}%20${encodeURIComponent(visaType)}%20visa.%20Score:%20${score}%25.%20I%20have%20questions!" 
            style="display: inline-block; font-size: 24px; font-weight: 700; color: #86efac; text-decoration: none; margin: 16px 0;">
           +234 903 162 2709
         </a>
         <br>
-        <a href="https://wa.me/2349031622709?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20eligibility%20assessment" 
+        <a href="https://wa.me/2347088565417?text=Hi%20Japa%20Genie,%20I%20need%20help%20with%20my%20visa%20eligibility%20assessment" 
            style="display: inline-block; background: #22c55e; color: white; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; margin-top: 16px;">
           Start Chat Now
         </a>
