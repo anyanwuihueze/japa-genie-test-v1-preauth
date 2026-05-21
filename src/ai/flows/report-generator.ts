@@ -2,7 +2,7 @@
 
 const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
 const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const KIMI_MODEL = 'moonshotai/kimi-k2.5';
+const KIMI_MODEL = 'moonshotai/kimi-k2.6';
 
 export async function generatePersonalizedReport(analysisResult: any, targetCountry: string, visaType: string) {
   const prompt = `You are a friendly visa consultant writing a personalized report for someone applying for a ${visaType} visa to ${targetCountry}.

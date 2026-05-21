@@ -2,7 +2,7 @@
 
 const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
 const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const KIMI_MODEL = 'moonshotai/kimi-k2.5';
+const KIMI_MODEL = 'moonshotai/kimi-k2.6';
 
 export interface QuickEligibilityRequest {
   destination: string;

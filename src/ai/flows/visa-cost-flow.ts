@@ -2,7 +2,7 @@
 
 const KIMI_API_KEY = process.env.KIMI_API_KEY || '';
 const KIMI_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const KIMI_MODEL = 'moonshotai/kimi-k2.5';
+const KIMI_MODEL = 'moonshotai/kimi-k2.6';
 
 export interface VisaCostRequest {
   originCountry: string;
@@ -360,7 +360,7 @@ Return ONLY the JSON object, no markdown formatting, no code blocks.`;
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-          model: 'moonshotai/kimi-k2.5',
+          model: 'moonshotai/kimi-k2.6',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.4,
           max_tokens: 16000,
