@@ -1,3 +1,25 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'From Rural Ghana Teacher to UK Global Talent Visa | Japa Genie',
+  description: 'How a rural Ghana teacher used an innovative EdTech approach to qualify for the UK Global Talent visa and land a £65,000 salary in London.',
+  openGraph: {
+    title: 'From Rural Ghana Teacher to UK Global Talent Visa | Japa Genie',
+    description: 'How a rural Ghana teacher used an innovative EdTech approach to qualify for the UK Global Talent visa and land a £65,000 salary in London.',
+    url: 'https://japagenie.com/blog/kwame-teacher-to-uk-global-talent',
+    siteName: 'Japa Genie',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'From Rural Ghana Teacher to UK Global Talent Visa | Japa Genie',
+    description: 'How a rural Ghana teacher used an innovative EdTech approach to qualify for the UK Global Talent visa and land a £65,000 salary in London.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/blog/kwame-teacher-to-uk-global-talent',
+  }
+};
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 

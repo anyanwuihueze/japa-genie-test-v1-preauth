@@ -1,3 +1,25 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Japan Is Hiring African Truck Drivers — SSW Visa Guide 2025 | Japa Genie',
+  description: 'Japan needs 270,000 truck drivers by 2030 and is actively recruiting Africans. Complete guide to the Japan SSW visa for Nigerian and African applicants.',
+  openGraph: {
+    title: 'Japan Is Hiring African Truck Drivers — SSW Visa Guide 2025 | Japa Genie',
+    description: 'Japan needs 270,000 truck drivers by 2030 and is actively recruiting Africans. Complete guide to the Japan SSW visa for Nigerian and African applicants.',
+    url: 'https://japagenie.com/blog/japan-truck-driver-visa',
+    siteName: 'Japa Genie',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Japan Is Hiring African Truck Drivers — SSW Visa Guide 2025 | Japa Genie',
+    description: 'Japan needs 270,000 truck drivers by 2030 and is actively recruiting Africans. Complete guide to the Japan SSW visa for Nigerian and African applicants.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/blog/japan-truck-driver-visa',
+  }
+};
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 

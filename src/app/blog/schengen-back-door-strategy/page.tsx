@@ -1,3 +1,25 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'The Schengen Back Door Strategy for Africans — Europe to Canada 2025 | Japa Genie',
+  description: 'UK and Canada are closing doors but smart Africans are using a two-step Schengen strategy to reach Europe and beyond. Full pathway guide inside.',
+  openGraph: {
+    title: 'The Schengen Back Door Strategy for Africans — Europe to Canada 2025 | Japa Genie',
+    description: 'UK and Canada are closing doors but smart Africans are using a two-step Schengen strategy to reach Europe and beyond. Full pathway guide inside.',
+    url: 'https://japagenie.com/blog/schengen-back-door-strategy',
+    siteName: 'Japa Genie',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The Schengen Back Door Strategy for Africans — Europe to Canada 2025 | Japa Genie',
+    description: 'UK and Canada are closing doors but smart Africans are using a two-step Schengen strategy to reach Europe and beyond. Full pathway guide inside.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/blog/schengen-back-door-strategy',
+  }
+};
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 

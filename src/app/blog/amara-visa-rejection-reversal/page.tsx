@@ -1,3 +1,25 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'From 3 Rejections to Canadian PR: Amara's Story | Japa Genie',
+  description: 'How an Ivorian software engineer reversed three Canadian visa rejections using AI-powered analysis to land a CAD $85,000 job in Toronto.',
+  openGraph: {
+    title: 'From 3 Rejections to Canadian PR: Amara's Story | Japa Genie',
+    description: 'How an Ivorian software engineer reversed three Canadian visa rejections using AI-powered analysis to land a CAD $85,000 job in Toronto.',
+    url: 'https://japagenie.com/blog/amara-visa-rejection-reversal',
+    siteName: 'Japa Genie',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'From 3 Rejections to Canadian PR: Amara's Story | Japa Genie',
+    description: 'How an Ivorian software engineer reversed three Canadian visa rejections using AI-powered analysis to land a CAD $85,000 job in Toronto.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/blog/amara-visa-rejection-reversal',
+  }
+};
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 

@@ -1,4 +1,26 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+
+export const metadata = {
+  title: 'Expert Immigration Help for Africans | Japa Genie',
+  description: 'Connect with verified immigration experts who specialise in African visa applications. Get professional guidance for complex cases.',
+  openGraph: {
+    title: 'Expert Immigration Help for Africans | Japa Genie',
+    description: 'Connect with verified immigration experts who specialise in African visa applications. Get professional guidance for complex cases.',
+    url: 'https://japagenie.com/experts',
+    siteName: 'Japa Genie',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Expert Immigration Help for Africans | Japa Genie',
+    description: 'Connect with verified immigration experts who specialise in African visa applications. Get professional guidance for complex cases.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/experts',
+  }
+};
+
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Star, Users, Shield, Clock, MessageCircle, FileText, Plane } from 'lucide-react';

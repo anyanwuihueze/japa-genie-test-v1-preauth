@@ -1,5 +1,27 @@
 'use client';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'How Japa Genie Calculates Your Visa Rejection Risk Score | Japa Genie',
+  description: 'Discover the 7 hidden factors embassies check that cause 68% of visa rejections. Learn how to fix your risk score before you apply.',
+  openGraph: {
+    title: 'How Japa Genie Calculates Your Visa Rejection Risk Score | Japa Genie',
+    description: 'Discover the 7 hidden factors embassies check that cause 68% of visa rejections. Learn how to fix your risk score before you apply.',
+    url: 'https://japagenie.com/blog/rejection-risk-score',
+    siteName: 'Japa Genie',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How Japa Genie Calculates Your Visa Rejection Risk Score | Japa Genie',
+    description: 'Discover the 7 hidden factors embassies check that cause 68% of visa rejections. Learn how to fix your risk score before you apply.',
+  },
+  alternates: {
+    canonical: 'https://japagenie.com/blog/rejection-risk-score',
+  }
+};
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
