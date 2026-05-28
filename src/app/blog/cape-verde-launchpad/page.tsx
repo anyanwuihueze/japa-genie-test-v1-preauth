@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie',
+  title: "Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie",
   description: 'Cape Verde offers Nigerian passport holders visa-free entry and a residency pathway that leads directly to Portugal and EU citizenship. Full guide inside.',
   openGraph: {
-    title: 'Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie',
+    title: "Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie",
     description: 'Cape Verde offers Nigerian passport holders visa-free entry and a residency pathway that leads directly to Portugal and EU citizenship. Full guide inside.',
     url: 'https://japagenie.com/blog/cape-verde-launchpad',
     siteName: 'Japa Genie',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie',
+    title: "Cape Verde: Africa's Launchpad to Europe — Residency Guide 2025 | Japa Genie",
     description: 'Cape Verde offers Nigerian passport holders visa-free entry and a residency pathway that leads directly to Portugal and EU citizenship. Full guide inside.',
   },
   alternates: {
