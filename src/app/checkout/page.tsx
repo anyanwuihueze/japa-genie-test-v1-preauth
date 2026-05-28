@@ -51,7 +51,7 @@ function CheckoutContent() {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({planKey: plan.key,
           name: plan.name,
           price: plan.price,
           duration: plan.duration || plan.interval
