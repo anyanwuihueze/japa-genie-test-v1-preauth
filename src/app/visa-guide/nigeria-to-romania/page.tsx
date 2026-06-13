@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle, AlertCircle, Clock, DollarSign, AlertTriangle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'South Africa to Canada Visa Guide 2026 — Requirements, Costs and Timeline | Japa Genie',
-  description: 'Complete South Africa to Canada immigration guide 2026. Visa requirements, proof of funds, processing times and step-by-step guide for Africans.',
-  openGraph: { title: 'South Africa to Canada Visa Guide 2026 | Japa Genie', description: 'Complete South Africa to Canada immigration guide 2026.', url: 'https://japagenie.com/visa-guide/south-africa-to-canada', siteName: 'Japa Genie', type: 'article' },
-  alternates: { canonical: 'https://japagenie.com/visa-guide/south-africa-to-canada' },
+  title: 'Nigeria to Romania Visa Guide 2026 — Requirements, Costs and Timeline | Japa Genie',
+  description: 'Complete Nigeria to Romania immigration guide 2026. Visa requirements, proof of funds, processing times and step-by-step guide for Africans.',
+  openGraph: { title: 'Nigeria to Romania Visa Guide 2026 | Japa Genie', description: 'Complete Nigeria to Romania immigration guide 2026.', url: 'https://japagenie.com/visa-guide/nigeria-to-romania', siteName: 'Japa Genie', type: 'article' },
+  alternates: { canonical: 'https://japagenie.com/visa-guide/nigeria-to-romania' },
 };
 
 export default function VisaGuide() {
@@ -14,20 +14,20 @@ export default function VisaGuide() {
     <section className="py-16 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-12">
-          <div className="text-6xl mb-4">🇿🇦 → 🇨🇦</div>
+          <div className="text-6xl mb-4">🇳🇬 → 🇷🇴</div>
           <div className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">Updated June 2026</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">South Africa to Canada Visa Guide 2026</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Everything you need to move from South Africa to Canada in 2026 — visa routes, proof of funds, real costs, and step-by-step guidance for African applicants.</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Nigeria to Romania Visa Guide 2026</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Everything you need to move from Nigeria to Romania in 2026 — visa routes, proof of funds, real costs, and step-by-step guidance for African applicants.</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
-          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><DollarSign className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">CAD $2,500-$3,500</div><div className="text-xs text-gray-500 mt-1">Est. Total Cost</div></div>
-          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">12-18 months total</div><div className="text-xs text-gray-500 mt-1">Processing Time</div></div>
-          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><CheckCircle className="w-7 h-7 text-green-600 mx-auto mb-2" /><div className="text-xl font-bold">Express Entry</div><div className="text-xs text-gray-500 mt-1">Top Visa Route</div></div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><DollarSign className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">€1,500-€2,500</div><div className="text-xs text-gray-500 mt-1">Est. Total Cost</div></div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">2-4 months</div><div className="text-xs text-gray-500 mt-1">Processing Time</div></div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><CheckCircle className="w-7 h-7 text-green-600 mx-auto mb-2" /><div className="text-xl font-bold">Work Permit</div><div className="text-xs text-gray-500 mt-1">Top Visa Route</div></div>
         </div>
         <div className="bg-white rounded-xl p-8 shadow-sm border mb-8">
           <h2 className="text-2xl font-bold mb-6">Core Requirements</h2>
           <div className="space-y-3">
-            {['Valid passport — minimum 6 months validity, at least 2 blank pages','Proof of funds — CAD $15,263 single applicant. CAD $19,007 for couple','Language — IELTS CLB 7 minimum. Target CLB 9 to be competitive','Educational qualifications and professional certifications (apostilled/attested)','Police clearance certificate from your home country police authority','Medical examination clearance from an approved health provider','Completed visa application with all supporting documents'].map((req, i) => (
+            {['Valid passport — minimum 6 months validity, at least 2 blank pages','Proof of funds — €700-€1,000/month living costs in Bucharest','Language — Romanian not required for IT/tech roles. English accepted','Educational qualifications and professional certifications (apostilled/attested)','Police clearance certificate from your home country police authority','Medical examination clearance from an approved health provider','Completed visa application with all supporting documents'].map((req, i) => (
               <div key={i} className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" /><span className="text-gray-700 text-sm">{req}</span></div>
             ))}
           </div>
@@ -62,7 +62,7 @@ export default function VisaGuide() {
           </div>
         </div>
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Get Your Personalised South Africa to Canada Roadmap</h2>
+          <h2 className="text-2xl font-bold mb-4">Get Your Personalised Nigeria to Romania Roadmap</h2>
           <p className="mb-2 opacity-90 max-w-xl mx-auto">Japa Genie analyses your profile and gives you a personalised visa strategy with exact requirements and next steps.</p>
           <p className="text-sm opacity-75 mb-6">Free eligibility check. No agent fees. No spam.</p>
           <Button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold" asChild>

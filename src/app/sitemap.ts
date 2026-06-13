@@ -20,6 +20,14 @@ const visaGuidePages = [
   'nigeria-to-uk',
   'south-africa-to-canada',
   'south-africa-to-uk',
+  'south-africa-to-japan',
+  'nigeria-to-serbia',
+  'nigeria-to-malta',
+  'nigeria-to-romania',
+  'nigeria-to-cyprus',
+  'ghana-to-australia',
+  'kenya-to-australia',
+  'nigeria-to-new-zealand',
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -108,6 +116,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
+    },
+    {
+      url: 'https://japagenie.com/comparisons/canada-vs-australia-nigerians',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    {
+      url: 'https://japagenie.com/resources/canada-proof-of-funds-nigerians',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    {
+      url: 'https://japagenie.com/resources/african-migration-index-2026',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
     },
     ...visaGuideEntries,
   ];

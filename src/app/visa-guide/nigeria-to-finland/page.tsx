@@ -1,129 +1,74 @@
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, AlertCircle, Clock, DollarSign } from 'lucide-react';
+import { ArrowRight, CheckCircle, AlertCircle, Clock, DollarSign, AlertTriangle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Nigeria to Finland Visa Guide 2025 — Requirements, Costs & Timeline | Japa Genie',
-  description: 'Complete Nigeria to Finland visa guide for 2025. Visa requirements, proof of funds, processing times, hidden costs and step-by-step application guide.',
-  openGraph: {
-    title: 'Nigeria to Finland Visa Guide 2025 | Japa Genie',
-    description: 'Complete Nigeria to Finland visa guide for 2025.',
-    url: 'https://japagenie.com/visa-guide/nigeria-to-finland',
-    siteName: 'Japa Genie',
-    type: 'article',
-  },
-  alternates: {
-    canonical: 'https://japagenie.com/visa-guide/nigeria-to-finland',
-  }
+  title: 'Nigeria to Finland Visa Guide 2026 — Requirements, Costs and Timeline | Japa Genie',
+  description: 'Complete Nigeria to Finland immigration guide 2026. Visa requirements, proof of funds, processing times and step-by-step guide for Africans.',
+  openGraph: { title: 'Nigeria to Finland Visa Guide 2026 | Japa Genie', description: 'Complete Nigeria to Finland immigration guide 2026.', url: 'https://japagenie.com/visa-guide/nigeria-to-finland', siteName: 'Japa Genie', type: 'article' },
+  alternates: { canonical: 'https://japagenie.com/visa-guide/nigeria-to-finland' },
 };
 
 export default function VisaGuide() {
   return (
     <section className="py-16 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 max-w-4xl">
-
         <div className="text-center mb-12">
-          <div className="text-6xl mb-4">🇫🇮</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Nigeria to Finland Visa Guide 2025
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Everything you need to know about moving from Nigeria to Finland — visa requirements, proof of funds, costs, and timeline.
-          </p>
+          <div className="text-6xl mb-4">🇳🇬 → 🇫🇮</div>
+          <div className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">Updated June 2026</div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Nigeria to Finland Visa Guide 2026</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Everything you need to move from Nigeria to Finland in 2026 — visa routes, proof of funds, real costs, and step-by-step guidance for African applicants.</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
-            <DollarSign className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">$1,600</div>
-            <div className="text-sm text-gray-500 mt-1">Estimated Total Cost</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
-            <Clock className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">8-14 weeks</div>
-            <div className="text-sm text-gray-500 mt-1">Processing Time</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
-            <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900">Residence Permit</div>
-            <div className="text-sm text-gray-500 mt-1">Top Visa Category</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><DollarSign className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">€3,500-€5,000</div><div className="text-xs text-gray-500 mt-1">Est. Total Cost</div></div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" /><div className="text-xl font-bold">3-9 months</div><div className="text-xs text-gray-500 mt-1">Processing Time</div></div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border text-center"><CheckCircle className="w-7 h-7 text-green-600 mx-auto mb-2" /><div className="text-xl font-bold">Work Permit</div><div className="text-xs text-gray-500 mt-1">Top Visa Route</div></div>
         </div>
-
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
+        <div className="bg-white rounded-xl p-8 shadow-sm border mb-8">
           <h2 className="text-2xl font-bold mb-6">Core Requirements</h2>
-          <div className="space-y-4">
-            {[
-              'Valid passport with at least 6 months validity beyond intended stay',
-              'Proof of funds — bank statements seasoned for minimum 3-6 months',
-              'Employment offer or evidence of self-sufficiency depending on visa type',
-              'Educational qualifications and professional certifications',
-              'Clean criminal record certificate from country of origin',
-              'Medical examination clearance from approved health provider',
-              'Completed visa application form with correct supporting documents',
-            ].map((req, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-                <span className="text-gray-700">{req}</span>
-              </div>
+          <div className="space-y-3">
+            {['Valid passport — minimum 6 months validity, at least 2 blank pages','Proof of funds — €1,500+ per month to cover living costs without social benefits','Language — English accepted in tech sector. Finnish B1 improves prospects significantly','Educational qualifications and professional certifications (apostilled/attested)','Police clearance certificate from your home country police authority','Medical examination clearance from an approved health provider','Completed visa application with all supporting documents'].map((req, i) => (
+              <div key={i} className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" /><span className="text-gray-700 text-sm">{req}</span></div>
             ))}
           </div>
         </div>
-
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Common Rejection Reasons</h2>
-          <div className="space-y-4">
-            {[
-              'Insufficient or improperly seasoned proof of funds',
-              'Inconsistent information between application and supporting documents',
-              'Weak ties to home country suggesting intention to overstay',
-              'Incomplete documentation or missing required certificates',
-              'Previous visa violations or immigration history issues',
-            ].map((reason, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-                <span className="text-gray-700">{reason}</span>
-              </div>
+        <div className="bg-white rounded-xl p-8 shadow-sm border mb-8">
+          <h2 className="text-2xl font-bold mb-6">Why Applications Get Refused</h2>
+          <div className="space-y-3">
+            {['Insufficient or improperly seasoned proof of funds','Inconsistent information between application and documents','Weak ties to home country — officer suspects overstay intent','Missing or incorrectly certified documents','Previous visa violations or immigration history issues','Misrepresentation — leads to multi-year bans'].map((r, i) => (
+              <div key={i} className="flex items-start gap-3"><AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" /><span className="text-gray-700 text-sm">{r}</span></div>
+            ))}
+          </div>
+          <div className="mt-5 bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800"><strong>African applicant note:</strong> Applications from Nigeria, Ghana, Kenya and other African countries face additional scrutiny. Ensure every document is certified and bank statements show consistent seasoned funds over at least 6 months — not recent large deposits.</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-8 shadow-sm border mb-8">
+          <h2 className="text-2xl font-bold mb-6">Step-by-Step Application</h2>
+          <div className="space-y-5">
+            {[{s:'1',t:'Confirm Eligibility',d:'Check your qualifications, language scores, finances, and work experience against your target visa category.'},{s:'2',t:'Season Your Proof of Funds',d:'Build your bank balance consistently over 6+ months. Avoid large unexplained deposits. Get a formal bank letter — not just statements.'},{s:'3',t:'Gather and Certify Documents',d:'Collect qualifications, employment records, and ID. Get documents apostilled or notarised as required by the destination country.'},{s:'4',t:'Submit Application',d:'Complete the form accurately. One inconsistency between your form and documents can trigger a refusal.'},{s:'5',t:'Biometrics and Interview',d:'Attend your appointment with originals of all submitted documents. Be fully honest and consistent.'},{s:'6',t:'Await Decision',d:'Track your application. Respond quickly to any embassy requests. Prepare your settlement plan before departure.'}].map((item) => (
+              <div key={item.s} className="flex gap-4"><div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">{item.s}</div><div><div className="font-semibold text-gray-900">{item.t}</div><div className="text-gray-600 text-sm mt-1">{item.d}</div></div></div>
             ))}
           </div>
         </div>
-
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Step-by-Step Application Process</h2>
-          <div className="space-y-6">
-            {[
-              { step: '1', title: 'Assess Your Eligibility', desc: 'Check your qualifications, language requirements, and financial standing against the specific visa category requirements.' },
-              { step: '2', title: 'Build Your Proof of Funds', desc: 'Season your bank account for at least 3 months. Ensure funds are consistent, explainable, and well-documented.' },
-              { step: '3', title: 'Gather Your Documents', desc: 'Collect all required certificates, qualifications, employment records, and identification documents.' },
-              { step: '4', title: 'Submit Your Application', desc: 'Complete the application form accurately and submit with all supporting documents. Double-check everything before submission.' },
-              { step: '5', title: 'Attend Biometrics and Interview', desc: 'Attend your biometrics appointment and any required visa interview at the consulate or embassy.' },
-              { step: '6', title: 'Await Decision', desc: 'Processing times vary. Track your application status and respond promptly to any requests for additional information.' },
-            ].map((item) => (
-              <div key={item.step} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">
-                  {item.step}
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">{item.title}</div>
-                  <div className="text-gray-600 text-sm mt-1">{item.desc}</div>
-                </div>
-              </div>
-            ))}
+        <div className="bg-white rounded-xl p-8 shadow-sm border mb-8">
+          <h2 className="text-2xl font-bold mb-4">Related Guides</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <a href="/visa-guide/nigeria-to-canada" className="flex items-start gap-3 p-4 border rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors group"><div><div className="font-semibold text-sm group-hover:text-blue-700">🇨🇦 Nigeria to Canada 2026</div><div className="text-xs text-gray-500">Express Entry, CRS scores</div></div><ArrowRight className="w-4 h-4 text-gray-400 ml-auto mt-0.5" /></a>
+            <a href="/visa-guide/nigeria-to-uk" className="flex items-start gap-3 p-4 border rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors group"><div><div className="font-semibold text-sm group-hover:text-blue-700">🇬🇧 Nigeria to UK 2026</div><div className="text-xs text-gray-500">Skilled Worker visa</div></div><ArrowRight className="w-4 h-4 text-gray-400 ml-auto mt-0.5" /></a>
+            <a href="/visa-guide/nigeria-to-germany" className="flex items-start gap-3 p-4 border rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors group"><div><div className="font-semibold text-sm group-hover:text-blue-700">🇩🇪 Nigeria to Germany 2026</div><div className="text-xs text-gray-500">Opportunity Card</div></div><ArrowRight className="w-4 h-4 text-gray-400 ml-auto mt-0.5" /></a>
+            <a href="/resources/african-migration-index-2026" className="flex items-start gap-3 p-4 border rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors group"><div><div className="font-semibold text-sm group-hover:text-blue-700">🌍 African Migration Index 2026</div><div className="text-xs text-gray-500">Best countries ranked for Africans</div></div><ArrowRight className="w-4 h-4 text-gray-400 ml-auto mt-0.5" /></a>
           </div>
         </div>
-
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white text-center">
           <h2 className="text-2xl font-bold mb-4">Get Your Personalised Nigeria to Finland Roadmap</h2>
-          <p className="mb-6 opacity-90">
-            Japa Genie will analyse your specific profile — profession, age, finances, and timeline — and give you a personalised visa strategy with exact proof of funds requirements and step-by-step guidance.
-          </p>
+          <p className="mb-2 opacity-90 max-w-xl mx-auto">Japa Genie analyses your profile and gives you a personalised visa strategy with exact requirements and next steps.</p>
+          <p className="text-sm opacity-75 mb-6">Free eligibility check. No agent fees. No spam.</p>
           <Button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold" asChild>
-            <a href="/kyc" className="flex items-center gap-2">
-              Check My Eligibility Free <ArrowRight className="w-4 h-4" />
-            </a>
+            <a href="/kyc" className="flex items-center gap-2">Check My Eligibility Free <ArrowRight className="w-4 h-4" /></a>
           </Button>
         </div>
-
       </div>
     </section>
   );
