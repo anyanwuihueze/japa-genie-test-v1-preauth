@@ -22,6 +22,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info, Check, Sparkles, Lock, Zap, Ticket, Users, Calendar } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
 
 // Define proper types for your plans
 interface OneTimeCreditPlan {
@@ -52,12 +53,13 @@ function PricingContent() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState('');
   const searchParams = useSearchParams();
-  const { user, signInWithGoogle } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (searchParams?.get('login_required') === 'true') {
@@ -85,15 +87,7 @@ function PricingContent() {
           subtitle: "Access your progress tracking, saved conversations, and personalized roadmap."
         };
       case 'tool_access':
-          case 'cost_calculator':
-            return {
-              icon: <Zap className="w-6 h-6 text-orange-500" />,
-              title: 'Complete Your Visa Cost Calculation',
-              message: 'Unlock full cost breakdown for your visa',
-              bgColor: 'bg-orange-500/10',
-              borderColor: 'border-orange-500/30',
-              textColor: 'text-orange-400'
-            };
+      case 'cost_calculator':
         return {
           title: "Access Premium Tools",
           subtitle: "Upgrade to use document verification, visa matchmaker, and other advanced features."
@@ -177,15 +171,7 @@ function PricingContent() {
       case 'dashboard_access':
         return `Access Dashboard • ${plan.cta}`;
       case 'tool_access':
-          case 'cost_calculator':
-            return {
-              icon: <Zap className="w-6 h-6 text-orange-500" />,
-              title: 'Complete Your Visa Cost Calculation',
-              message: 'Unlock full cost breakdown for your visa',
-              bgColor: 'bg-orange-500/10',
-              borderColor: 'border-orange-500/30',
-              textColor: 'text-orange-400'
-            };
+      case 'cost_calculator':
         return `Unlock Tools • ${plan.cta}`;
       default:
         return plan.cta;
@@ -285,7 +271,7 @@ function PricingContent() {
               <span>Please log in to purchase a plan or use promo codes.</span>
               <Button 
                 size="sm" 
-                onClick={() => signInWithGoogle('/pricing')}
+                onClick={() => setShowAuthModal(true)}
                 className="ml-4"
               >
                 Log In Now
@@ -410,6 +396,7 @@ function PricingContent() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} redirectPath="/pricing" />
     </div>
   );
 }

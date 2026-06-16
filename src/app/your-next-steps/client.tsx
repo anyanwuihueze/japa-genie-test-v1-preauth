@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
 
 export default function YourNextStepsClient() {
   const [showModal, setShowModal] = useState(false);
@@ -25,7 +26,8 @@ export default function YourNextStepsClient() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const searchParams = useSearchParams();
-  const { user, signInWithGoogle } = useAuth();
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     // Check if redirected because login required
@@ -69,7 +71,7 @@ export default function YourNextStepsClient() {
               <span>Please log in to purchase a plan</span>
               <Button 
                 size="sm" 
-                onClick={() => signInWithGoogle('/your-next-steps')}
+                onClick={() => setShowAuthModal(true)}
                 className="ml-4"
               >
                 Log In Now
@@ -127,6 +129,7 @@ export default function YourNextStepsClient() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} redirectPath="/your-next-steps" />
     </section>
   );
 }
