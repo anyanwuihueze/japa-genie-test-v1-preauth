@@ -27,7 +27,18 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error) {
+    console.error('Middleware auth error:', error.message)
+  }
+
+  if (user) {
+    supabaseResponse.headers.set('x-user-id', user.id)
+    supabaseResponse.headers.set('x-user-email', user.email || '')
+  }
+
+  supabaseResponse.headers.set('Cache-Control', 'private, no-store, max-age=0')
 
   return supabaseResponse
 }
