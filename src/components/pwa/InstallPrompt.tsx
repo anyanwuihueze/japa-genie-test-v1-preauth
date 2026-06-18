@@ -10,44 +10,51 @@ export function InstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Check if iOS
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(isIOSDevice);
 
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    // Don't show if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+    // Don't show if already dismissed (unless coming from email install link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromEmail = urlParams.get('install') === 'true';
+    const dismissed = localStorage.getItem('pwa-install-dismissed');
+
+    if (fromEmail) {
+      // Always show if coming from email link
       setIsVisible(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Check if already installed
-    const checkAlreadyInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        setIsVisible(false);
-      }
-    };
-
-    checkAlreadyInstalled();
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
+    } else if (!dismissed) {
+      // Show normally if never dismissed
+      const handleBeforeInstallPrompt = (e: any) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+        setIsVisible(true);
+      };
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
+    }
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+  const handleDismiss = () => {
+    setIsVisible(false);
+    localStorage.setItem('pwa-install-dismissed', 'true');
+  };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      // Fallback for when prompt not available but coming from email
+      alert('To install Japa Genie:\n1. Tap the Share button (or 3 dots menu)\n2. Tap "Add to Home Screen"\n3. Tap "Add"');
+      return;
+    }
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
     if (outcome === 'accepted') {
-      console.log('User accepted install');
       setIsVisible(false);
+      localStorage.setItem('pwa-install-dismissed', 'true');
     }
-    
     setDeferredPrompt(null);
   };
 
@@ -67,19 +74,19 @@ export function InstallPrompt() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900">Install Japa Genie</h3>
-              <p className="text-sm text-gray-600">Get the app experience</p>
+              <p className="text-sm text-gray-600">Get the full app experience</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsVisible(false)}
+            onClick={handleDismiss}
             className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
+
         {isIOS ? (
           <Button
             onClick={handleIOSInstructions}
@@ -97,7 +104,7 @@ export function InstallPrompt() {
             Install App
           </Button>
         )}
-        
+
         <p className="text-xs text-gray-500 mt-2 text-center">
           Works offline • Fast loading • No ads
         </p>
