@@ -1,5 +1,5 @@
 'use server';
-import { groq } from '@/lib/groq-client';
+import { callGeminiServer } from '@/lib/gemini-server';
 import { getCurrencyInfoWithLiveRate } from "@/lib/currency-live";
 import { BurnRateTracker } from '@/lib/burnrate-sdk';
 import {
@@ -82,16 +82,33 @@ export async function visaChatAssistant(input: VisaAssistantInput): Promise<Visa
   const { wishCount, isSignedIn } = input;
 
   try {
-    const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
-      messages: buildModelMessages(input, SYSTEM_PROMPT),
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.7,
-      max_tokens: 2000,
-      response_format: { type: 'json_object' }
-    }), 'visa-chat');
+    const prompt = [
+      SYSTEM_PROMPT,
+      "",
+      "Conversation:",
+      JSON.stringify(buildModelMessages(input, SYSTEM_PROMPT), null, 2),
+      "",
+      "Return ONLY valid JSON."
+    ].join("\n");
 
-    const content = completion.choices[0]?.message?.content || '{"chatResponse": "Error processing response"}';
-    const data = JSON.parse(content);
+    const content = await callGeminiServer(prompt);
+
+    // Normalize Gemini JSON output (handles ```json markdown fences)
+    const cleanedContent = content
+      .replace(/```json/gi, '')
+      .replace(/```/g, '')
+      .trim();
+
+    const jsonStart = cleanedContent.indexOf('{');
+    const jsonEnd = cleanedContent.lastIndexOf('}');
+
+    const jsonString =
+      jsonStart !== -1 && jsonEnd !== -1
+        ? cleanedContent.slice(jsonStart, jsonEnd + 1)
+        : cleanedContent;
+
+
+    const data = JSON.parse(jsonString);
 
     let answer = data.chatResponse?.replace(/\(?\d+\s*wishes?\s*remaining\)?/gi, '').trim() || '';
 

@@ -26,7 +26,7 @@ export async function callGeminiServer(prompt: string, jsonMode: boolean = true)
       }
     });
 
-    const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent(prompt), 'gemini-server', 'gemini-server');
+    const result = await __burnrateTracker.trackGoogle('gemini-2.0-flash', () => model.generateContent(prompt), 'gemini-server');
     const response = await result.response;
     return response.text();
     
