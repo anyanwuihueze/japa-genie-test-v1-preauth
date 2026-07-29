@@ -23,6 +23,7 @@ export async function callGeminiServer(prompt: string, jsonMode: boolean = true)
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 2000,
+        ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
       }
     });
 
