@@ -60,3 +60,7 @@ japa_mobile/flutter-app.zip
 .env*.local
 .env.local
 .env
+
+# Local environment secrets
+.env.local
+.env*.local

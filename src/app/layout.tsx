@@ -9,6 +9,7 @@ import AppShell from '@/components/pwa/AppShell'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import FloatingChatButton from '@/components/layout/floating-chat-button'
 import RegisterServiceWorker from '@/components/pwa/RegisterServiceWorker'
+import ComingSoon from '@/components/coming-soon/coming-soon'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,7 +31,23 @@ export const viewport = {
   interactiveWidget: 'resizes-content' as const,
 }
 
+const PAUSED = process.env.NEXT_PUBLIC_PAUSE_MODE === 'true'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  if (PAUSED) {
+    return (
+      <html lang="en">
+        <head>
+          <meta name="theme-color" content="#0F172A" />
+          <link rel="icon" href="/favicon.ico?v=4" />
+        </head>
+        <body className={inter.className}>
+          <ComingSoon />
+        </body>
+      </html>
+    )
+  }
+
   return (
     <html lang="en">
       <head>
@@ -40,9 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="icon" href="/favicon.ico?v=3" />
+        <link rel="icon" href="/favicon.ico?v=4" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-      
+
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
@@ -52,7 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             })(window, document, "clarity", "script", "x8iqcuthg5");
           `}
         </Script>
-
       </head>
       <body className={inter.className}>
         <AuthProvider>
