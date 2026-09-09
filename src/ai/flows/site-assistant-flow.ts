@@ -17,8 +17,8 @@ const __burnrateTracker = new BurnRateTracker({ apiKey: process.env.BURNRATE_API
 export async function siteAssistant(input: SiteAssistantInput): Promise<SiteAssistantOutput> {
   try {
     // PROPER GROQ STRUCTURE - SYSTEM MESSAGE FIRST
-    const completion = await __burnrateTracker.trackGroq('llama-3.3-70b-versatile', () => groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const completion = await __burnrateTracker.trackGroq('openai/gpt-oss-20b', () => groq.chat.completions.create({
+      model: 'openai/gpt-oss-20b',
       messages: [
         { 
           role: 'system', 
