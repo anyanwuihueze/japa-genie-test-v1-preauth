@@ -1,6 +1,6 @@
 // src/app/api/create-checkout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/stripe-server';
+import { getStripe } from '@/lib/stripe/stripe-server';
 import { createClient } from '@/lib/supabase/server';
 import { findPlanByKeyOrName } from '@/lib/pricing';
 
@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
 
     const cancelUrl = new URL('/pricing', origin);
     cancelUrl.searchParams.set('canceled', 'true');
+
+    const stripe = getStripe();
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

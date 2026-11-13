@@ -1,22 +1,27 @@
 import Groq from 'groq-sdk';
 
-function getGroqApiKey(): string {
-  // PWA-safe: Use public variable first
-  const key = 
-    process.env.NEXT_PUBLIC_GROQ_API_KEY ||
-    process.env.GROQ_API_KEY ||
-    '';
-  
-  if (!key) {
-    throw new Error('❌ GROQ_API_KEY not found in environment variables');
+let groqClient: Groq | null = null;
+
+function getGroqClient(): Groq {
+  if (groqClient) return groqClient;
+
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('Groq is not configured for this deployment');
   }
-  
-  if (!key.includes('gsk_')) {
-    console.error('⚠️ Invalid Groq API key format');
-  }
-  
-  return key;
+
+  groqClient = new Groq({ apiKey });
+  return groqClient;
 }
 
-// Create and export the Groq instance
-export const groq = new Groq({ apiKey: getGroqApiKey() });
+export const groq = new Proxy({} as Groq, {
+  get(_target, property) {
+    const client = getGroqClient();
+    const value = Reflect.get(client, property, client);
+
+    return typeof value === 'function'
+      ? value.bind(client)
+      : value;
+  },
+});

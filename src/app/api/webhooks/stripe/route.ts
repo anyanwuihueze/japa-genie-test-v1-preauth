@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/stripe-server';
+import { getStripe } from '@/lib/stripe/stripe-server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 
@@ -16,10 +16,21 @@ export async function POST(request: NextRequest) {
     : null;
 
   try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      return NextResponse.json(
+        { error: 'Stripe webhook is not configured' },
+        { status: 503 }
+      );
+    }
+
+    const stripe = getStripe();
+
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
 
     console.log('Stripe webhook event:', event.type);

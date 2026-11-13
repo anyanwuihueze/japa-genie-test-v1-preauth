@@ -1,9 +1,20 @@
 import Stripe from 'stripe';
 
-const key = process.env.STRIPE_SECRET_KEY;
-if (!key) throw new Error('Missing STRIPE_SECRET_KEY');
+let stripe: Stripe | null = null;
 
-export const stripe = new Stripe(key, {
-  apiVersion: '2025-09-30.clover',
-  typescript: true,
-});
+export function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY;
+
+  if (!key) {
+    throw new Error('Stripe is not configured for this deployment');
+  }
+
+  if (!stripe) {
+    stripe = new Stripe(key, {
+      apiVersion: '2025-09-30.clover',
+      typescript: true,
+    });
+  }
+
+  return stripe;
+}

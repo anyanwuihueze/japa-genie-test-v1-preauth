@@ -1,4 +1,3 @@
-terms-of-service/page.tsx
 export default function TermsOfService() {
   return (
     <main style={{ padding: "40px", maxWidth: "800px", margin: "auto" }}>
